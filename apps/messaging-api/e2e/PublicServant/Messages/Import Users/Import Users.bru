@@ -1,0 +1,39 @@
+meta {
+  name: Import Users
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{profileBaseUrl}}/api/v1/profiles/import-profiles
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{profilePublicServantAccessToken}}
+}
+
+body:json {
+  {
+    "profiles": [
+      {
+        "address": "A road",
+        "city": "A city",
+        "firstName": "Recipient",
+        "lastName": "Maximus",
+        "email": "{{importedEmail}}",
+        "dateOfBirth": "1980-01-02"
+      }
+    ]
+  }
+}
+
+vars:pre-request {
+  importedEmail: recipient@test-messaging.com
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq "completed"
+}

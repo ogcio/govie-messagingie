@@ -1,0 +1,91 @@
+{
+  "name": "@ogcio/govie-services-messaging",
+  "version": "0.0.1",
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "description": "",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:www\" \"pnpm dev:admin\"",
+    "dev:next": "concurrently \"pnpm dev:api\" \"pnpm dev:admin\" \"pnpm dev:next-app\"",
+    "dev:api": "pnpm --filter messaging-api dev 2>&1 | tee logs/messaging-api.log",
+    "dev:www": "pnpm --filter messaging dev 2>&1 | tee logs/messaging.log",
+    "dev:admin": "pnpm --filter messaging-admin dev 2>&1 | tee logs/messaging-admin.log",
+    "dev:next-app": "pnpm --filter messaging-next dev 2>&1 | tee logs/messaging-next.log",
+    "dev:setup": "node scripts/dev/setup.mjs",
+    "dev:health": "node scripts/dev/health-check.mjs",
+    "dev:reset": "pnpm clean && pnpm dev:setup",
+    "build": "pnpm -r build",
+    "build:api": "pnpm --filter messaging-api build",
+    "build:www": "pnpm --filter messaging build",
+    "build:www:watt": "pnpm --filter messaging build:watt",
+    "build:admin": "pnpm --filter messaging-admin build",
+    "format": "pnpm -r format",
+    "format:api": "pnpm --filter messaging-api format",
+    "format:www": "pnpm --filter messaging format",
+    "format:admin": "pnpm --filter messaging-admin format",
+    "lint": "pnpm -r lint",
+    "lint:api": "pnpm --filter messaging-api lint",
+    "lint:www": "pnpm --filter messaging lint",
+    "lint:admin": "pnpm --filter messaging-admin lint",
+    "test": "pnpm -r test",
+    "test:api": "pnpm --filter messaging-api test",
+    "test:www": "pnpm --filter messaging test",
+    "test:admin": "pnpm --filter messaging-admin test",
+    "prepare": "husky || true",
+    "preinstall": "npx only-allow pnpm",
+    "db:up": "docker compose -f docker-compose.yaml up --detach",
+    "db:migrate": "pnpm --filter messaging-api db:migrate",
+    "db:prepare": "pnpm db:up && pnpm --filter messaging-api db:create && pnpm --filter messaging-api db:migrate && pnpm --filter messaging-api sync-event-summary",
+    "db:reset": "node scripts/db/reset.mjs",
+    "db:seed": "pnpm --filter messaging-api db:seed",
+    "db:reset:seed": "pnpm db:reset --seed",
+    "env:init": "node scripts/init-env.mjs",
+    "env:update": "MODE=update node scripts/init-env.mjs",
+    "env:sync": "MODE=update node scripts/init-env.mjs",
+    "env:dry-run": "node scripts/init-env.mjs --dry-run",
+    "azure:local": "node scripts/dev/azure-pipeline-local.mjs",
+    "pipeline:local": "node scripts/dev/pipeline-local.mjs",
+    "docker:build": "pnpm docker:build:base && pnpm docker:build:api && pnpm docker:build:www && pnpm docker:build:next && pnpm docker:build:admin",
+    "docker:build:base": "docker build -f Dockerfile -t base-deps .",
+    "docker:build:api": "docker build -f apps/messaging-api/Dockerfile -t messaging-api .",
+    "docker:build:www": "docker build -f apps/messaging/Dockerfile -t messaging .",
+    "docker:build:next": "docker build -f apps/messaging-next/Dockerfile -t messaging-next .",
+    "docker:build:admin": "docker build -f apps/messaging-admin/Dockerfile -t messaging-admin .",
+    "run:dev": "pnpm dev:setup && pnpm dev",
+    "deps:smart-update": "tsx scripts/smart-workspace-update.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@axe-core/playwright": "4.11.1",
+    "@biomejs/biome": "2.4.11",
+    "@commitlint/cli": "20.5.0",
+    "@commitlint/config-conventional": "20.5.0",
+    "@types/node": "25.6.0",
+    "@vitest/coverage-v8": "4.1.4",
+    "concurrently": "9.2.1",
+    "husky": "9.1.7",
+    "nodemon": "3.1.14",
+    "tsc-alias": "1.8.16",
+    "tsx": "4.21.0",
+    "typescript": "6.0.2",
+    "vite": "8.0.8",
+    "vitest": "4.1.4",
+    "yaml": "2.8.3"
+  },
+  "resolutions": {
+    "mdast-util-gfm-autolink-literal": "2.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "@opentelemetry/api": "1.9.1"
+    },
+    "patchedDependencies": {
+      "@ogcio/design-system-react@1.34.0": "patches/@ogcio__design-system-react@1.34.0.patch"
+    }
+  }
+}

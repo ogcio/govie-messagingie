@@ -1,0 +1,26 @@
+meta {
+  name: Get messages with organization - POST
+  type: http
+  seq: 16
+}
+
+post {
+  url: {{baseUrl}}/api/v1/messages/search
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "organisationId": "does-not-exist"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.metadata.totalCount: eq 0
+}

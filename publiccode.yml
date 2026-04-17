@@ -1,0 +1,49 @@
+publiccodeYmlVersion: 0.5.0
+name: Government of Ireland MessagingIE
+applicationSuite: Government of Ireland Building Blocks
+url: https://github.com/ogcio/govie-messagingie
+platforms:
+  - web
+categories:
+  - communications
+  - instant-messaging
+organisation:
+  name: Office of the Government Chief Information Officer
+  uri: https://www.ogcio.gov.ie
+usedBy:
+  - Office of Government's Chief Information Officer, Ireland
+  - Department of Education and Youth, Ireland
+  - Department of Social Protection, Ireland
+developmentStatus: stable
+softwareType: standalone/web
+intendedAudience:
+  countries:
+    - IE
+  scope:
+    - local-authorities
+    - government
+description:
+  en:
+    shortDescription: A secure, multi-channel government messaging platform enabling public service bodies to communicate with citizens across email and SMS.
+
+    longDescription: |-
+      MessagingIE is an open-source Building Block of the Irish Government's Digital Government platform, designed to give Public Service Bodies (PSBs) a unified, secure, and standards-compliant way to communicate with citizens.
+      It supports delivery via email, with support for reusable message templates, scheduled notifications, and reminders. PSBs can integrate with MessagingIE through a well-defined API, allowing them to trigger communications programmatically as part of broader service journeys without managing their own notification infrastructure.
+      MessagingIE is live in production and serves as the successor to the Digital Postbox, consolidating government citizen messaging under a single platform. It is a component of the wider Building Blocks programme, which includes FormsIE, Journey Builder, and a shared User Profile and Dashboard, enabling joined-up digital public services for citizens.
+    features:
+      - Sending secure messages to citizens
+      - MyGovID integration for login and signup
+      - Digital-Postbox replacement
+legal:
+  license: MIT
+maintenance:
+  type: internal
+  contacts:
+    - name: Applications and Architecture Team
+      email: appsarchitecture@dsu.cloud.gov.ie
+      affiliation: Office of the Government Chief Information Officer
+localisation:
+  localisationReady: true
+  availableLanguages:
+    - ga
+    - en

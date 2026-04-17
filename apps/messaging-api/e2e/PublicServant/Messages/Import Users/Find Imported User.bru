@@ -1,0 +1,47 @@
+meta {
+  name: Find Imported User
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{profileBaseUrl}}/api/v1/profiles/find-profile?email={{importedEmail}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  email: {{importedEmail}}
+}
+
+auth:bearer {
+  token: {{profilePublicServantAccessToken}}
+}
+
+body:json {
+  {
+    "profiles": [
+      {
+        "address": "A road",
+        "city": "A city",
+        "firstName": "Recipient",
+        "lastName": "Maximus",
+        "email": "recipient@test-messaging.com",
+        "dateOfBirth": "1980-01-02"
+      }
+    ]
+  }
+}
+
+vars:pre-request {
+  importedEmail: recipient@test-messaging.com
+}
+
+vars:post-response {
+  importedUserId: res.body.data.id
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.id: isString
+}

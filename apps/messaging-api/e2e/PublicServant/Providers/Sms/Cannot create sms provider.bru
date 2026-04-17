@@ -1,0 +1,40 @@
+meta {
+  name: Cannot create sms provider
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/v1/providers
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:pre-request {
+  randomStringSms: null
+}
+
+assert {
+  res.status: eq 422
+}
+
+script:pre-request {
+  const uuid = require("uuid")
+  const next = uuid.v4()
+  bru.setVar("randomStringSms", next)
+  req.setBody({
+    "type":"sms",
+    "isPrimary":true,
+    "providerName": next,
+    "config":{
+      "type":"AWS",
+      "accessKey":"key",
+      "secretAccessKey":"secret",
+      "region":"region"
+    }
+  })
+}

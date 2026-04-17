@@ -1,0 +1,124 @@
+{
+  "metadata": {
+    "title": "MessagingIE"
+  },
+  "pages": {
+    "messages": {
+      "title": "Messages"
+    }
+  },
+  "home": {
+    "heading": "Messages",
+    "tab": {
+      "unread": "Unread",
+      "all": "All"
+    },
+    "ariaLabel": {
+      "all": "All messages",
+      "unread": "Unread messages",
+      "mainContent": "Main content"
+    },
+    "table": {
+      "column": {
+        "status": "Status",
+        "sender": "Sender",
+        "date": "Date",
+        "details": "Details",
+        "attachment": "Attachment"
+      },
+      "rowsPerPage": "Rows per page",
+      "aria": {
+        "messageList": "Message list"
+      },
+      "filter": {
+        "status": "Filter by status",
+        "all": "All messages",
+        "unread": "Unread",
+        "read": "Read"
+      },
+      "loading": "Loading messages...",
+      "from": "From",
+      "unknownSender": "Unknown sender",
+      "attachment": "{count, plural, one {attachment} other {attachments}}",
+      "unreadCount": "{count, plural, one {(#) unread message} other {(#) unread messages}}",
+      "empty": {
+        "unread": "You have no unread messages",
+        "read": "You have no read messages",
+        "all": "You have no messages",
+        "search": "No messages matched your search."
+      }
+    },
+    "button": {
+      "back": "Back"
+    }
+  },
+  "search": {
+    "button": {
+      "search": "Search",
+      "reset": "Reset"
+    },
+    "input": {
+      "placeholder": "Search"
+    },
+    "ariaLabel": "Search messages"
+  },
+  "navigation": {
+    "header": {
+      "title": "MessagingIE",
+      "drawer": {
+        "dashboard": "Dashboard",
+        "profile": "View my Profile",
+        "messaging": "MessagingIE",
+        "logout": "Logout",
+        "close": "Close"
+      },
+      "menu": "Menu",
+      "language": {
+        "english": "English",
+        "irish": "Gaeilge"
+      }
+    },
+    "back": {
+      "ariaLabel": "Go back"
+    }
+  },
+  "footer": {
+    "privacy": "Privacy",
+    "cookies": "Cookies",
+    "accessibilityStatement": "Accessibility statement",
+    "termsOfUse": "Terms of use",
+    "contactSupport": "Contact Support",
+    "trademark": "© 2025 Government of Ireland Design System"
+  },
+  "consent": {
+    "banner": "You have opted-out of receiving messages from Public Sector Bodies. You can <link>update your preferences</link> to start receiving messages again."
+  },
+  "accountLinking": {
+    "title": "Is this you?",
+    "description": "We believe that we have matched your records below.",
+    "footer": "If this is correct, please select <bold>Confirm</bold>. We will send you an email to confirm the match on your User Profile.<br></br><br></br>If this is incorrect, please select <bold>Report an Issue</bold>",
+    "confirm": "Confirm",
+    "report": "Report an Issue",
+    "loading": "Loading...",
+    "error": {
+      "server": "Failed to load account information. Please report an issue if the problem persists.",
+      "linking": "Failed to link accounts"
+    }
+  },
+  "notFound": {
+    "heading": "Page not found",
+    "message": "The page you are looking for doesn't exist or has been moved.",
+    "back": "Go to messages"
+  },
+  "errors": {
+    "page": {
+      "title": "Something went wrong",
+      "message": "MessagingIE could not complete your request. Please try again and if the problem persists contact MessagingIE support.",
+      "retry": "Retry"
+    },
+    "global": {
+      "title": "An unexpected error occurred",
+      "retry": "Retry"
+    }
+  }
+}

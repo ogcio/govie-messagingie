@@ -1,0 +1,23 @@
+meta {
+  name: Delete provider3
+  type: http
+  seq: 14
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/providers/{{emailProviderId3}}?type=email
+  body: none
+  auth: bearer
+}
+
+params:query {
+  type: email
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+docs {
+  Cleans up all created providers
+}

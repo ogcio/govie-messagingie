@@ -1,0 +1,22 @@
+meta {
+  name: Get events for message id
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/messages/{{messageId}}/events
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data[0]: isDefined
+  res.body.data[0].eventType: isDefined
+}

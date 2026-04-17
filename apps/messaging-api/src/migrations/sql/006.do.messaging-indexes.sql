@@ -1,0 +1,1 @@
+-- no-op, indexes are created one by one in the following migrations

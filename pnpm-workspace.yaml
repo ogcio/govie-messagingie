@@ -1,0 +1,13 @@
+packages:
+  - "apps/messaging-api"
+  - "apps/messaging-admin"
+  - "apps/messaging"
+  - "apps/messaging-support"
+  - "apps/messaging-next"
+  - "packages/authorisation"
+syncInjectedDepsAfterScripts:
+  - build
+injectWorkspacePackages: true
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - "@ogcio/*"

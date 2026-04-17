@@ -1,0 +1,26 @@
+meta {
+  name: Get all messages with recipient id - POST
+  type: http
+  seq: 18
+}
+
+post {
+  url: {{baseUrl}}/api/v1/messages/search
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "recipientUserId": "{{process.env.CITIZEN_USER_PROFILE_ID}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body: isJson
+}

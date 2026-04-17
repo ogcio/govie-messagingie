@@ -1,0 +1,257 @@
+.container {
+  width: 100%;
+}
+
+/* Search row */
+.searchRow {
+  display: flex;
+  gap: var(--gieds-space-2);
+  align-items: stretch;
+  width: 100%;
+}
+
+.searchRow > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Unread count */
+.unreadCount {
+  padding: var(--gieds-space-2) 0;
+  font-size: 0.9375rem;
+  color: var(--gieds-color-gray-700, #51555e);
+}
+
+/* Loading / empty states */
+.loadingState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gieds-space-2);
+  padding: var(--gieds-space-12) var(--gieds-space-4);
+  color: var(--gieds-color-gray-600, #686d78);
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gieds-space-20) var(--gieds-space-4);
+  text-align: center;
+  color: var(--gieds-color-gray-600, #686d78);
+}
+
+/* ── Desktop table ── */
+.desktopTable {
+  display: block;
+  width: 100%;
+}
+
+.desktopTable :global(.gi-table-head),
+.desktopTable thead {
+  background-color: var(--gieds-color-gray-100, #e9eaed);
+}
+
+/* ── Unread row: gray bg + bold everything ── */
+.unreadRow {
+  background-color: var(--gieds-color-gray-200, #d8dadf);
+}
+
+.unreadRow.unreadRow td,
+.unreadRow.unreadRow :global(.gi-table-td) {
+  font-weight: var(--gieds-font-weight-700);
+}
+
+.unreadRow.unreadRow span,
+.unreadRow.unreadRow time,
+.unreadRow.unreadRow button {
+  font-weight: var(--gieds-font-weight-700);
+}
+
+/* Sender cell */
+.senderCell {
+  font-weight: inherit;
+  color: var(--gieds-color-gray-900, #252526);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+}
+
+/* Details text */
+.detailsText {
+  font-weight: inherit;
+}
+
+/* Clickable row */
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:hover {
+  background-color: var(--gieds-color-gray-50, #f7f7f8);
+}
+
+.clickableRow:focus-visible {
+  outline: var(--gieds-border-width-200) solid var(--gieds-color-primary-700);
+  outline-offset: -2px;
+}
+
+/* Attachment icon */
+.attachmentIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gieds-color-gray-600, #686d78);
+}
+
+/* Mobile footer */
+.mobileFooter {
+  display: none;
+  padding: var(--gieds-space-3) 0;
+}
+
+.mobileFooter :global(.gi-table-pagination) {
+  justify-content: center;
+}
+
+/*
+ * Footer selects (initial UX): (1) Chevron uses DS transform vars that can drop out —
+ * use a single translateY. (2) Same fixed width on both: native <select> grows for the
+ * widest <option> (“50” vs “1”), so boxes looked mismatched. (3) Cell vertical-align.
+ */
+.desktopTable :global(tfoot .gi-select-icon),
+.mobileFooter :global(.gi-select-icon) {
+  display: block;
+  transform: translate(0, calc(-50% + 2px));
+}
+
+.desktopTable :global(tfoot .gi-select),
+.mobileFooter :global(.gi-select) {
+  box-sizing: border-box;
+  width: var(--gieds-space-14, 3.5rem);
+  min-width: var(--gieds-space-14, 3.5rem);
+  max-width: var(--gieds-space-14, 3.5rem);
+}
+
+.desktopTable :global(tfoot td) {
+  vertical-align: middle;
+}
+
+/*
+ * Rows-per-page: .gi-select-container is width:100%; when the flex item is wider than
+ * the <select>, the chevron anchors outside the border. Shrink-wrap + fill.
+ */
+.rowsPerPage :global(.gi-select-container) {
+  display: inline-block;
+  width: auto;
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.rowsPerPage :global(.gi-select) {
+  width: 100%;
+}
+
+/* ── Mobile list ── */
+.mobileList {
+  display: none;
+}
+
+.mobileRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gieds-space-1);
+  width: 100%;
+  padding: var(--gieds-space-3-5) var(--gieds-space-3);
+  border: none;
+  border-bottom: var(--gieds-border-width-100) solid
+    var(--gieds-color-gray-200, #d8dadf);
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.mobileRow.unreadRow {
+  background-color: var(--gieds-color-gray-200, #d8dadf);
+}
+
+.mobileRow:hover {
+  background: var(--gieds-color-gray-50, #f7f7f8);
+}
+
+.mobileRow:focus-visible {
+  outline: var(--gieds-border-width-200) solid var(--gieds-color-primary-700);
+  outline-offset: -2px;
+}
+
+.mobileRowTop {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gieds-space-2);
+}
+
+.mobileSender {
+  font-size: var(--gieds-font-size-300);
+  font-weight: var(--gieds-font-weight-500);
+  color: var(--gieds-color-gray-900, #252526);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobileDate {
+  font-size: 0.9375rem;
+  /* Gray-700 for ≥4.5:1 on gray-200 (unread) and white backgrounds */
+  color: var(--gieds-color-gray-700, #51555e);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.mobileSubjectRow {
+  display: flex;
+  align-items: center;
+  gap: var(--gieds-space-2);
+}
+
+.mobileSubject {
+  font-size: var(--gieds-font-size-200);
+  line-height: 1.35;
+  color: var(--gieds-color-gray-700, #51555e);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  flex: 1;
+}
+
+.mobileAttachment {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--gieds-color-gray-700, #51555e);
+}
+
+/* ── Responsive ── */
+@media (max-width: 767px) {
+  .desktopTable {
+    display: none;
+  }
+
+  .mobileList {
+    display: block;
+  }
+
+  .mobileFooter {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobileRow {
+    transition: none;
+  }
+}

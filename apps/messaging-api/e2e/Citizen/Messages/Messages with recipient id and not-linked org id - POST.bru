@@ -1,0 +1,34 @@
+meta {
+  name: Messages with recipient id and not-linked org id - POST
+  type: http
+  seq: 20
+}
+
+post {
+  url: {{baseUrl}}/api/v1/messages/search
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "recipientUserId": "{{process.env.CITIZEN_USER_PROFILE_ID}}",
+    "organisationId": "ogcio",
+    "status": "delivered"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data: length 0
+}
+
+tests {
+  
+  
+}

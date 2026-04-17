@@ -1,0 +1,24 @@
+meta {
+  name: Get messages without params - POST
+  type: http
+  seq: 15
+}
+
+post {
+  url: {{baseUrl}}/api/v1/messages/search
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {}
+}
+
+assert {
+  res.status: eq 200
+  res.body: isJson
+}

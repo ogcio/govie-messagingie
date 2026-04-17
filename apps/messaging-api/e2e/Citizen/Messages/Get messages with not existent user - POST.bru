@@ -1,0 +1,26 @@
+meta {
+  name: Get messages with not existent user - POST
+  type: http
+  seq: 17
+}
+
+post {
+  url: {{baseUrl}}/api/v1/messages/search
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "recipientId": "does-not-exist"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body: isJson
+}

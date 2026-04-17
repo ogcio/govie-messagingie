@@ -1,0 +1,1 @@
+alter table message_template_contents alter COLUMN excerpt drop not null;

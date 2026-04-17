@@ -1,0 +1,124 @@
+{
+  "metadata": {
+    "title": "MessagingIE"
+  },
+  "pages": {
+    "messages": {
+      "title": "Teachtaireachtaí"
+    }
+  },
+  "home": {
+    "heading": "Teachtaireachtaí",
+    "tab": {
+      "unread": "Neamh-léite",
+      "all": "Gach"
+    },
+    "ariaLabel": {
+      "all": "Gach teachtaireacht",
+      "unread": "Teachtaireachtaí neamhléite",
+      "mainContent": "Príomhábhar"
+    },
+    "table": {
+      "column": {
+        "status": "Stádas",
+        "sender": "Seoltóir",
+        "date": "Dáta",
+        "details": "Sonraí",
+        "attachment": "Ceangaltán"
+      },
+      "rowsPerPage": "Sraitheanna in aghaidh an leathanaigh",
+      "aria": {
+        "messageList": "Liosta teachtaireachtaí"
+      },
+      "filter": {
+        "status": "Scag de réir stádais",
+        "all": "Gach teachtaireacht",
+        "unread": "Neamhléite",
+        "read": "Léite"
+      },
+      "loading": "Teachtaireachtaí á lódáil...",
+      "from": "Ó",
+      "unknownSender": "Seoltóir anaithnid",
+      "attachment": "{count, plural, one {ceangaltán} other {ceangaltáin}}",
+      "unreadCount": "{count, plural, one {(#) teachtaireacht neamhléite} other {(#) teachtaireachtaí neamhléite}}",
+      "empty": {
+        "unread": "Níl aon teachtaireachtaí neamhléite agat",
+        "read": "Níl aon teachtaireachtaí léite agat",
+        "all": "Níl aon theachtaireachtaí agat",
+        "search": "Níor aimsíodh aon teachtaireacht."
+      }
+    },
+    "button": {
+      "back": "Ar ais"
+    }
+  },
+  "search": {
+    "button": {
+      "search": "Cuardach",
+      "reset": "Athshocraigh"
+    },
+    "input": {
+      "placeholder": "Cuardach"
+    },
+    "ariaLabel": "Cuardaigh teachtaireachtaí"
+  },
+  "navigation": {
+    "header": {
+      "title": "MessagingIE",
+      "drawer": {
+        "dashboard": "Painéal Rialaithe",
+        "profile": "Féach ar mo Phróifíl",
+        "messaging": "MessagingIE",
+        "logout": "Logáil Amach",
+        "close": "Dún"
+      },
+      "menu": "Roghchlár",
+      "language": {
+        "english": "English",
+        "irish": "Gaeilge"
+      }
+    },
+    "back": {
+      "ariaLabel": "Téigh ar ais"
+    }
+  },
+  "footer": {
+    "privacy": "Príobháideacht",
+    "cookies": "Fianáin",
+    "accessibilityStatement": "Tuarascáil Inrochtaineachta",
+    "termsOfUse": "Téarmaí Úsáide",
+    "contactSupport": "Cuir glaoch ar an tacaíocht",
+    "trademark": "© 2025 Córas Dearaidh Rialtas na hÉireann"
+  },
+  "consent": {
+    "banner": "Tá tú tar éis diúltú do theachtaireachtaí a fháil ó Bhoinn an tSeirbhíse Phoiblí. Is féidir leat <link>do roghanna a nuashonrú</link> chun teachtaireachtaí a fháil arís."
+  },
+  "accountLinking": {
+    "title": "Cén fhreagra is atá agat?",
+    "description": "Cruthaíodh do chuntas mar sheirbhíseach poiblí anois.",
+    "footer": "Má tá an chuntas corrú, déan cinnte go bhfuil <bold>Confirm</bold>. Táimid ag fáilte duit an teachtaireacht a chur ar an phost a phostáil ar do phróifíl.<br></br><br></br>Má tá an chuntas corrú, déan cinnte go bhfuil <bold>Report an Issue</bold>",
+    "confirm": "Cuir in Eagar",
+    "report": "Rapóirt an Chuntas",
+    "loading": "Táimid ag fáilte duit an teachtaireacht a chur ar an phost a phostáil ar do phróifíl.",
+    "error": {
+      "server": "Níor cuireadh an teachtaireacht. Déan iarracht arís le do thoil.",
+      "linking": "Níor cuireadh an teachtaireacht."
+    }
+  },
+  "notFound": {
+    "heading": "Leathanach gan aimsiú",
+    "message": "Níl an leathanach a bhfuil tú ag lorg ann nó tá sé bogtha.",
+    "back": "Téigh go dtí teachtaireachtaí"
+  },
+  "errors": {
+    "page": {
+      "title": "Tharla rud éigin mícheart",
+      "message": "Níor éirigh le MessagingIE d'iarratas a chomhlíonadh. Déan iarracht arís, agus má leanann an fhadhb ar aghaidh, déan teagmháil le tacaíocht MessagingIE.",
+      "retry": "Athsheol"
+    },
+    "global": {
+      "title": "Tharla earráid gan choinne",
+      "retry": "Athsheol"
+    }
+  }
+}

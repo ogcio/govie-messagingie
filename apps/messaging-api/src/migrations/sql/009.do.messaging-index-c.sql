@@ -1,0 +1,2 @@
+CREATE INDEX CONCURRENTLY idx_attachments_messages_message_id
+ON attachments_messages (message_id);

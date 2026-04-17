@@ -1,0 +1,13 @@
+{
+  "root": false,
+  "extends": ["../../biome.jsonc"],
+  "files": {
+    "includes": [
+      "app/**/*",
+      "messages/**/*",
+      "hooks/**/*",
+      "!**/.next/**/*",
+      "!**/public/**/*"
+    ]
+  }
+}

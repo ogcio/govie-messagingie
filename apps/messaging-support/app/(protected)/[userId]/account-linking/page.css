@@ -1,0 +1,9 @@
+.account-link-container {
+  width: 600px;
+}
+
+@media (max-width: 600px) {
+  .account-link-container {
+    width: 100%;
+  }
+}

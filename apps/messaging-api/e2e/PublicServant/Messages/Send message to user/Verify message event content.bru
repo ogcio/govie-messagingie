@@ -1,0 +1,20 @@
+meta {
+  name: Verify message event content
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/message-events/ae80ddfb-2a72-4bfd-9dfb-3776772696f6
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body: isJson
+}

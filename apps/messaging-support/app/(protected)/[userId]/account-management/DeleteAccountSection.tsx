@@ -1,0 +1,156 @@
+"use client"
+
+import { useState, useTransition } from "react"
+import {
+  Alert,
+  Button,
+  InputCheckbox,
+  Paragraph,
+  Stack,
+  toaster,
+} from "@ogcio/design-system-react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { deleteAccountAction } from "@/utils/actions"
+import type { MainProfile, SessionUser } from "@/data/types"
+import { emitAuditOnce } from "@/data/audit"
+
+export function DeleteAccountSection(props: {
+  profile: MainProfile
+  user: SessionUser
+}) {
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [isPending, startTransition] = useTransition()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [checks, setChecks] = useState({
+    permanent: false,
+    authority: false,
+    verified: false,
+  })
+
+  const allChecked = checks.permanent && checks.authority && checks.verified
+
+  const handleDelete = () => {
+    startTransition(async () => {
+      void emitAuditOnce({
+        user: props.user,
+        actionName: "deleteAccount",
+        actionType: "delete",
+        args: Object.assign(
+          {},
+          {
+            profileId: props.profile.id,
+            action: "started",
+          },
+        ),
+      })
+      const result = await deleteAccountAction({ profileId: props.profile.id })
+      void emitAuditOnce({
+        user: props.user,
+        actionName: "deleteAccount",
+        actionType: "delete",
+        args: Object.assign(
+          {},
+          {
+            profileId: props.profile.id,
+            result: result.success ? "success" : "failure",
+          },
+        ),
+      })
+      if (!result.success) {
+        toaster.create({
+          title: "Error!",
+          description: "User was not deleted",
+          duration: 2000,
+          position: { x: "right", y: "top" },
+          variant: "danger",
+          animation: "fadeinright",
+        })
+        return
+      }
+
+      const qs = searchParams?.toString()
+      toaster.create({
+        title: "Success!",
+        description: "User successfully deleted",
+        duration: 2000,
+        position: { x: "right", y: "top" },
+        variant: "success",
+        animation: "fadeinright",
+      })
+      await new Promise((resolve) => setTimeout(resolve, 2500))
+      router.push(`/${qs ? `?${qs}` : ""}`)
+    })
+  }
+
+  const handleCancel = () => {
+    setShowConfirmation(false)
+    setChecks({ permanent: false, authority: false, verified: false })
+  }
+
+  if (!showConfirmation) {
+    return (
+      <Button
+        variant='primary'
+        style={{ backgroundColor: "var(--gieds-color-red-600, #d32f2f)" }}
+        onClick={() => setShowConfirmation(true)}
+      >
+        Delete Account
+      </Button>
+    )
+  }
+
+  return (
+    <>
+      <Alert variant='warning' title='Warning'>
+        <Paragraph size='sm'>
+          You are about to permanently delete this account for{" "}
+          {props.profile.publicName}. This cannot be undone. Please confirm by
+          checking the boxes below.
+        </Paragraph>
+      </Alert>
+      <InputCheckbox
+        checked={checks.permanent}
+        onChange={() =>
+          setChecks((prev) => ({ ...prev, permanent: !prev.permanent }))
+        }
+        label='I understand deletion is permanent'
+        hint='All data will be erased.'
+      />
+      <InputCheckbox
+        checked={checks.authority}
+        onChange={() =>
+          setChecks((prev) => ({ ...prev, authority: !prev.authority }))
+        }
+        label='I confirm I have authority to delete this account'
+        hint='I am an authorised user.'
+      />
+      <InputCheckbox
+        checked={checks.verified}
+        onChange={() =>
+          setChecks((prev) => ({ ...prev, verified: !prev.verified }))
+        }
+        label='I have verified this is the account I wish to delete'
+        hint='Name, Email, and PPSN match the intended use.'
+      />
+
+      <Stack direction='row' itemsDistribution='between' gap={16}>
+        <Button
+          variant='primary'
+          style={{
+            backgroundColor: allChecked
+              ? "var(--gieds-color-red-600, #d32f2f)"
+              : undefined,
+          }}
+          disabled={!allChecked || isPending}
+          onClick={handleDelete}
+        >
+          {isPending ? "Deleting..." : "Delete Account"}
+        </Button>
+        <Button variant='secondary' onClick={handleCancel} disabled={isPending}>
+          Cancel
+        </Button>
+      </Stack>
+    </>
+  )
+}

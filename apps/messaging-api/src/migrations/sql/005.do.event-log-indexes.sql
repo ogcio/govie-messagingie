@@ -1,0 +1,1 @@
+CREATE INDEX idx_logs_message_created_desc ON messaging_event_logs(message_id, created_at DESC);

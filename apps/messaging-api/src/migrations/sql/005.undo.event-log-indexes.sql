@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS idx_logs_message_created_desc;

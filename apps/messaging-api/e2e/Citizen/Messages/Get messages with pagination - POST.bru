@@ -1,0 +1,31 @@
+meta {
+  name: Get messages with pagination - POST
+  type: http
+  seq: 21
+}
+
+post {
+  url: {{baseUrl}}/api/v1/messages/search
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "recipientUserId": "{{process.env.CITIZEN_USER_PROFILE_ID}}",
+    "status": "delivered",
+    "limit": "1",
+    "offset": "0"
+  }
+}
+
+assert {
+  res.body.data[0].id: isDefined
+  res.body.data: length 1
+  res.body.metadata.totalCount: gte 1
+  res.body.metadata.links: isDefined
+}

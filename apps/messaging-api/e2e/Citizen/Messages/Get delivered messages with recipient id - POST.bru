@@ -1,0 +1,33 @@
+meta {
+  name: Get delivered messages with recipient id - POST
+  type: http
+  seq: 14
+}
+
+post {
+  url: {{baseUrl}}/api/v1/messages/search
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "recipientUserId": "{{process.env.CITIZEN_USER_PROFILE_ID}}",
+    "status": "delivered"
+  }
+}
+
+vars:post-response {
+  messageId: res.body.data && res.body.data[0] ?  res.body.data[0].id : undefined
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data[0]: isDefined
+  res.body.data[0].id: isDefined
+}

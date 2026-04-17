@@ -1,0 +1,1 @@
+-- no-op, indexes are removed one by one in the following migrations

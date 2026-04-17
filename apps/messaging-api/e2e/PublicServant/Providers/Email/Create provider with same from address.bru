@@ -1,0 +1,36 @@
+meta {
+  name: Create provider with same from address
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/providers
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+   { 
+    "type":"email",
+    "isPrimary":true,
+    "smtpHost": "{{randomStringEmail}}",
+    "smtpPort":1234,
+    "username":"user",
+    "password":"password",
+    "providerName": "illegal",
+    "fromAddress": "{{randomStringEmail}}",
+    "ssl":true,
+    "tenant": null
+  }
+}
+
+assert {
+  res.body.code: eq VALIDATION_ERROR
+  res.body.requestId: isDefined
+  res.status: eq 422
+}
