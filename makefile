@@ -1,7 +1,7 @@
 security-privacy-report: 
-	docker run --rm -v $(shell pwd):/tmp/scan bearer/bearer:latest scan --report privacy -f html /tmp/scan > bearer-privacy-report.html
+	docker run --rm -v $(shell pwd):/tmp/scan bearer/bearer:2.0.1@sha256:f6701b1b6385c9e564efe680a8391cacc5e94798d7b719a21450064c26a7b2d9 scan --report privacy -f html /tmp/scan > bearer-privacy-report.html
 security-scan: 
-	docker run --rm -v $(shell pwd):/tmp/scan bearer/bearer:latest scan -f html /tmp/scan > bearer-scan-report.html
+	docker run --rm -v $(shell pwd):/tmp/scan bearer/bearer:2.0.1@sha256:f6701b1b6385c9e564efe680a8391cacc5e94798d7b719a21450064c26a7b2d9 scan -f html /tmp/scan > bearer-scan-report.html
 
 ci-install:
 	pnpm install --frozen-lockfile
