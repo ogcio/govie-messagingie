@@ -30,6 +30,27 @@ export const env = createEnv({
     NEXT_PUBLIC_UNLEASH_CLIENT_KEY: z.string().optional(),
     NEXT_PUBLIC_UNLEASH_APP_NAME: z.string().default("messaging"),
 
+    /**
+     * Dev-only fallback: when the messages API returns an empty list, render
+     * a bundled fixture (`src/mock/messages.json`) so the unified inbox has
+     * content to show. Defaults to `false`. Set to `true` in local `.env` for
+     * UI development without a working backend. Build pipelines may pass
+     * "false", "False", or YAML booleans stringified — normalize before strict
+     * enum.
+     */
+    NEXT_PUBLIC_ENABLE_MOCK_MESSAGES: z
+      .preprocess(
+        (v) => {
+          if (v === undefined || v === null || v === "") return "false"
+          const s = String(v).trim().toLowerCase()
+          if (["true", "1", "yes", "on"].includes(s)) return "true"
+          if (["false", "0", "no", "off"].includes(s)) return "false"
+          return "false"
+        },
+        z.enum(["true", "false"]),
+      )
+      .transform((v) => v === "true"),
+
     /** Matomo — same IDs as legacy messaging (`ANALYTICS_*`). Optional URL: set directly or via MATOMO_* below. */
     NEXT_PUBLIC_ANALYTICS_URL: optionalUrl,
     NEXT_PUBLIC_MATOMO_URL: z.string().optional(),
@@ -81,6 +102,8 @@ export const env = createEnv({
     NEXT_PUBLIC_UNLEASH_URL: process.env.NEXT_PUBLIC_UNLEASH_URL,
     NEXT_PUBLIC_UNLEASH_CLIENT_KEY: process.env.NEXT_PUBLIC_UNLEASH_CLIENT_KEY,
     NEXT_PUBLIC_UNLEASH_APP_NAME: process.env.NEXT_PUBLIC_UNLEASH_APP_NAME,
+    NEXT_PUBLIC_ENABLE_MOCK_MESSAGES:
+      process.env.NEXT_PUBLIC_ENABLE_MOCK_MESSAGES,
     NEXT_PUBLIC_ANALYTICS_URL: process.env.NEXT_PUBLIC_ANALYTICS_URL,
     NEXT_PUBLIC_MATOMO_URL: process.env.NEXT_PUBLIC_MATOMO_URL,
     NEXT_PUBLIC_MATOMO_PROTOCOL: process.env.NEXT_PUBLIC_MATOMO_PROTOCOL,

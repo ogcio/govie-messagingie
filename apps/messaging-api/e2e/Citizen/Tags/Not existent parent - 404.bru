@@ -1,0 +1,35 @@
+meta {
+  name: Not existent parent - 404
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tags
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "label": "{{failingChildName}}",
+    "parentTagId": "{{notFoundParentId}}"
+  }
+}
+
+assert {
+  res.status: eq 400
+}
+
+script:pre-request {
+  const notFoundParentId = require("uuid").v4();
+  bru.setVar('notFoundParentId', notFoundParentId);
+  
+  const suffix = require("uuid").v4().substring(0,5)
+  const failingChildName = `Failing ${suffix}`;
+  bru.setVar('failingChildName', failingChildName);
+}

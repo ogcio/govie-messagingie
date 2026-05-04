@@ -41,13 +41,21 @@ export async function listMessages(params: {
     messagesStatus: Delivered | undefined;
     isSeen: AcceptedQueryBooleanValues | undefined;
     search: string | undefined;
-    deleted: boolean | undefined;
+    deletedAfterDateTime: string | undefined;
+    tagId: string | undefined;
+    untagged: boolean | undefined;
   };
   pool: Pool;
   pagination: Required<PaginationParams>;
   logger: FastifyBaseLogger;
 }): Promise<{ data: MessageList; totalCount: number }> {
   const { loggedInUserData, query, pool, pagination, logger } = params;
+
+  if (query.untagged && query.tagId) {
+    throw httpErrors.badRequest(
+      "'untagged' and 'tagId' are mutually exclusive",
+    );
+  }
 
   const requestedIds = await getRequestedIds(loggedInUserData, query, logger);
 
@@ -219,7 +227,9 @@ async function queryMessagesForList(params: {
   query: {
     isSeen: AcceptedQueryBooleanValues | undefined;
     search: string | undefined;
-    deleted: boolean | undefined;
+    deletedAfterDateTime: string | undefined;
+    tagId: string | undefined;
+    untagged: boolean | undefined;
   };
 }): Promise<{ data: MessageList; totalCount: number }> {
   const { pool, recipientUserIds, organizationId, pagination, query } = params;
@@ -242,8 +252,10 @@ async function queryMessagesForList(params: {
 
   conditions.push(`scheduled_at <= now()`);
 
-  if (query.deleted === true) {
-    conditions.push(`deleted_at IS NOT NULL`);
+  if (query.deletedAfterDateTime) {
+    conditions.push(`deleted_at >= $${paramIndex}`);
+    values.push(query.deletedAfterDateTime);
+    paramIndex++;
   } else {
     conditions.push(`deleted_at IS NULL`);
   }
@@ -257,6 +269,15 @@ async function queryMessagesForList(params: {
   conditions.push(`subject ilike $${paramIndex}`);
   values.push(query.search ? `%${query.search}%` : "%%");
   paramIndex++;
+
+  // Tag filtering
+  if (query.untagged) {
+    conditions.push(`messages.tag_id IS NULL`);
+  } else if (query.tagId) {
+    conditions.push(`messages.tag_id = $${paramIndex}`);
+    values.push(query.tagId);
+    paramIndex++;
+  }
 
   const limitParam = paramIndex++;
   const offsetParam = paramIndex++;
@@ -500,6 +521,51 @@ async function executeSoftDelete(
       );
     }
     throw error;
+  }
+}
+
+export async function assignMessageTag(params: {
+  pool: Pool;
+  userId: string;
+  messageIds: string[];
+  tagId: string | null;
+}): Promise<{ tagId: string | null; messageIds: string[] }> {
+  const { pool, userId, messageIds, tagId } = params;
+  const client = await pool.connect();
+  try {
+    // Verify message exists and belongs to the user
+    const messageResult = await client.query<{ id: string; user_id: string }>(
+      `SELECT id, user_id FROM messages WHERE id = ANY($1)`,
+      [messageIds],
+    );
+
+    if (
+      messageResult.rows.length < messageIds.length ||
+      messageResult.rows.some((row) => row.user_id !== userId)
+    ) {
+      throw httpErrors.notFound("Message not found");
+    }
+
+    // If assigning a tag, verify it exists and belongs to the user
+    if (tagId !== null) {
+      const tagResult = await client.query<{ id: string; user_id: string }>(
+        `SELECT id, user_id FROM tags WHERE id = $1`,
+        [tagId],
+      );
+
+      if (tagResult.rows.length === 0 || tagResult.rows[0].user_id !== userId) {
+        throw httpErrors.notFound("Tag not found");
+      }
+    }
+
+    await client.query(`UPDATE messages SET tag_id = $1 WHERE id = ANY($2)`, [
+      tagId,
+      messageIds,
+    ]);
+
+    return { tagId, messageIds };
+  } finally {
+    client.release();
   }
 }
 

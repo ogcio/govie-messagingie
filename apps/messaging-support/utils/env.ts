@@ -25,6 +25,9 @@ export interface EnvConfig {
   PROFILE_API_RESOURCE_URL: string
   AUDIT_API_URL: string
   LOGTO_PLATFORM_ADMIN_RESOURCE: string
+  ANALYTICS_URL: string
+  ANALYTICS_WEBSITE_ID: string
+  ANALYTICS_ORGANIZATION_ID: string
 }
 
 let cachedEnv: EnvConfig | null = null
@@ -53,7 +56,7 @@ export const getEnvConfig = (): EnvConfig => {
       "dummy-service",
     ),
     OTEL_COLLECTOR_URL: process.env["OTEL_COLLECTOR_URL"],
-    
+
     POSTGRES_MESSAGING_USER: getEnvOrPlaceholder(
       "POSTGRES_MESSAGING_USER",
       "user",
@@ -109,6 +112,12 @@ export const getEnvConfig = (): EnvConfig => {
     AUDIT_API_URL: getEnvOrPlaceholder("AUDIT_API_URL", "dummy"),
     LOGTO_PLATFORM_ADMIN_RESOURCE: getEnvOrPlaceholder(
       "LOGTO_PLATFORM_ADMIN_RESOURCE",
+      "dummy",
+    ),
+    ANALYTICS_URL: getEnvOrPlaceholder("ANALYTICS_URL", "dummy"),
+    ANALYTICS_WEBSITE_ID: getEnvOrPlaceholder("ANALYTICS_WEBSITE_ID", "dummy"),
+    ANALYTICS_ORGANIZATION_ID: getEnvOrPlaceholder(
+      "ANALYTICS_ORGANIZATION_ID",
       "dummy",
     ),
   }

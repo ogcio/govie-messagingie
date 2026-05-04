@@ -1,0 +1,34 @@
+meta {
+  name: Rename tag
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/tags/{{childTagId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "label": "{{childTagName}}",
+    "parentTagId": "{{parentTagId}}"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data.id: isDefined
+}
+
+script:pre-request {
+  const suffix = require("uuid").v4().substring(0,5)
+  const name = `Child ${suffix}`;
+  bru.setVar('childTagName', name);
+}

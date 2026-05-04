@@ -1,0 +1,45 @@
+meta {
+  name: Tree tags
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tags/tree
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data: isArray
+}
+
+tests {
+  const body = res.getBody().data;
+  let parent = undefined;
+  let index = 0;
+  const parentId = bru.getVar("parentTagId");
+  const childId = bru.getVar("childTagId");
+  
+  while(!parent || index < body.length) {
+    if(body[index].id === parentId) {
+      parent = body[index]
+    }
+    index++;
+  }
+  
+  test("parent response must match", function () {
+    expect(parent).to.exist;
+    expect(parent.id).to.equal(parentId);
+    expect(parent.unreadMessages).to.be.equal(0);
+    expect(parent.children).to.be.an("array");
+    expect(parent.children[0].id).to.be.equal(childId);
+    expect(parent.children[0].unreadMessages).to.be.equal(0);
+  });
+}

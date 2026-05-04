@@ -7,6 +7,8 @@ import {
   CardSubtitle,
   CardTitle,
   Heading,
+  Icon,
+  Link,
   Paragraph,
   Spinner,
   Stack,
@@ -24,7 +26,6 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { BackButton } from "@/components/button/back-button"
-import { DownloadIcon } from "@/components/icons"
 import type { FileMetadata, Message } from "@/types"
 import { MessageTable } from "./message-table"
 import { buildMessagesUrl, computeTotalPages } from "./pagination-utils"
@@ -227,21 +228,27 @@ function AttachmentCard({ id }: { id: string }) {
   return (
     <Card type='horizontal'>
       <div className='gi-card-icon'>
-        <DownloadIcon size='xl' className='gi-text-gray-500' />
+        <Icon
+          icon='download'
+          size='xl'
+          className='gi-text-gray-500'
+          ariaHidden
+        />
       </div>
       <CardContainer>
         <CardHeader>
           <CardTitle>
-            <button
-              data-testid='attachment-download-action'
-              type='button'
-              onClick={handleOpen}
-              aria-busy={isDownloading}
-              disabled={isDownloading}
-              className='gi-link'
-            >
-              {data.fileName}
-            </button>
+            <Link asChild>
+              <button
+                data-testid='attachment-download-action'
+                type='button'
+                onClick={handleOpen}
+                aria-busy={isDownloading}
+                disabled={isDownloading}
+              >
+                {data.fileName}
+              </button>
+            </Link>
           </CardTitle>
           <CardSubtitle>{`${sizeKb} kb`}</CardSubtitle>
         </CardHeader>

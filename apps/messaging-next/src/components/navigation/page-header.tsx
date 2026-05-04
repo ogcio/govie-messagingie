@@ -10,12 +10,12 @@ import {
   HeaderPrimaryMenu,
   HeaderSecondaryMenu,
   HeaderTitle,
+  Icon,
 } from "@ogcio/design-system-react"
 import { LogoHarpWhite, LogoWhite } from "@ogcio/design-system-react/logos"
 import { usePathname } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
-import { MenuIcon } from "@/components/icons"
 import { LANG_EN, LANG_GA } from "@/const"
 import { env } from "@/env/env.client"
 import { DrawerLink } from "./drawer-link"
@@ -46,7 +46,7 @@ export function PageHeader({
 
   return (
     <>
-      <HeaderNext variant='default'>
+      <HeaderNext variant='default' fullWidth>
         <HeaderLogo>
           <a href={`/${locale}/messages`} aria-label={t("title")}>
             <LogoHarpWhite className='gi-h-10 sm:gi-hidden' />
@@ -68,7 +68,7 @@ export function PageHeader({
             }}
           >
             {t("menu")}
-            <MenuIcon className='gi-block gi-shrink-0' />
+            <Icon icon='menu' className='gi-shrink-0' ariaHidden />
           </HeaderMenuItemButton>
         </HeaderPrimaryMenu>
       </HeaderNext>

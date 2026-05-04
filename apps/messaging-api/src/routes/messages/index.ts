@@ -3,6 +3,7 @@ import { ensureUserCanAccessUser } from "@ogcio/api-auth";
 import type { FastifyInstance } from "fastify";
 import { getEventsForMessageId } from "../../services/message-events/message-event-service.js";
 import {
+  assignMessageTag,
   deleteMessages,
   getMessage,
   listMessages,
@@ -29,6 +30,7 @@ import type {
   FastifyReplyTypebox,
   FastifyRequestTypebox,
 } from "../../types/shared.js";
+import { AssignTagReqSchema } from "../../types/tags.js";
 import {
   ensureOrganizationIdIsSet,
   ensureUserIdIsSet,
@@ -84,9 +86,11 @@ export default async function messages(app: FastifyInstance) {
           isSeen: request.query.isSeen,
           search: request.query.search,
           messagesStatus: request.query.status,
-          deleted:
-            request.query.deleted !== undefined
-              ? parseBooleanEnum(request.query.deleted)
+          deletedAfterDateTime: request.query.deletedAfterDateTime,
+          tagId: request.query.tagId,
+          untagged:
+            request.query.untagged !== undefined
+              ? parseBooleanEnum(request.query.untagged)
               : undefined,
         },
         pagination,
@@ -137,9 +141,11 @@ export default async function messages(app: FastifyInstance) {
           isSeen: request.body.isSeen,
           search: request.body.search,
           messagesStatus: request.body.status,
-          deleted:
-            request.body.deleted !== undefined
-              ? parseBooleanEnum(request.body.deleted)
+          deletedAfterDateTime: request.body.deletedAfterDateTime,
+          tagId: request.body.tagId,
+          untagged:
+            request.body.untagged !== undefined
+              ? parseBooleanEnum(request.body.untagged)
               : undefined,
         },
         pagination,
@@ -343,6 +349,33 @@ export default async function messages(app: FastifyInstance) {
       });
 
       return reply.status(200).send({ data: { ids: messageIds } });
+    },
+  );
+
+  // Assign or remove tag on multiple messages
+  app.post(
+    "/tags",
+    {
+      preValidation: (req, res) =>
+        app.checkPermissions(req, res, [Permissions.MessageSelf.Write]),
+      schema: AssignTagReqSchema,
+    },
+    async function handleAssignTag(
+      request: FastifyRequestTypebox<typeof AssignTagReqSchema>,
+      reply,
+    ) {
+      if (!request.userData) {
+        throw httpErrors.unauthorized("User needs to be logged in");
+      }
+
+      const result = await assignMessageTag({
+        pool: app.pg.pool,
+        userId: request.userData.userId,
+        messageIds: request.body.messageIds,
+        tagId: request.body.tagId,
+      });
+
+      return reply.send({ data: result });
     },
   );
 }

@@ -1,5 +1,3 @@
-export { AttachFileIcon } from "./attach-file"
-export { DownloadIcon } from "./download"
-export { MenuIcon } from "./menu"
-export { RefreshIcon } from "./refresh"
+export { CheckboxIndicatorIcon } from "./checkbox-indicator"
+export { SearchIcon } from "./search"
 export type { IconSize, SvgIconProps } from "./types"

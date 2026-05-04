@@ -40,7 +40,14 @@
       "from": "Ó",
       "unknownSender": "Seoltóir anaithnid",
       "attachment": "{count, plural, one {ceangaltán} other {ceangaltáin}}",
-      "unreadCount": "{count, plural, one {(#) teachtaireacht neamhléite} other {(#) teachtaireachtaí neamhléite}}",
+      "unreadCount": "{count} neamhléite",
+      "select": "Roghnaigh",
+      "selectAll": "Roghnaigh Uile",
+      "close": "Dún",
+      "ariaLabel": {
+        "selectAll": "Roghnaigh gach teachtaireacht ar an leathanach seo",
+        "selectRow": "Roghnaigh teachtaireacht ó {sender}: {subject}"
+      },
       "empty": {
         "unread": "Níl aon teachtaireachtaí neamhléite agat",
         "read": "Níl aon teachtaireachtaí léite agat",
@@ -50,6 +57,27 @@
     },
     "button": {
       "back": "Ar ais"
+    },
+    "delete": {
+      "toolbar": {
+        "ariaLabel": "Gníomhartha mórchóir",
+        "selectedCount": "{count} roghnaithe",
+        "delete": "Scrios"
+      },
+      "confirm": {
+        "title": "{count, plural, one {Scrios an teachtaireacht?} other {Scrios # teachtaireacht?}}",
+        "body": "{count, plural, one {Bainfear an teachtaireacht seo as do bhosca isteach.} other {Bainfear na # teachtaireachtaí seo as do bhosca isteach.}}",
+        "cta": "Scrios",
+        "cancel": "Cealaigh",
+        "close": "Dún"
+      },
+      "alert": {
+        "success": "{count, plural, one {Scriosadh # teachtaireacht} other {Scriosadh # teachtaireachtaí}}",
+        "failure": "{count, plural, one {Níorbh fhéidir # teachtaireacht a scriosadh} other {Níorbh fhéidir # teachtaireachtaí a scriosadh}}"
+      }
+    },
+    "detail": {
+      "delete": "Scrios"
     }
   },
   "search": {

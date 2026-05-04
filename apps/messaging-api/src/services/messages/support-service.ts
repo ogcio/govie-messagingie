@@ -13,9 +13,10 @@ export async function supportListMessages(params: {
   requestParams: SupportBodyParams;
   logger: FastifyBaseLogger;
   pool: Pool;
-  deleted?: boolean;
+  deletedAfterDateTime?: string;
 }): Promise<{ data: SupportMessageList; totalCount: number }> {
-  const { pagination, requestParams, logger, pool, deleted } = params;
+  const { pagination, requestParams, logger, pool, deletedAfterDateTime } =
+    params;
 
   const client = await pool.connect();
   try {
@@ -23,7 +24,7 @@ export async function supportListMessages(params: {
       client,
       recipientUserIds: requestParams.recipientUserIds,
       pagination,
-      deleted,
+      deletedAfterDateTime,
     });
   } catch (error) {
     logger.error({ error }, "Error retrieving messages for support list");
@@ -43,17 +44,19 @@ async function queryMessagesForList(params: {
   client: PoolClient;
   recipientUserIds: string[];
   pagination: Required<PaginationParams>;
-  deleted?: boolean;
+  deletedAfterDateTime?: string;
 }): Promise<{ data: SupportMessageList; totalCount: number }> {
-  const { client, recipientUserIds, pagination, deleted } = params;
+  const { client, recipientUserIds, pagination, deletedAfterDateTime } = params;
 
-  const deletedAtClause =
-    deleted === true
-      ? "AND m.deleted_at IS NOT NULL"
-      : "AND m.deleted_at IS NULL";
+  const hasDeletedAfter =
+    deletedAfterDateTime !== undefined && Date.parse(deletedAfterDateTime);
 
-  const deletedAtClauseNoAlias =
-    deleted === true ? "AND deleted_at IS NOT NULL" : "AND deleted_at IS NULL";
+  const deletedAtClause = hasDeletedAfter
+    ? "AND m.deleted_at >= $4"
+    : "AND m.deleted_at IS NULL";
+  const deletedAtClauseNoAlias = hasDeletedAfter
+    ? "AND deleted_at >= $2"
+    : "AND deleted_at IS NULL";
 
   const selectDataQuery = `
     SELECT
@@ -81,15 +84,20 @@ async function queryMessagesForList(params: {
     `;
   const selectCountQuery = `
     SELECT COUNT(*) as count
-    FROM messages
+    FROM messages 
     WHERE user_id = ANY ($1)
     AND scheduled_at <= now()
     ${deletedAtClauseNoAlias};
   `;
 
+  const countQueryParams: (string | string[])[] = [recipientUserIds];
+  if (hasDeletedAfter) {
+    countQueryParams.push(deletedAfterDateTime);
+  }
+
   const countQueryResult = await client.query<{ count: string }>(
     selectCountQuery,
-    [recipientUserIds],
+    countQueryParams,
   );
 
   if (countQueryResult.rowCount === 0) {
@@ -101,9 +109,18 @@ async function queryMessagesForList(params: {
     return { data: [], totalCount: 0 };
   }
 
+  const dataQueryParams: (string | string[] | number)[] = [
+    recipientUserIds,
+    pagination.limit,
+    pagination.offset,
+  ];
+  if (hasDeletedAfter) {
+    dataQueryParams.push(deletedAfterDateTime);
+  }
+
   const dataQueryResult = await client.query<SupportMessageItem>(
     selectDataQuery,
-    [recipientUserIds, pagination.limit, pagination.offset],
+    dataQueryParams,
   );
 
   return { data: dataQueryResult.rows, totalCount };

@@ -1,0 +1,26 @@
+meta {
+  name: Same name fails
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tags
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "label": "{{childTagName}}",
+    "parentTagId": "{{parentTagId}}"
+  }
+}
+
+assert {
+  res.status: eq 409
+}

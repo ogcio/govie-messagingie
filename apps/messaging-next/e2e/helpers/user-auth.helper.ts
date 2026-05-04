@@ -8,8 +8,12 @@ export async function loginAsCitizen(
   // Go to the main page which will redirect to auth
   await page.goto("/")
 
-  // Click the MyGovID login button
-  await page.getByRole("button", { name: "Continue with MyGovId" }).click()
+  if (
+    page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
+  ) {
+    // Click the MyGovID login button
+    await page.getByRole("button", { name: "Continue with MyGovId" }).click()
+  }
 
   // Fill in the login form
   switch (citizenName) {
@@ -85,18 +89,6 @@ export async function loginAsCitizen(
 
   // Wait for redirect to complete
   await expect(page).toHaveURL(/.*\/en\//)
-
-  await page.context().clearCookies({ name: "x-canary" })
-  await page.context().addCookies([
-    {
-      name: "x-canary",
-      value: "next",
-      path: "/",
-      domain: "messaging.dev.services.gov.ie",
-    },
-  ])
-
-  await page.reload()
 }
 
 export async function createAuthenticatedPage(
@@ -122,17 +114,6 @@ export async function setSafeLevel(
   await page.locator("#DSPOnlineLevelStatic").fill(safeLevel)
   await page.getByRole("button", { name: "LOGIN" }).click()
   await page.waitForLoadState("networkidle")
-  await page.context().clearCookies({ name: "x-canary" })
-  await page.context().addCookies([
-    {
-      name: "canary",
-      value: "next",
-      path: "/",
-      domain: "messaging.dev.services.gov.ie",
-    },
-  ])
-
-  await page.reload()
 }
 
 export async function setSafeLevelAndUser(

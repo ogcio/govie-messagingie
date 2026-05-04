@@ -236,7 +236,19 @@ export const SearchParamsSchema = Type.Object({
   status: Type.Optional(DeliveredSchema),
   isSeen: Type.Optional(TypeboxBooleanEnum()),
   search: Type.Optional(Type.String()),
-  deleted: Type.Optional(TypeboxBooleanEnum()),
+  deletedAfterDateTime: Type.Optional(Type.String({ format: "date-time" })),
+  tagId: Type.Optional(
+    Type.String({
+      format: "uuid",
+      description: "Filter messages by tag id",
+    }),
+  ),
+  untagged: Type.Optional(
+    TypeboxBooleanEnum(
+      undefined,
+      "If true, return only messages without a tag",
+    ),
+  ),
 });
 
 const ListMessagesParamsSchema = Type.Optional(

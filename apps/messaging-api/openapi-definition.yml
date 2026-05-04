@@ -43,14 +43,28 @@ paths:
           required: false
         - schema:
             type: string
+            format: date-time
+          in: query
+          name: deletedAfterDateTime
+          required: false
+        - schema:
+            type: string
+            format: uuid
+          in: query
+          name: tagId
+          required: false
+          description: Filter messages by tag id
+        - schema:
+            type: string
             enum:
               - "true"
               - "false"
               - "0"
               - "1"
           in: query
-          name: deleted
+          name: untagged
           required: false
+          description: If true, return only messages without a tag
         - schema:
             type: string
           in: query
@@ -670,13 +684,21 @@ paths:
                     - "1"
                 search:
                   type: string
-                deleted:
+                deletedAfterDateTime:
+                  type: string
+                  format: date-time
+                tagId:
+                  type: string
+                  format: uuid
+                  description: Filter messages by tag id
+                untagged:
                   type: string
                   enum:
                     - "true"
                     - "false"
                     - "0"
                     - "1"
+                  description: If true, return only messages without a tag
                 recipientUserId:
                   type: string
                   description: Either recipientUserId and organisationId are mandatory
@@ -1430,6 +1452,206 @@ paths:
                     type: string
                   statusCode:
                     type: number
+  /api/v1/messages/tags:
+    post:
+      operationId: AssignTagToMessages
+      tags: &a5
+        - Tags
+      description: Assigns or removes a tag on multiple messages
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - tagId
+                - messageIds
+              properties:
+                tagId:
+                  anyOf:
+                    - type: string
+                      format: uuid
+                      description: Tag id to assign
+                    - type: "null"
+                      description: Set to null to remove the tag
+                messageIds:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                    description: Message ids to assign/remove the tag on
+                  minItems: 1
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                      - tagId
+                      - messageIds
+                    properties:
+                      tagId:
+                        anyOf:
+                          - type: string
+                            format: uuid
+                          - type: "null"
+                      messageIds:
+                        type: array
+                        items:
+                          type: string
+                          format: uuid
+                  metadata:
+                    type: object
+                    properties:
+                      links:
+                        type: object
+                        required:
+                          - self
+                          - first
+                          - last
+                          - pages
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the request itself
+                          next:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the next page of results in a paginated response.
+                                  If there are no more results, this field may
+                                  be omitted
+                          prev:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the previous page of results in a paginated
+                                  response. If there are no more results, this
+                                  field may be omitted
+                          first:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the first page of results in a paginated response
+                          last:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the first page of results in a paginated response
+                          pages:
+                            type: object
+                            description: It may contain a list of other useful URLs, e.g. one entry for
+                              page:'page 1', 'page 2'
+                            additionalProperties:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                        description: Object containing the links to the related endpoints
+                      totalCount:
+                        type: number
+                        description: Number representing the total number of available items
+        4XX:
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                  - statusCode
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string
+                  statusCode:
+                    type: number
+        5XX:
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                  - statusCode
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string
+                  statusCode:
+                    type: number
   /api/v1/providers/:
     get:
       operationId: ListProviders
@@ -1977,6 +2199,8 @@ paths:
                         anyOf:
                           - type: "null"
                           - type: object
+                            description: Optional field to add custom headers to all emails sent with this
+                              provider
                             additionalProperties:
                               anyOf:
                                 - type: string
@@ -2190,6 +2414,8 @@ paths:
                   anyOf:
                     - type: "null"
                     - type: object
+                      description: Optional field to add custom headers to all emails sent with this
+                        provider
                       additionalProperties:
                         anyOf:
                           - type: string
@@ -4374,14 +4600,11 @@ paths:
             in a single request
         - schema:
             type: string
-            enum:
-              - "true"
-              - "false"
-              - "0"
-              - "1"
+            format: date-time
           in: query
-          name: deleted
+          name: deletedAfterDateTime
           required: false
+          description: Filter messages deleted after specified date
       responses:
         "200":
           description: Default Response
@@ -4693,6 +4916,936 @@ paths:
                         type: string
                         format: uuid
                         description: Unique Id of the resource
+                  metadata:
+                    type: object
+                    properties:
+                      links:
+                        type: object
+                        required:
+                          - self
+                          - first
+                          - last
+                          - pages
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the request itself
+                          next:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the next page of results in a paginated response.
+                                  If there are no more results, this field may
+                                  be omitted
+                          prev:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the previous page of results in a paginated
+                                  response. If there are no more results, this
+                                  field may be omitted
+                          first:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the first page of results in a paginated response
+                          last:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the first page of results in a paginated response
+                          pages:
+                            type: object
+                            description: It may contain a list of other useful URLs, e.g. one entry for
+                              page:'page 1', 'page 2'
+                            additionalProperties:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                        description: Object containing the links to the related endpoints
+                      totalCount:
+                        type: number
+                        description: Number representing the total number of available items
+        4XX:
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                  - statusCode
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string
+                  statusCode:
+                    type: number
+        5XX:
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                  - statusCode
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string
+                  statusCode:
+                    type: number
+  /api/v1/tags/:
+    post:
+      operationId: CreateTag
+      tags: *a5
+      description: Creates a tag for the logged-in user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - label
+              properties:
+                label:
+                  type: string
+                  description: Display name of the tag
+                  minLength: 1
+                  maxLength: 100
+                parentTagId:
+                  type: string
+                  format: uuid
+                  description: Parent tag id (omit for root-level tag)
+      responses:
+        "201":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                      - id
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                        description: Unique Id of the created tag
+                  metadata:
+                    type: object
+                    properties:
+                      links:
+                        type: object
+                        required:
+                          - self
+                          - first
+                          - last
+                          - pages
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the request itself
+                          next:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the next page of results in a paginated response.
+                                  If there are no more results, this field may
+                                  be omitted
+                          prev:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the previous page of results in a paginated
+                                  response. If there are no more results, this
+                                  field may be omitted
+                          first:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the first page of results in a paginated response
+                          last:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the first page of results in a paginated response
+                          pages:
+                            type: object
+                            description: It may contain a list of other useful URLs, e.g. one entry for
+                              page:'page 1', 'page 2'
+                            additionalProperties:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                        description: Object containing the links to the related endpoints
+                      totalCount:
+                        type: number
+                        description: Number representing the total number of available items
+        4XX:
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                  - statusCode
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string
+                  statusCode:
+                    type: number
+        5XX:
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                  - statusCode
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string
+                  statusCode:
+                    type: number
+    get:
+      operationId: ListTags
+      tags: *a5
+      description: Returns all tags for the logged-in user (flat list)
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - userId
+                        - label
+                        - parentTagId
+                        - path
+                        - createdAt
+                        - updatedAt
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          description: Unique Id of the tag
+                        userId:
+                          type: string
+                          description: Owner user id
+                        label:
+                          type: string
+                          description: Display name of the tag
+                        parentTagId:
+                          anyOf:
+                            - type: string
+                              format: uuid
+                              description: Parent tag id
+                            - type: "null"
+                        path:
+                          type: string
+                          description: Materialized ltree path
+                        createdAt:
+                          type: string
+                          description: Creation date time
+                        updatedAt:
+                          type: string
+                          description: Last update date time
+                  metadata:
+                    type: object
+                    properties:
+                      links:
+                        type: object
+                        required:
+                          - self
+                          - first
+                          - last
+                          - pages
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the request itself
+                          next:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the next page of results in a paginated response.
+                                  If there are no more results, this field may
+                                  be omitted
+                          prev:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the previous page of results in a paginated
+                                  response. If there are no more results, this
+                                  field may be omitted
+                          first:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the first page of results in a paginated response
+                          last:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the first page of results in a paginated response
+                          pages:
+                            type: object
+                            description: It may contain a list of other useful URLs, e.g. one entry for
+                              page:'page 1', 'page 2'
+                            additionalProperties:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                        description: Object containing the links to the related endpoints
+                      totalCount:
+                        type: number
+                        description: Number representing the total number of available items
+        4XX:
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                  - statusCode
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string
+                  statusCode:
+                    type: number
+        5XX:
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                  - statusCode
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string
+                  statusCode:
+                    type: number
+  /api/v1/tags/tree:
+    get:
+      operationId: GetTagTree
+      tags: *a5
+      description: Returns the tag tree for the logged-in user, sorted alphabetically
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - id
+                        - label
+                        - unreadMessages
+                        - children
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                        label:
+                          type: string
+                        unreadMessages:
+                          type: number
+                          description: Number of unread messages for the tag
+                        children:
+                          type: array
+                          items: {}
+                  metadata:
+                    type: object
+                    properties:
+                      links:
+                        type: object
+                        required:
+                          - self
+                          - first
+                          - last
+                          - pages
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the request itself
+                          next:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the next page of results in a paginated response.
+                                  If there are no more results, this field may
+                                  be omitted
+                          prev:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the previous page of results in a paginated
+                                  response. If there are no more results, this
+                                  field may be omitted
+                          first:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the first page of results in a paginated response
+                          last:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the first page of results in a paginated response
+                          pages:
+                            type: object
+                            description: It may contain a list of other useful URLs, e.g. one entry for
+                              page:'page 1', 'page 2'
+                            additionalProperties:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                        description: Object containing the links to the related endpoints
+                      totalCount:
+                        type: number
+                        description: Number representing the total number of available items
+        4XX:
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                  - statusCode
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string
+                  statusCode:
+                    type: number
+        5XX:
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                  - statusCode
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string
+                  statusCode:
+                    type: number
+  /api/v1/tags/{tagId}:
+    patch:
+      operationId: UpdateTag
+      tags: *a5
+      description: Updates a tag (name and/or parent)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+                  description: New display name
+                  minLength: 1
+                  maxLength: 100
+                parentTagId:
+                  anyOf:
+                    - type: string
+                      format: uuid
+                      description: New parent tag id
+                    - type: "null"
+                      description: Set to null to move to root
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: tagId
+          required: true
+          description: Unique Id of the tag
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                      - id
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
+                  metadata:
+                    type: object
+                    properties:
+                      links:
+                        type: object
+                        required:
+                          - self
+                          - first
+                          - last
+                          - pages
+                        properties:
+                          self:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the request itself
+                          next:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the next page of results in a paginated response.
+                                  If there are no more results, this field may
+                                  be omitted
+                          prev:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the previous page of results in a paginated
+                                  response. If there are no more results, this
+                                  field may be omitted
+                          first:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the first page of results in a paginated response
+                          last:
+                            type: object
+                            properties:
+                              href:
+                                type: string
+                                description: URL pointing to the first page of results in a paginated response
+                          pages:
+                            type: object
+                            description: It may contain a list of other useful URLs, e.g. one entry for
+                              page:'page 1', 'page 2'
+                            additionalProperties:
+                              type: object
+                              properties:
+                                href:
+                                  type: string
+                        description: Object containing the links to the related endpoints
+                      totalCount:
+                        type: number
+                        description: Number representing the total number of available items
+        4XX:
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                  - statusCode
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string
+                  statusCode:
+                    type: number
+        5XX:
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                  - statusCode
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string
+                  statusCode:
+                    type: number
+    delete:
+      operationId: DeleteTag
+      tags: *a5
+      description: Deletes a tag and its descendants. Blocked if any have messages attached.
+      parameters:
+        - schema:
+            type: string
+            format: uuid
+          in: path
+          name: tagId
+          required: true
+          description: Unique Id of the tag
+      responses:
+        "200":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: object
+                    required:
+                      - id
+                    properties:
+                      id:
+                        type: string
+                        format: uuid
                   metadata:
                     type: object
                     properties:

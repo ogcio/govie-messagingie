@@ -5,9 +5,12 @@ import { generateTestData, logout } from "../utils/functions"
 test.describe("User Messaging page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    await page
-      .getByRole("button", { name: "MyGovId (MyGovId connector)" })
-      .click()
+    if (
+      page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
+    ) {
+      // Click the MyGovID login button
+      await page.getByRole("button", { name: "Continue with MyGovId" }).click()
+    }
   })
 
   test("a user with safe level 2 can create an account @regression", async ({
@@ -48,9 +51,12 @@ test.describe("User Messaging page", () => {
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
     await logout(page)
     await page.goto("/")
-    await page
-      .getByRole("button", { name: "MyGovId (MyGovId connector)" })
-      .click()
+    if (
+      page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
+    ) {
+      // Click the MyGovID login button
+      await page.getByRole("button", { name: "Continue with MyGovId" }).click()
+    }
     await setSafeLevelAndUser(page, "2", userEmail)
     await expect(
       page.locator("body > div.gi-modal.gi-modal-open"),
@@ -68,9 +74,12 @@ test.describe("User Messaging page", () => {
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
     await logout(page)
     await page.goto("/")
-    await page
-      .getByRole("button", { name: "MyGovId (MyGovId connector)" })
-      .click()
+    if (
+      page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
+    ) {
+      // Click the MyGovID login button
+      await page.getByRole("button", { name: "Continue with MyGovId" }).click()
+    }
     await setSafeLevelAndUser(page, "2", userEmail)
     await expect(
       page.locator("body > div.gi-modal.gi-modal-open"),

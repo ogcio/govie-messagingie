@@ -2,6 +2,7 @@
 
 import { emitAuditOnce } from "@/data/audit"
 import { ProfileDataService } from "@/data/profile"
+import type { Consent } from "@/data/types"
 import { failure } from "@/data/utils"
 import {
   serverMessagingFilterKeySelectOptions,
@@ -72,6 +73,28 @@ export async function getAccountLinkDetailsAction(
     detailsResult.success ? undefined : detailsResult.error.message,
   ).catch(console.error)
   return detailsResult
+}
+
+export async function updateProfileConsentDataAction(params: {
+  profileId: string
+  consents: { subject: string; status: Consent["status"] }[]
+}) {
+  const user = await getIdentity()
+  if (!user) {
+    return failure(new Error("no user"), "unauthorized")
+  }
+
+  const result = await ProfileDataService.updateProfileConsentData(params)
+  void emitAuditOnce(
+    {
+      actionName: "updateProfileConsentData",
+      actionType: "update",
+      user,
+      args: params,
+    },
+    result.success ? undefined : result.error.message,
+  )
+  return result
 }
 
 export async function deleteAccountAction(params: {

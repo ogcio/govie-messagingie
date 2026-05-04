@@ -614,7 +614,9 @@ describe("Message Service", () => {
           recipientUserId: undefined,
           isSeen: "false",
           search: undefined,
-          deleted: undefined,
+          deletedAfterDateTime: undefined,
+          tagId: undefined,
+          untagged: undefined,
         },
         pool,
         pagination: { offset: "0", limit: "20" },
@@ -654,7 +656,9 @@ describe("Message Service", () => {
           recipientUserId: childProfileOne,
           isSeen: "false",
           search: undefined,
-          deleted: undefined,
+          deletedAfterDateTime: undefined,
+          tagId: undefined,
+          untagged: undefined,
         },
         pool,
         pagination: { offset: "0", limit: "20" },
@@ -694,7 +698,9 @@ describe("Message Service", () => {
           recipientUserId: recipientProfileId,
           isSeen: "false",
           search: undefined,
-          deleted: undefined,
+          deletedAfterDateTime: undefined,
+          tagId: undefined,
+          untagged: undefined,
         },
         pool,
         pagination: { offset: "0", limit: "20" },
@@ -731,7 +737,9 @@ describe("Message Service", () => {
           recipientUserId: recipientProfileId,
           isSeen: undefined,
           search: undefined,
-          deleted: undefined,
+          deletedAfterDateTime: undefined,
+          tagId: undefined,
+          untagged: undefined,
         },
         pool,
         pagination: { offset: "0", limit: "20" },
@@ -762,7 +770,9 @@ describe("Message Service", () => {
           recipientUserId: recipientProfileId,
           isSeen: undefined,
           search: "s",
-          deleted: undefined,
+          deletedAfterDateTime: undefined,
+          tagId: undefined,
+          untagged: undefined,
         },
         pool,
         pagination: { offset: "0", limit: "20" },
@@ -789,7 +799,9 @@ describe("Message Service", () => {
           recipientUserId: "not-a-child",
           isSeen: "false",
           search: undefined,
-          deleted: undefined,
+          deletedAfterDateTime: undefined,
+          tagId: undefined,
+          untagged: undefined,
         },
         pool,
         pagination: { offset: "0", limit: "20" },
@@ -822,7 +834,9 @@ describe("Message Service", () => {
           recipientUserId: recipientProfileId,
           isSeen: undefined,
           search: undefined,
-          deleted: undefined,
+          deletedAfterDateTime: undefined,
+          tagId: undefined,
+          untagged: undefined,
         },
         pool,
         pagination: { offset: "0", limit: "20" },
@@ -839,9 +853,18 @@ describe("Message Service", () => {
       const orgId = randomUUID().substring(0, 12);
       const activeMsg = await insertMessage(recipientProfileId, orgId, pool);
       const deletedMsg = await insertMessage(recipientProfileId, orgId, pool);
+      const deletedBefore = await insertMessage(
+        recipientProfileId,
+        orgId,
+        pool,
+      );
       await pool.query("UPDATE messages SET deleted_at = now() WHERE id = $1", [
         deletedMsg,
       ]);
+      await pool.query(
+        "UPDATE messages SET deleted_at = now() - interval '30 day' WHERE id = $1",
+        [deletedBefore],
+      );
 
       const retrievedMessages = await listMessages({
         loggedInUserData: {
@@ -855,7 +878,11 @@ describe("Message Service", () => {
           recipientUserId: recipientProfileId,
           isSeen: undefined,
           search: undefined,
-          deleted: true,
+          deletedAfterDateTime: new Date(
+            Date.now() - 15 * 24 * 60 * 60 * 1000,
+          ).toISOString(), // 15 days ago
+          tagId: undefined,
+          untagged: undefined,
         },
         pool,
         pagination: { offset: "0", limit: "20" },

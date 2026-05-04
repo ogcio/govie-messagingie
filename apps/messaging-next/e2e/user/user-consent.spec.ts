@@ -4,22 +4,14 @@ import { giveConsent } from "../utils/consent-helper"
 test.describe("User Messaging page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    await page
-      .getByRole("button", { name: "MyGovId (MyGovId connector)" })
-      .click()
+    if (
+      page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
+    ) {
+      // Click the MyGovID login button
+      await page.getByRole("button", { name: "Continue with MyGovId" }).click()
+    }
     await page.getByRole("button", { name: "LOGIN" }).click()
     await page.waitForLoadState("networkidle")
-    await page.context().clearCookies({ name: "x-canary" })
-    await page.context().addCookies([
-      {
-        name: "x-canary",
-        value: "next",
-        path: "/",
-        domain: "messaging.dev.services.gov.ie",
-      },
-    ])
-
-    await page.reload()
   })
 
   test("a user can accept consent @smoke @regression", async ({ page }) => {
@@ -89,16 +81,6 @@ test.describe("User Messaging page", () => {
     ).toHaveCount(0)
     //Goto profile page
     await page.goto("https://profile.dev.services.gov.ie")
-    /*await page.context().clearCookies({ name: "x-canary" })
-    await page.context().addCookies([
-      {
-        name: "x-canary",
-        value: "next",
-        path: "/",
-        domain: "profile.dev.services.gov.ie",
-      },
-    ])*/
-
     await expect(
       page.getByRole("heading", { name: "My Profile" }),
     ).toBeVisible()
@@ -114,9 +96,7 @@ test.describe("User Messaging page", () => {
     await expect(page.url()).toContain("messaging.dev.services.gov.ie")
 
     await expect(
-      page.getByText(
-        "MessagingIE provides you with a safe and secure access to letters, documents, and messages from Public Sector Bodies (PSBs).",
-      ),
+      page.locator("body > div.gi-modal.gi-modal-open"),
     ).toBeVisible()
   })
 })

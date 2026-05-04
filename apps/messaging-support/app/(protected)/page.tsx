@@ -11,7 +11,9 @@ import {
   TableRow,
 } from "@ogcio/design-system-react"
 import { Suspense, use } from "react"
+import { ANALYTICS } from "@/const/analytics"
 import { getProfileFilterOptions } from "@/utils/actions"
+import { AnalyticsViewEventHandler } from "../components/AnalyticsViewEventHandler"
 import AuthWrapper from "../server-utils/AuthWrapper"
 import Filter from "./Filter"
 import { TableBodyRows } from "./TableBodyRows"
@@ -26,54 +28,62 @@ export default function Home(props: {
 
   return (
     <AuthWrapper>
-      <Stack gap={7}>
-        <Heading as='h1'>Messaging Support</Heading>
-        <Filter keyOptions={filterKeyOptions}></Filter>
-        <Table>
-          <TableHead
-            style={{
-              backgroundColor:
-                "var(--gieds-color-surface-system-neutral-layer1)",
-            }}
-          >
-            <TableRow>
-              <TableHeader>Profile ID</TableHeader>
-              <TableHeader>Parent ID</TableHeader>
-              <TableHeader>Org ID</TableHeader>
-              <TableHeader>Full Name</TableHeader>
-              <TableHeader>Email</TableHeader>
-              <TableHeader>PPSN</TableHeader>
-              <TableHeader>DOB</TableHeader>
-              <TableHeader>Logto Roles</TableHeader>
-              <TableHeader>Last login date</TableHeader>
-              <TableHeader align='center'>Links</TableHeader>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            <Suspense
-              fallback={
-                <TableRow>
-                  <TableData colSpan={11}>Loading…</TableData>
-                </TableRow>
-              }
+      <AnalyticsViewEventHandler
+        event={{
+          name: ANALYTICS.profileList.view.name,
+          category: ANALYTICS.profileList.category,
+          action: ANALYTICS.profileList.view.action,
+        }}
+      >
+        <Stack gap={7}>
+          <Heading as='h1'>Messaging Support</Heading>
+          <Filter keyOptions={filterKeyOptions}></Filter>
+          <Table>
+            <TableHead
+              style={{
+                backgroundColor:
+                  "var(--gieds-color-surface-system-neutral-layer1)",
+              }}
             >
-              {hasSearchParams ? (
-                <TableBodyRows searchParams={searchParams}></TableBodyRows>
-              ) : (
-                <TableRow>
-                  <TableData colSpan={10}>
-                    <Container insetBottom='lg' insetTop='lg'>
-                      <Alert variant='info' title='No search performed'>
-                        Use the filters above to start your search.
-                      </Alert>
-                    </Container>
-                  </TableData>
-                </TableRow>
-              )}
-            </Suspense>
-          </TableBody>
-        </Table>
-      </Stack>
+              <TableRow>
+                <TableHeader>Profile ID</TableHeader>
+                <TableHeader>Parent ID</TableHeader>
+                <TableHeader>Org ID</TableHeader>
+                <TableHeader>Full Name</TableHeader>
+                <TableHeader>Email</TableHeader>
+                <TableHeader>PPSN</TableHeader>
+                <TableHeader>DOB</TableHeader>
+                <TableHeader>Logto Roles</TableHeader>
+                <TableHeader>Last login date</TableHeader>
+                <TableHeader align='center'>Links</TableHeader>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              <Suspense
+                fallback={
+                  <TableRow>
+                    <TableData colSpan={11}>Loading…</TableData>
+                  </TableRow>
+                }
+              >
+                {hasSearchParams ? (
+                  <TableBodyRows searchParams={searchParams}></TableBodyRows>
+                ) : (
+                  <TableRow>
+                    <TableData colSpan={10}>
+                      <Container insetBottom='lg' insetTop='lg'>
+                        <Alert variant='info' title='No search performed'>
+                          Use the filters above to start your search.
+                        </Alert>
+                      </Container>
+                    </TableData>
+                  </TableRow>
+                )}
+              </Suspense>
+            </TableBody>
+          </Table>
+        </Stack>
+      </AnalyticsViewEventHandler>
     </AuthWrapper>
   )
 }

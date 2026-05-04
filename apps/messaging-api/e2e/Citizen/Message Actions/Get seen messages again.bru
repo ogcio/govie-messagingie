@@ -1,7 +1,7 @@
 meta {
   name: Get seen messages again
   type: http
-  seq: 8
+  seq: 7
 }
 
 get {
@@ -10,7 +10,7 @@ get {
   auth: bearer
 }
 
-query {
+params:query {
   recipientUserId: {{process.env.CITIZEN_USER_PROFILE_ID}}
   status: delivered
   isSeen: true

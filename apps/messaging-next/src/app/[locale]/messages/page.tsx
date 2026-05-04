@@ -1,3 +1,4 @@
+import { Spinner } from "@ogcio/design-system-react"
 import { setRequestLocale } from "next-intl/server"
 import { Suspense, use } from "react"
 import { MessagesPageClient } from "@/components/messages/messages-client"
@@ -6,8 +7,12 @@ export { generateStaticParams } from "@/util/route-helpers"
 
 function Loading() {
   return (
-    <output aria-label='Loading'>
-      <div>Loading...</div>
+    <output
+      aria-label='Loading'
+      className='gi-flex gi-items-center gi-justify-center'
+      style={{ minHeight: "30vh" }}
+    >
+      <Spinner size='xl' />
     </output>
   )
 }

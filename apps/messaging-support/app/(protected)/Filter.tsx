@@ -11,8 +11,10 @@ import {
   SelectNext,
   Stack,
 } from "@ogcio/design-system-react"
+import { useAnalytics } from "@ogcio/nextjs-analytics"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useCallback, useState } from "react"
+import { ANALYTICS } from "@/const/analytics"
 import {
   buildAppliedFilter,
   dateOptions,
@@ -32,12 +34,25 @@ import { Case, Switch } from "../Switch"
 export default function Filter(props: { keyOptions: ClientFilterKeyOption[] }) {
   const router = useRouter()
   const params = useSearchParams()
+  const analyticsClient = useAnalytics()
+
+  function handleSearchEventTracking(): void {
+    analyticsClient.trackEvent({
+      event: {
+        name: ANALYTICS.profileList.search.name,
+        category: ANALYTICS.profileList.category,
+        action: ANALYTICS.profileList.search.action,
+      },
+    })
+  }
+
+  const { keyOptions } = props
 
   const [chipState, setChipState] = useState<AppliedFilter[]>(
     () =>
       [...params.entries()]
         .map(([key, value]) => {
-          const o = props.keyOptions.find((o) => o.value === key)
+          const o = keyOptions.find((o) => o.value === key)
           if (!o) {
             return null
           }
@@ -79,7 +94,7 @@ export default function Filter(props: { keyOptions: ClientFilterKeyOption[] }) {
   )
 
   const handleSelectKeyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const option = props.keyOptions.find((o) => o.value === e.target.value)
+    const option = keyOptions.find((o) => o.value === e.target.value)
     if (!option) {
       return
     }
@@ -139,6 +154,7 @@ export default function Filter(props: { keyOptions: ClientFilterKeyOption[] }) {
       meta: draftFilter,
     })
 
+    handleSearchEventTracking()
     setDraftFilter(null)
     setSelectedKeyOption(null)
     syncUrlWithChips([...chipState, appliedFilter])
@@ -158,7 +174,7 @@ export default function Filter(props: { keyOptions: ClientFilterKeyOption[] }) {
               <SelectItemNext value='null' hidden>
                 Search
               </SelectItemNext>
-              {props.keyOptions.map((option) => (
+              {keyOptions.map((option) => (
                 <SelectItemNext key={option.value} value={option.value}>
                   {option.label}
                 </SelectItemNext>

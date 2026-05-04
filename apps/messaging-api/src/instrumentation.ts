@@ -9,7 +9,7 @@ if (
     serviceName: process.env.OTEL_SERVER_SERVICE_NAME,
     collectorUrl: process.env.OTEL_COLLECTOR_URL as string,
     diagLogLevel: (process.env.OTEL_LOG_LEVEL as SDKLogLevel) ?? "ERROR",
-    ignoreUrls: [{ type: "equals", url: "/api/health" }],
+    ignoreUrls: [{ type: "equals", url: "/health" }],
     pseudoProfiling: { enabled: true },
     additionalInstrumentations: [
       new FastifyOtelInstrumentation({ registerOnInitialization: true }),

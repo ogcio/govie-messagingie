@@ -11,13 +11,13 @@ import {
   TableRow,
 } from "@ogcio/design-system-react"
 import { Suspense } from "react"
+import { ProfileMeta } from "@/app/components/ProfileMeta"
 import AuthWrapper from "@/app/server-utils/AuthWrapper"
+import { ProfileDataService } from "@/data/profile"
 import { getMessagingFilterOptions } from "@/utils/actions"
 import { getFullName, toURLSearchParams } from "@/utils/utils"
-import Filter from "./Filter"
 import { TableBodyRows } from "./components/TableBodyRows"
-import { ProfileMeta } from "@/app/components/ProfileMeta"
-import { ProfileDataService } from "@/data/profile"
+import Filter from "./Filter"
 
 export default async function Messages(props: {
   params: Promise<{ userId: string }>

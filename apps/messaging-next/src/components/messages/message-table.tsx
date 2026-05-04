@@ -1,7 +1,10 @@
 "use client"
 
 import {
+  Icon,
   Link,
+  Spinner,
+  Stack,
   Table,
   TableBody,
   TableData,
@@ -10,9 +13,7 @@ import {
   TableRow,
 } from "@ogcio/design-system-react"
 import { useTranslations } from "next-intl"
-import { AttachFileIcon } from "@/components/icons"
 import { formatDate } from "@/util/datetime"
-import { TableDataPlaceholder } from "./table-data-placeholder"
 
 interface MessageRow {
   id: string
@@ -48,7 +49,28 @@ export function MessageTable({
       <TableBody id='table-body'>
         {isLoading && previousHeight > 0 ? (
           <TableRow>
-            <TableDataPlaceholder height={previousHeight} />
+            {/*
+             * Loading placeholder row. Pins to the previously-rendered
+             * table height so a re-fetch doesn't collapse the list and
+             * shift the layout below, and centres a DS `Spinner` inside
+             * a DS `Stack` — no absolute positioning, no hand-sized
+             * translate hack. DS gap: `Table` / `TableData` don't have
+             * a built-in loading state, so the height-pinning is left
+             * as an explicit `style` hook.
+             */}
+            <TableData
+              colSpan={3}
+              align='center'
+              style={{ height: `${previousHeight}px` }}
+            >
+              <Stack
+                direction='column'
+                itemsAlignment='center'
+                itemsDistribution='center'
+              >
+                <Spinner size='xl' />
+              </Stack>
+            </TableData>
           </TableRow>
         ) : messages.length > 0 ? (
           messages.map((msg) => (
@@ -68,7 +90,9 @@ export function MessageTable({
                 </Link>
               </TableData>
               <TableData align='right'>
-                {msg.attachmentsCount ? <AttachFileIcon /> : null}
+                {msg.attachmentsCount ? (
+                  <Icon icon='attach_file' ariaHidden />
+                ) : null}
               </TableData>
             </TableRow>
           ))

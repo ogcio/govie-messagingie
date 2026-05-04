@@ -40,7 +40,14 @@
       "from": "From",
       "unknownSender": "Unknown sender",
       "attachment": "{count, plural, one {attachment} other {attachments}}",
-      "unreadCount": "{count, plural, one {(#) unread message} other {(#) unread messages}}",
+      "unreadCount": "{count} unread",
+      "select": "Select",
+      "selectAll": "Select All",
+      "close": "Close",
+      "ariaLabel": {
+        "selectAll": "Select all messages on this page",
+        "selectRow": "Select message from {sender}: {subject}"
+      },
       "empty": {
         "unread": "You have no unread messages",
         "read": "You have no read messages",
@@ -50,6 +57,27 @@
     },
     "button": {
       "back": "Back"
+    },
+    "delete": {
+      "toolbar": {
+        "ariaLabel": "Bulk actions",
+        "selectedCount": "{count} selected",
+        "delete": "Delete"
+      },
+      "confirm": {
+        "title": "{count, plural, one {Delete message?} other {Delete # messages?}}",
+        "body": "{count, plural, one {This message will be removed from your inbox.} other {These # messages will be removed from your inbox.}}",
+        "cta": "Delete",
+        "cancel": "Cancel",
+        "close": "Close"
+      },
+      "alert": {
+        "success": "{count, plural, one {# message has been deleted} other {# messages have been deleted}}",
+        "failure": "{count, plural, one {# message could not be deleted} other {# messages could not be deleted}}"
+      }
+    },
+    "detail": {
+      "delete": "Delete"
     }
   },
   "search": {

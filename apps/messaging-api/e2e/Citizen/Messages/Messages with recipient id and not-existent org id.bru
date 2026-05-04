@@ -10,7 +10,7 @@ get {
   auth: bearer
 }
 
-query {
+params:query {
   recipientUserId: {{process.env.CITIZEN_USER_PROFILE_ID}}
   organisationId: 09569127-7cb2-4716-9783-0865a778a1b2
   status: delivered
@@ -24,9 +24,4 @@ assert {
   res.status: eq 200
   res.body.data: isDefined
   res.body.data: length 0
-}
-
-tests {
-  
-  
 }

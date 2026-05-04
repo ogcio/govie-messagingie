@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
     "require-in-the-middle",
   ],
   output: "standalone",
+  transpilePackages: ["@ogcio/nextjs-analytics", "@ogcio/analytics-sdk"],
 }
 
 export default nextConfig

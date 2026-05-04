@@ -126,3 +126,8 @@ tsconfig.tsbuildinfo
 
 .copilot
 .cursor
+
+.github/agents
+.github/prompts
+.specsmd
+.specs-fire

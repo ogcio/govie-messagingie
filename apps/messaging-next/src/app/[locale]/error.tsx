@@ -4,6 +4,10 @@ import { faro } from "@grafana/faro-web-sdk"
 import { Button, Heading, Paragraph, Stack } from "@ogcio/design-system-react"
 import { useTranslations } from "next-intl"
 import { useEffect } from "react"
+import {
+  isChunkLoadError,
+  reloadOnceIfChunkLoadError,
+} from "@/util/chunk-error"
 
 export default function ErrorPage({
   error,
@@ -15,6 +19,10 @@ export default function ErrorPage({
   const t = useTranslations("errors.page")
 
   useEffect(() => {
+    if (isChunkLoadError(error)) {
+      faro.api?.pushLog([`ChunkLoadError: ${error.message}`])
+      if (reloadOnceIfChunkLoadError(error)) return
+    }
     faro.api?.pushLog([`Error: ${error.message}`])
   }, [error])
 

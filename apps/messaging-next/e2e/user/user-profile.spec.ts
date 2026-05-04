@@ -16,17 +16,6 @@ test.describe("User Profile Features", () => {
     await page.waitForLoadState("networkidle")
 
     await page.goto("https://profile.dev.services.gov.ie")
-    /*await page.context().clearCookies({ name: "x-canary" })
-    await page.context().addCookies([
-      {
-        name: "x-canary",
-        value: "next",
-        path: "/",
-        domain: "profile.dev.services.gov.ie",
-      },
-    ])
-    await page.reload()*/
-
     await expect(
       page.getByRole("heading", { name: "My Profile" }),
     ).toBeVisible()
@@ -57,17 +46,6 @@ test.describe("User Profile Features", () => {
     await page.waitForLoadState("networkidle")
 
     await page.goto("https://profile.dev.services.gov.ie")
-    /*await page.context().clearCookies({ name: "x-canary" })
-    await page.context().addCookies([
-      {
-        name: "x-canary",
-        value: "next",
-        path: "/",
-        domain: "profile.dev.services.gov.ie",
-      },
-    ])
-    await page.reload()*/
-
     await expect(
       page.getByRole("heading", { name: "My Profile" }),
     ).toBeVisible()

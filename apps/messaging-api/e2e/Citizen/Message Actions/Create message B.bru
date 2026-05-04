@@ -1,7 +1,7 @@
 meta {
   name: Create message B
   type: http
-  seq: 3
+  seq: 2
 }
 
 post {
@@ -34,6 +34,7 @@ body:json {
 
 vars:post-response {
   messageBId: res.body.data.id
+  messageBId2: res.body.data.id
 }
 
 assert {

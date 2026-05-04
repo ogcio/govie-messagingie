@@ -13,8 +13,11 @@ import {
   type ProfileLinkParams,
   type ProfileQueryBase,
   type Result,
-  UserRelationStatuses,
+  type GetUserConsentDataResponse,
   type UserRelations,
+  type UpdateUserConsentDataResponse,
+  UserRelationStatuses,
+  Consent,
 } from "../types"
 import { failure, GENERIC_USER_ERROR, success } from "../utils"
 import {
@@ -32,6 +35,8 @@ import {
   queryProfileLinkDetails,
   queryRelatedUsersByUserId,
 } from "./pgAccess"
+
+const supportSdk = getSupportSdk(getEnvConfig()).profile.support
 
 async function getUserRelationStatus(
   toSearchForUserId: string,
@@ -171,7 +176,6 @@ async function getProfiles(
   return withSpan({
     spanName: "ProfileDataService.getProfiles",
     fn: async (span) => {
-      const supportSdk = getSupportSdk(getEnvConfig()).profile.support
       const body = buildListUserSdkBody(nextSearchParams)
       if (!body.success) {
         logger.error(body.error)
@@ -179,7 +183,7 @@ async function getProfiles(
         return body
       }
       const result = await supportSdk.postProfileSearch(body.value)
-      if(result.error || !result.data) {
+      if (result.error || !result.data) {
         logger.error(result.error)
         span.recordException(result.error)
         return failure(result.error, GENERIC_USER_ERROR)
@@ -351,6 +355,47 @@ async function deleteAccount(params: {
   })
 }
 
+async function getLatestConsentData(
+  profileId: string,
+): Promise<GetUserConsentDataResponse> {
+  return withSpan({
+    spanName: "ProfileDataService.getLatestConsents",
+    fn: async (span) => {
+      const result = await supportSdk.getLatestConsents({ profileId })
+
+      if (result.error) {
+        logger.error(result.error)
+        span.recordException(result.error)
+        return failure(result.error, GENERIC_USER_ERROR)
+      }
+
+      return success(result.data)
+    },
+  })
+}
+
+async function updateProfileConsentData(params: {
+  consents: { subject: string; status: Consent["status"] }[]
+  profileId: string
+}): Promise<UpdateUserConsentDataResponse> {
+  return withSpan({
+    spanName: "ProfileDataService.submitConsents",
+    fn: async (span) => {
+      const { consents, profileId } = params
+
+      const result = await supportSdk.submitConsents({ consents, profileId })
+
+      if (result.error) {
+        logger.error(result.error)
+        span.recordException(result.error)
+        return failure(result.error, GENERIC_USER_ERROR)
+      }
+
+      return success(result.data)
+    },
+  })
+}
+
 export const ProfileDataService = {
   getAccountLinkDetails,
   createAccountLink,
@@ -359,5 +404,7 @@ export const ProfileDataService = {
   getConsents,
   deleteAccount,
   getUserRelationStatus,
-  getProfilesSdk: getProfiles
+  getLatestConsentData,
+  updateProfileConsentData,
+  getProfilesSdk: getProfiles,
 } as const

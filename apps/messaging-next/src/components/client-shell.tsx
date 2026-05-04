@@ -1,6 +1,6 @@
 "use client"
 
-import { faro } from "@grafana/faro-web-sdk"
+import { faro, LogLevel } from "@grafana/faro-web-sdk"
 import type { ConsentStatementLanguages } from "@ogcio/consent"
 import {
   ConsentProvider,
@@ -11,6 +11,7 @@ import {
   Button,
   Container,
   Heading,
+  LoadMaterialSymbols,
   Paragraph,
   Spinner,
   Stack,
@@ -18,6 +19,7 @@ import {
 } from "@ogcio/design-system-react"
 import {
   CONNECTOR_MYGOVID,
+  ROLE_NAME_ONBOARDED_CITIZEN,
   SagClientProvider,
   useAuth,
   useOnboardingGuard,
@@ -36,10 +38,19 @@ import { FeatureFlagsProvider } from "@/components/feature-flags-provider"
 import { MainContainer } from "@/components/layout/containers"
 import { MessagingAnalyticsProvider } from "@/components/messaging-analytics-provider"
 import { PageHeader } from "@/components/navigation/page-header"
+import { TRACE_MESSAGES } from "@/const/traces"
 import { env } from "@/env/env.client"
 import { useRouter } from "@/i18n/navigation"
 
 const AUTH_TIMEOUT_MS = 15_000
+
+// One-shot guard against the post-onboarding stale-claims race: when the user
+// returns from the profile-service onboarding flow, the SAG session can still
+// hold the pre-onboarding ID token (no `Onboarded citizen` role). Detect that
+// here, force one fresh sign-in cycle, and bound retries with sessionStorage
+// so we never loop. Works regardless of which profile app handled onboarding
+// (legacy `profile` or `profile-next`).
+const STALE_CLAIMS_REFRESH_KEY = "messaging_next_stale_claims_refreshed"
 
 function LayoutLoading() {
   return (
@@ -108,7 +119,103 @@ function ShellContent({ children }: { children: ReactNode }) {
     return <LayoutLoading />
   }
 
-  return <AuthenticatedShell>{children}</AuthenticatedShell>
+  return (
+    <StaleClaimsRefreshGate>
+      <AuthenticatedShell>{children}</AuthenticatedShell>
+    </StaleClaimsRefreshGate>
+  )
+}
+
+function StaleClaimsRefreshGate({ children }: { children: ReactNode }) {
+  const { user, claims, invalidateSession } = useAuth()
+  const [refreshing, setRefreshing] = useState(false)
+  const triggered = useRef(false)
+
+  useEffect(() => {
+    if (!user || !claims || triggered.current) return
+
+    // PS users are redirected away by `useOnboardingGuard` before we get
+    // here — gating on citizens only is just defense in depth.
+    const isCitizen = claims.organization_roles.length === 0
+    if (!isCitizen) return
+
+    const isOnboarded = claims.roles?.includes(ROLE_NAME_ONBOARDED_CITIZEN)
+    const previousAttemptTs = sessionStorage.getItem(STALE_CLAIMS_REFRESH_KEY)
+
+    if (isOnboarded) {
+      if (previousAttemptTs) {
+        // Recovered after a refresh attempt earlier this session.
+        faro.api?.pushLog([
+          TRACE_MESSAGES.STALE_CLAIMS_REFRESH.RECOVERED,
+          {
+            context: {
+              previousAttemptTs,
+              roleCount: claims.roles?.length ?? 0,
+              orgCount: claims.organizations.length,
+            },
+          },
+        ])
+      }
+      sessionStorage.removeItem(STALE_CLAIMS_REFRESH_KEY)
+      return
+    }
+
+    // Already attempted this session. Fall through with whatever claims we
+    // have so a stuck IdP / propagation issue can't trap the user in a
+    // refresh loop — same behaviour as before this gate existed.
+    if (previousAttemptTs) {
+      faro.api?.pushLog(
+        [
+          TRACE_MESSAGES.STALE_CLAIMS_REFRESH.SKIPPED_ALREADY_ATTEMPTED,
+          {
+            context: {
+              previousAttemptTs,
+              roles: claims.roles ?? [],
+              orgRoleCount: claims.organization_roles.length,
+            },
+          },
+        ],
+        { level: LogLevel.WARN },
+      )
+      return
+    }
+
+    faro.api?.pushLog([
+      TRACE_MESSAGES.STALE_CLAIMS_REFRESH.DETECTED,
+      {
+        context: {
+          // Role *names* are not PII; user identifiers are intentionally omitted.
+          roles: claims.roles ?? [],
+          orgRoleCount: claims.organization_roles.length,
+          signinMethod: claims.signinMethod,
+        },
+      },
+    ])
+
+    triggered.current = true
+    sessionStorage.setItem(STALE_CLAIMS_REFRESH_KEY, String(Date.now()))
+    setRefreshing(true)
+    invalidateSession()
+      .catch((error: unknown) => {
+        faro.api?.pushLog(
+          [
+            TRACE_MESSAGES.STALE_CLAIMS_REFRESH.INVALIDATE_FAILED,
+            {
+              context: {
+                error: error instanceof Error ? error.message : String(error),
+              },
+            },
+          ],
+          { level: LogLevel.ERROR },
+        )
+      })
+      .finally(() => {
+        window.location.reload()
+      })
+  }, [user, claims, invalidateSession])
+
+  if (refreshing) return <LayoutLoading />
+  return <>{children}</>
 }
 
 function AuthenticatedShell({ children }: { children: ReactNode }) {
@@ -130,7 +237,15 @@ function AuthenticatedShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!loading && !user && !signInTriggered.current) {
       signInTriggered.current = true
-      signIn({ connector: CONNECTOR_MYGOVID })
+      // Pass the full current URL (including query string) as the post-login
+      // redirect target. Without this, the gateway falls back to the Referer
+      // header which — under the "strict-origin-when-cross-origin" policy
+      // set in nginx — is stripped to the origin only, dropping the path and
+      // query (e.g. the `?id=<messageId>` on /secure-messages).
+      signIn({
+        connector: CONNECTOR_MYGOVID,
+        redirectUrl: window.location.href,
+      })
     }
   }, [loading, user, signIn])
 
@@ -177,9 +292,9 @@ function AuthenticatedShell({ children }: { children: ReactNode }) {
               onSignOut={signOut}
             />
             <MainContainer>
-              <Container>
+              <Container fullWidth>
                 <Stack direction='row' wrap gap={10}>
-                  <div style={{ width: "100%" }}>
+                  <div className='gi-w-full'>
                     <ConsentBanner />
                     {children}
                   </div>
@@ -199,6 +314,13 @@ export function ClientShell({ children }: { children: ReactNode }) {
       gatewayUrl={env.NEXT_PUBLIC_SAG_URL}
       appName={env.NEXT_PUBLIC_SAG_APP_NAME}
     >
+      {/*
+       * Inject the DS <link rel=stylesheet> to the Material Symbols font so
+       * DS `Icon` can render every id in its set as a font glyph. The SSR'd
+       * <link> is hoisted by React 19 into <head>, so it's safe to mount
+       * deep in the client tree.
+       */}
+      <LoadMaterialSymbols />
       <ShellContent>{children}</ShellContent>
     </SagClientProvider>
   )

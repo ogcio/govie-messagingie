@@ -1,0 +1,38 @@
+meta {
+  name: Create child tag
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tags
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "label": "{{childTagName}}",
+    "parentTagId": "{{parentTagId}}"
+  }
+}
+
+vars:post-response {
+  childTagId: res.body.data && res.body.data ?  res.body.data.id : undefined
+}
+
+assert {
+  res.status: eq 201
+  res.body.data: isDefined
+  res.body.data.id: isDefined
+}
+
+script:pre-request {
+  const suffix = require("uuid").v4().substring(0,5)
+  const name = `Child ${suffix}`;
+  bru.setVar('childTagName', name);
+}

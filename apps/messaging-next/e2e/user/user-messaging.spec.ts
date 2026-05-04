@@ -47,9 +47,6 @@ test.describe("User Messages page", () => {
       page.getByTestId("attachment-download-action").click(),
     ])
     await newPage.waitForLoadState("domcontentloaded")
-    /*await expect(newPage.url()).toContain(
-      "ce198559-649b-419e-84bf-a97e19b5d577",
-    )*/
     await expect(newPage.getByText("46546546546546")).toBeVisible()
   })
 
@@ -57,17 +54,6 @@ test.describe("User Messages page", () => {
     await page.waitForLoadState("networkidle")
 
     await page.goto("https://dashboard.dev.services.gov.ie/en/my-dashboard")
-    /*await page.context().clearCookies({ name: "x-canary" })
-    await page.context().addCookies([
-      {
-        name: "x-canary",
-        value: "next",
-        path: "/",
-        domain: "dashboard.dev.services.gov.ie",
-      },
-    ])
-    await page.reload()*/
-
     await expect(
       page.getByRole("heading", { name: "Welcome back, Toby Tobyson" }),
     ).toBeVisible()
@@ -78,7 +64,7 @@ test.describe("User Messages page", () => {
         "body > main > div > div > div > article > div:nth-child(1) > div > div > div:nth-child(1) > a",
       )
       .click()
-    await expect(page.url()).toContain("messaging.dev.services.gov.ie")
+    await expect(page.url()).toContain("messaging.dev.services.gov.ie/")
     await expect(page.getByRole("link", { name: "Back" })).toBeVisible()
   })
 })

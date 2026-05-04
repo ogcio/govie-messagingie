@@ -7,8 +7,10 @@ import {
   Paragraph,
   toaster,
 } from "@ogcio/design-system-react"
+import { useAnalytics } from "@ogcio/nextjs-analytics"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useEffect, useState, useTransition } from "react"
+import { ANALYTICS } from "@/const/analytics"
 import type { LinkProfile } from "@/data/types"
 import { linkAccountsAction } from "@/utils/actions"
 import { AlreadyLinkedProfile } from "./AlreadyLinkedProfile"
@@ -23,6 +25,7 @@ type LookupState =
   | { status: "resolved:has-links"; profile: LinkProfile }
 
 export function LinkingForms(props: { toSetAsParentId: string }) {
+  const { toSetAsParentId } = props
   const [lookupState, setLookupState] = useState<LookupState>({
     status: "idle",
   })
@@ -31,11 +34,22 @@ export function LinkingForms(props: { toSetAsParentId: string }) {
   const router = useRouter()
   const params = useSearchParams()
   const pathname = usePathname()
+  const analyticsClient = useAnalytics()
+
+  function handleLinkEventTracking(): void {
+    analyticsClient.trackEvent({
+      event: {
+        name: ANALYTICS.linking.link.name,
+        category: ANALYTICS.linking.category,
+        action: ANALYTICS.linking.link.action,
+      },
+    })
+  }
 
   function handleLookupSubmit(profile: LinkProfile) {
     if (
-      profile.id === props.toSetAsParentId ||
-      profile.links.some((link) => link.id === props.toSetAsParentId)
+      profile.id === toSetAsParentId ||
+      profile.links.some((link) => link.id === toSetAsParentId)
     ) {
       setLookupState({ status: "resolved:circular-reference", profile })
     } else if (profile.links.length) {
@@ -71,13 +85,14 @@ export function LinkingForms(props: { toSetAsParentId: string }) {
     startTransition(async () => {
       const linkResult = await linkAccountsAction({
         profileId,
-        primaryUserId: props.toSetAsParentId,
+        primaryUserId: toSetAsParentId,
       })
 
       if (!linkResult.success) {
         return setLinkError(linkResult.userMessage)
       }
       setLookupState({ status: "idle" })
+      handleLinkEventTracking()
       router.refresh()
       toaster.create({
         title: "Success!",
@@ -108,7 +123,7 @@ export function LinkingForms(props: { toSetAsParentId: string }) {
       return (
         <ConfirmLinkForm
           profile={lookupState.profile}
-          primaryProfileId={props.toSetAsParentId}
+          primaryProfileId={toSetAsParentId}
           onFormCancel={handleCancel}
           onFormSubmit={handleLinkSubmit}
           isPending={isLinkingPending}

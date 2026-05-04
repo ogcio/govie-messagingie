@@ -27,7 +27,7 @@ export function SearchBar() {
   }
 
   return (
-    <div style={{ width: "100%" }}>
+    <div className='gi-w-full'>
       <Stack
         direction='row'
         gap={3}

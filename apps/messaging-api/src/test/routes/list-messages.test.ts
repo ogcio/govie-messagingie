@@ -159,9 +159,14 @@ describe("GET /api/v1/messages", {}, () => {
     const orgId = randomUUID().substring(0, 10);
     await insertMessage(delRecipientId, orgId, pool);
     const deletedMsg = await insertMessage(delRecipientId, orgId, pool);
+    const deletedAf = await insertMessage(delRecipientId, orgId, pool);
     await pool.query("UPDATE messages SET deleted_at = now() WHERE id = $1", [
       deletedMsg.id,
     ]);
+    await pool.query(
+      "UPDATE messages SET deleted_at = now() - interval '30 day' WHERE id = $1",
+      [deletedAf.id],
+    );
 
     app = await getServer(delRecipientId, undefined);
     const res = await app.inject({
@@ -170,7 +175,9 @@ describe("GET /api/v1/messages", {}, () => {
       query: {
         recipientUserId: delRecipientId,
         organisationId: orgId,
-        deleted: "true",
+        deletedAfterDateTime: new Date(
+          Date.now() - 15 * 24 * 60 * 60 * 1000,
+        ).toISOString(), // 15 days ago
       },
     });
 
@@ -304,9 +311,14 @@ describe("POST /api/v1/messages/search", {}, () => {
     const orgId = randomUUID().substring(0, 10);
     await insertMessage(delRecipientId, orgId, pool);
     const deletedMsg = await insertMessage(delRecipientId, orgId, pool);
+    const deletedAf = await insertMessage(delRecipientId, orgId, pool);
     await pool.query("UPDATE messages SET deleted_at = now() WHERE id = $1", [
       deletedMsg.id,
     ]);
+    await pool.query(
+      "UPDATE messages SET deleted_at = now() - interval '30 day' WHERE id = $1",
+      [deletedAf.id],
+    );
 
     app = await getServer(delRecipientId, undefined);
     const res = await app.inject({
@@ -315,7 +327,9 @@ describe("POST /api/v1/messages/search", {}, () => {
       payload: {
         recipientUserId: delRecipientId,
         organisationId: orgId,
-        deleted: "true",
+        deletedAfterDateTime: new Date(
+          Date.now() - 15 * 24 * 60 * 60 * 1000,
+        ).toISOString(), // 15 days ago
       },
     });
 

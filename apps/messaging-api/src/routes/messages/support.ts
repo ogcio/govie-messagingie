@@ -13,7 +13,6 @@ import {
   type SupportQueryParams,
 } from "../../types/messages-support.js";
 import { Permissions } from "../../types/permissions.js";
-import { parseBooleanEnum } from "../../types/schemaDefinitions.js";
 import {
   formatAPIResponse,
   sanitizePagination,
@@ -61,10 +60,7 @@ export default async function supportMessages(app: FastifyInstance) {
         pagination,
         pool: app.pg.pool,
         logger: request.log,
-        deleted:
-          request.query.deleted !== undefined
-            ? parseBooleanEnum(request.query.deleted)
-            : undefined,
+        deletedAfterDateTime: request.query.deletedAfterDateTime,
       });
 
       return formatAPIResponse({

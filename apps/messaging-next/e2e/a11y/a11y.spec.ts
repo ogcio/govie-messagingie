@@ -5,7 +5,7 @@ import { createAuthenticatedPage } from "../helpers/user-auth.helper"
 const citizenUrls = [
   "/en/home?tab=unread",
   "/en/home?tab=all",
-  "/en/secure-messages/05bcc336-5b19-4717-9223-16a68fc08a2e?tab=all",
+  "/en/secure-messages/05bcc336-5b19-4717-9223-16a68fc08a2e",
 ]
 
 test.describe("Accessibility (a11y) checks @regression", () => {
@@ -40,7 +40,7 @@ test.describe("Accessibility (a11y) checks @regression", () => {
     const seriousViolations = accessibilityScanResults.violations.filter(
       (v) => v.impact === "serious" || v.impact === "critical",
     )
-    expect(seriousViolations, `SERIOUS Violations on consent`).toEqual([])
+    expect(seriousViolations, `SERIOUS Violations on dashboard`).toEqual([])
     await page.close()
   })
 
@@ -56,17 +56,6 @@ test.describe("Accessibility (a11y) checks @regression", () => {
     await page.goto("https://dashboard.dev.services.gov.ie/en/my-dashboard", {
       waitUntil: "networkidle",
     })
-    /*await page.context().clearCookies({ name: "x-canary" })
-    await page.context().addCookies([
-      {
-        name: "x-canary",
-        value: "next",
-        path: "/",
-        domain: "dashboard.dev.services.gov.ie",
-      },
-    ])
-    await page.reload()*/
-
     const accessibilityScanResults = await new AxeBuilder({ page })
       .exclude('iframe[title="reCAPTCHA"]')
       .analyze()
@@ -89,17 +78,6 @@ test.describe("Accessibility (a11y) checks @regression", () => {
     await page.goto("https://profile.dev.services.gov.ie/en", {
       waitUntil: "networkidle",
     })
-    /*await page.context().clearCookies({ name: "x-canary" })
-    await page.context().addCookies([
-      {
-        name: "x-canary",
-        value: "next",
-        path: "/",
-        domain: "profile.dev.services.gov.ie",
-      },
-    ])
-    await page.reload()*/
-
     const accessibilityScanResults = await new AxeBuilder({ page })
       .exclude('iframe[title="reCAPTCHA"]')
       .analyze()

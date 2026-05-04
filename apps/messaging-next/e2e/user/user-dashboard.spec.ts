@@ -16,17 +16,6 @@ test.describe("User Dashboard Features", () => {
     await page.waitForLoadState("networkidle")
 
     await page.goto("https://dashboard.dev.services.gov.ie/en/my-dashboard")
-    /*await page.context().clearCookies({ name: "x-canary" })
-    await page.context().addCookies([
-      {
-        name: "x-canary",
-        value: "next",
-        path: "/",
-        domain: "dashboard.dev.services.gov.ie",
-      },
-    ])
-    await page.reload()*/
-
     await expect(
       page.getByRole("heading", { name: "Welcome back, E2E Citizen User" }),
     ).toBeVisible()
@@ -40,17 +29,6 @@ test.describe("User Dashboard Features", () => {
     await page.waitForLoadState("networkidle")
 
     await page.goto("https://dashboard.dev.services.gov.ie/en/my-dashboard")
-    /*await page.context().clearCookies({ name: "x-canary" })
-    await page.context().addCookies([
-      {
-        name: "x-canary",
-        value: "next",
-        path: "/",
-        domain: "dashboard.dev.services.gov.ie",
-      },
-    ])
-    await page.reload()*/
-
     await expect(
       page.getByRole("heading", { name: "Welcome back, E2E Citizen User" }),
     ).toBeVisible()

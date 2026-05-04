@@ -10,6 +10,7 @@ import messageEvents, {
 import messages, { prefix as messagePrefix } from "./messages/index.js";
 import supportMessages, { supportMessagesPrefix } from "./messages/support.js";
 import providers, { prefix as providersPrefix } from "./providers/index.js";
+import tags, { prefix as tagsPrefix } from "./tags/index.js";
 import templates from "./templates/index.js";
 
 export default async function routes(app: FastifyInstance) {
@@ -20,4 +21,5 @@ export default async function routes(app: FastifyInstance) {
   app.register(jobs, { prefix: jobsPrefix });
   app.register(messageAction, { prefix: messageActionsPrefix });
   app.register(supportMessages, { prefix: supportMessagesPrefix });
+  app.register(tags, { prefix: tagsPrefix });
 }

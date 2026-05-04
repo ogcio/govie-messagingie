@@ -1,3 +1,4 @@
+import { getBuildingBlockSDK } from "@ogcio/building-blocks-sdk"
 import type {
   MessageEventStatus,
   MessageEventType,
@@ -23,7 +24,8 @@ export type ProfileQueryBase = {
   id: string
   public_name: string
   email: string
-  primary_user_id: string };
+  primary_user_id: string
+}
 
 export type ProfileQueryRow = ProfileQueryBase & {
   safe_level: number
@@ -53,10 +55,11 @@ export const UserRelationStatuses = {
   Child: "child",
 } as const
 
-export type UserRelations = {userData: ProfileQueryBase } &
-     ({ userIs: typeof UserRelationStatuses.Unlinked }
+export type UserRelations = { userData: ProfileQueryBase } & (
+  | { userIs: typeof UserRelationStatuses.Unlinked }
   | { userIs: typeof UserRelationStatuses.Parent; children: ProfileQueryBase[] }
-  | { userIs: typeof UserRelationStatuses.Child; parent: ProfileQueryBase })
+  | { userIs: typeof UserRelationStatuses.Child; parent: ProfileQueryBase }
+)
 
 export type LinkProfileQueryRow = ProfileQueryBase & {
   // has_tree: boolean
@@ -194,3 +197,27 @@ export type Consent = {
   cascadeReason: string
   createdAt: string
 }
+
+export type GetUserConsentDataResponse = Result<
+  NonNullable<
+    Awaited<
+      ReturnType<
+        Awaited<
+          ReturnType<typeof getBuildingBlockSDK>["profile"]["support"]
+        >["getLatestConsents"]
+      >
+    >["data"]
+  >
+>
+
+export type UpdateUserConsentDataResponse = Result<
+  NonNullable<
+    Awaited<
+      ReturnType<
+        Awaited<
+          ReturnType<typeof getBuildingBlockSDK>["profile"]["support"]
+        >["submitConsents"]
+      >
+    >["data"]
+  >
+>

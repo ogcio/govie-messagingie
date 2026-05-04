@@ -44,18 +44,6 @@ test.describe("User Visual Regression", () => {
     await page.waitForLoadState("networkidle")
 
     await page.goto("https://profile.dev.services.gov.ie")
-    /*await page.context().clearCookies({ name: "x-canary" })
-    await page.context().addCookies([
-      {
-        name: "x-canary",
-        value: "next",
-        path: "/",
-        domain: "profile.dev.services.gov.ie",
-      },
-    ])
-    await page.reload()*/
-    await page.waitForTimeout(2000) // Wait for any dynamic content to load
-
     await expect(page).toHaveScreenshot("user-profile.png", {
       fullPage: true,
       maxDiffPixelRatio: maxDiff,
@@ -66,18 +54,6 @@ test.describe("User Visual Regression", () => {
     await page.waitForLoadState("networkidle")
 
     await page.goto("https://dashboard.dev.services.gov.ie/en/my-dashboard")
-
-    /*await page.context().clearCookies({ name: "x-canary" })
-    await page.context().addCookies([
-      {
-        name: "x-canary",
-        value: "next",
-        path: "/",
-        domain: "dashboard.dev.services.gov.ie",
-      },
-    ])
-    await page.reload()*/
-
     await expect(page).toHaveScreenshot("user-dashboard.png", {
       fullPage: true,
       maxDiffPixelRatio: maxDiff,

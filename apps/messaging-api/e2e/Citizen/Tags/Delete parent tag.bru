@@ -1,0 +1,21 @@
+meta {
+  name: Delete parent tag
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/tags/{{parentTagId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data.id: eq {{parentTagId}}
+}

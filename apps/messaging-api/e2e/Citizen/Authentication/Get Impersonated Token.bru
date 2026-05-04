@@ -17,7 +17,7 @@ headers {
 
 body:form-urlencoded {
   grant_type: urn:ietf:params:oauth:grant-type:token-exchange
-  scope: profile:user.self:read profile:user:onboarded messaging:message.self:read messaging:citizen.self:read messaging:citizen.self:write
+  scope: profile:user.self:read profile:user:onboarded messaging:message.self:read messaging:message.self:write
   resource: {{process.env.MESSAGING_API_RESOURCE_INDICATOR}}
   client_id: {{process.env.BRUNO_MESSAGING_APP_ID}}
   subject_token: {{subjectToken}}

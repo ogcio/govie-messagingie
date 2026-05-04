@@ -1,0 +1,60 @@
+meta {
+  name: List tags
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tags
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data: isArray
+}
+
+tests {
+  const body = res.getBody().data;
+  const ids = body.map((tag) => tag.id);
+  const parentId = bru.getVar("parentTagId");
+  const childId = bru.getVar("childTagId");
+  
+  test("must contain parent id", function () {
+    expect(ids).to.contain(parentId)  
+  });
+  
+  test("must contain child id", function () {
+    expect(ids).to.contain(childId)  
+  });
+  
+  let child = undefined
+  let parent = undefined
+  let index = 0;
+  
+  while(!child || !parent || index < body.length) {
+    if(body[index].id === childId) {
+      child = body[index];
+    } else if(body[index].id === parentId) {
+      parent = body[index]
+    }
+    index++;
+  }
+  
+  
+  test("child response must match", function () {
+    expect(child.id).to.equal(childId);
+    expect(child.parentTagId).to.equal(parentId);
+  });
+  
+  test("parent response must match", function () {
+    expect(parent.id).to.equal(parentId);
+    expect(parent.parentTagId).to.equal(null);
+  });
+}

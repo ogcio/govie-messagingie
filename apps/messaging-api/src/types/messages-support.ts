@@ -3,7 +3,6 @@ import { HttpError } from "./httpErrors.js";
 import {
   getGenericResponseSchema,
   PaginationParamsSchema,
-  TypeboxBooleanEnum,
 } from "./schemaDefinitions.js";
 
 const MESSAGES_TAGS = ["Messages Support"];
@@ -62,7 +61,12 @@ const SupportQueryParamsSchema = Type.Evaluate(
   Type.Intersect([
     PaginationParamsSchema,
     Type.Object({
-      deleted: Type.Optional(TypeboxBooleanEnum()),
+      deletedAfterDateTime: Type.Optional(
+        Type.String({
+          format: "date-time",
+          description: "Filter messages deleted after specified date",
+        }),
+      ),
     }),
   ]),
 );

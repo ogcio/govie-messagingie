@@ -1,0 +1,32 @@
+meta {
+  name: Delete message B
+  type: http
+  seq: 8
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/messages
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "ids": [
+      "{{messageBId}}"
+    ]
+  }
+}
+
+vars:post-response {
+  messageBId: res.body.data.id
+}
+
+assert {
+  res.status: eq 200
+  res.body: isJson
+}

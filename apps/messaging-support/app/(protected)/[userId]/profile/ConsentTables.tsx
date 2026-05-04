@@ -11,6 +11,7 @@ import {
 } from "@ogcio/design-system-react"
 import dayjs from "dayjs"
 import type { Consent } from "@/data/types"
+import { ConsentStatusTag } from "./ConsentStatusTag"
 
 function capitalize(str: string): string {
   if (!str) {
@@ -30,21 +31,6 @@ function consentTitleMap(subject: string) {
       return "MessagingIE consent history"
     default:
       return `${capitalize(subject)} consent history`.trim()
-  }
-}
-
-function statusTag(status: Consent["status"]) {
-  switch (status) {
-    case "pre-approved":
-    case "opted-in":
-      return <Tag text='Accepted' type='success' />
-    case "opted-out":
-      return <Tag text='Declined' type='error' />
-    case "pending":
-    case "undefined":
-      return <Tag text='Pending' type='info' />
-    default:
-      return null
   }
 }
 
@@ -91,7 +77,9 @@ export function ConsentTables(props: { consents: Consent[] }) {
 
                   return (
                     <TableRow key={consent.id}>
-                      <TableData>{statusTag(consent.status)}</TableData>
+                      <TableData>
+                        <ConsentStatusTag status={consent.status} />
+                      </TableData>
                       <TableData>
                         {date.isValid() && date.format("YYYY-MM-DD")}
                       </TableData>

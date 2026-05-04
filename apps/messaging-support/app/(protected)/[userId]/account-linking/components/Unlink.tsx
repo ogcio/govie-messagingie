@@ -11,9 +11,10 @@ import {
   Spinner,
   toaster,
 } from "@ogcio/design-system-react"
+import { useAnalytics } from "@ogcio/nextjs-analytics"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useState, useTransition } from "react"
-
+import { ANALYTICS } from "@/const/analytics"
 import type { LinkProfile } from "@/data/types"
 import { linkAccountsAction } from "@/utils/actions"
 
@@ -28,6 +29,17 @@ export function Unlink(props: {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const analyticsClient = useAnalytics()
+
+  function handleUnlinkEventTracking(): void {
+    analyticsClient.trackEvent({
+      event: {
+        name: ANALYTICS.linking.unlink.name,
+        category: ANALYTICS.linking.category,
+        action: ANALYTICS.linking.unlink.action,
+      },
+    })
+  }
 
   const handleUnlickClick = () => {
     setUnlinkError(false)
@@ -41,6 +53,7 @@ export function Unlink(props: {
         setUnlinkError(true)
         return
       }
+      handleUnlinkEventTracking()
       router.refresh()
 
       const nextparams = new URLSearchParams(searchParams.toString())

@@ -160,15 +160,24 @@ describe("POST /api/v1/support/messages/search", {}, () => {
     const orgId = randomUUID().substring(0, 10);
     const activeId = await insertMessage(delRecipientId, orgId, pool);
     const deletedId = await insertMessage(delRecipientId, orgId, pool);
+    const olderThanDaysId = await insertMessage(delRecipientId, orgId, pool);
     await pool.query("UPDATE messages SET deleted_at = now() WHERE id = $1", [
       deletedId,
     ]);
+    await pool.query(
+      "UPDATE messages SET deleted_at = now() - interval '31 days' WHERE id = $1",
+      [olderThanDaysId],
+    );
 
     app = await getServer(randomUUID().substring(0, 12), undefined, true);
     const res = await app.inject({
       method: "POST",
       url: "/api/v1/support/messages/search",
-      query: { deleted: "true" },
+      query: {
+        deletedAfterDateTime: new Date(
+          Date.now() - 30 * 24 * 60 * 60 * 1000,
+        ).toISOString(),
+      },
       payload: {
         recipientUserIds: [delRecipientId],
       },
@@ -179,6 +188,7 @@ describe("POST /api/v1/support/messages/search", {}, () => {
     const ids = body.map((m: { id: string }) => m.id);
     expect(ids).toContain(deletedId);
     expect(ids).not.toContain(activeId);
+    expect(ids).not.toContain(olderThanDaysId);
   });
 });
 

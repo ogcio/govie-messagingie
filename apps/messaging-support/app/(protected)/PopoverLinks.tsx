@@ -42,12 +42,6 @@ export function PopoverLinks(props: { profileId: string }) {
           >
             Accounts Linking
           </Link>
-          <Link
-            noVisited
-            href={`/${props.profileId}/account-management?${urlSearchParams}`}
-          >
-            Account Management
-          </Link>
         </Stack>
       </Popover>
     </>

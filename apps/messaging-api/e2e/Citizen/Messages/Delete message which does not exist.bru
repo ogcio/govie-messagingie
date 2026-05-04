@@ -1,0 +1,30 @@
+meta {
+  name: Delete message which does not exist
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/messages
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "ids": [
+      "09569127-7cb2-4716-9783-0865a778a1b2"
+      
+    ]
+  }
+}
+
+assert {
+  res.status: eq 404
+  res.body.requestId: isDefined
+  res.body.detail: contains One or more messages not found
+}

@@ -13,6 +13,7 @@ import { NextIntlClientProvider, useTranslations } from "next-intl"
 import { useEffect, useState } from "react"
 import { DEFAULT_LOCALE } from "@/const"
 import { detectLocale, type Locale, messagesMap } from "@/i18n/locale"
+import { reloadOnceIfChunkLoadError } from "@/util/chunk-error"
 
 function GlobalErrorBody({
   error,
@@ -56,9 +57,10 @@ export default function GlobalError({
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    if (reloadOnceIfChunkLoadError(error)) return
     setLocale(detectLocale())
     setMounted(true)
-  }, [])
+  }, [error])
 
   return (
     <html lang={locale} suppressHydrationWarning>

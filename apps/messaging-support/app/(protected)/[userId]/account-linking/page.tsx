@@ -1,13 +1,5 @@
-import { Suspense, use } from "react"
-import AuthWrapper from "@/app/server-utils/AuthWrapper"
-import type { NextSearchParams } from "@/data/types"
-import { toURLSearchParams } from "@/utils/utils"
 import {
   Alert,
-  BreadcrumbCurrentLink,
-  BreadcrumbLink,
-  Breadcrumbs,
-  Caption,
   Container,
   Heading,
   Link,
@@ -21,14 +13,18 @@ import {
   TableRow,
 } from "@ogcio/design-system-react"
 import { redirect } from "next/navigation"
+import { Suspense, use } from "react"
+import AuthWrapper from "@/app/server-utils/AuthWrapper"
 import { ProfileDataService } from "@/data/profile"
+import type { NextSearchParams } from "@/data/types"
 import { type ProfileLinkParams, UserRelationStatuses } from "@/data/types"
 import { getIdentity } from "@/utils/session"
+import { toURLSearchParams } from "@/utils/utils"
 import { LinkingForms } from "./components/LinkingForm"
 import { Unlink } from "./components/Unlink"
 import "./page.css"
-import { UserTable } from "./components/UserTable"
 import { ProfileMeta } from "@/app/components/ProfileMeta"
+import { UserTable } from "./components/UserTable"
 
 export default function AccountLink(props: {
   params: Promise<{ userId: string }>

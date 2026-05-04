@@ -44,7 +44,12 @@ test.describe("User Messages page", () => {
     await logout(page)
     //login as citizen to view the message
     await page.goto("/")
-    await page.getByRole("button", { name: "Continue with MyGovId" }).click()
+    if (
+      page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
+    ) {
+      // Click the MyGovID login button
+      await page.getByRole("button", { name: "Continue with MyGovId" }).click()
+    }
     await page
       .locator(
         "#login-form > div > div.gi-w-full > div:nth-child(1) > div.gi-accordion > div",
@@ -61,18 +66,6 @@ test.describe("User Messages page", () => {
     await page.locator("#email").fill("bruce.wayne@mail.ie")
     await page.locator("#submit_btn").click()
     await page.waitForLoadState("networkidle")
-
-    await page.context().clearCookies({ name: "x-canary" })
-    await page.context().addCookies([
-      {
-        name: "x-canary",
-        value: "next",
-        path: "/",
-        domain: "messaging.dev.services.gov.ie",
-      },
-    ])
-
-    await page.reload()
 
     await expect(page.getByRole("row").nth(1)).toContainText(
       "michael.clarkson+4@nearform.com",

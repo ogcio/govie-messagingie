@@ -1,0 +1,36 @@
+meta {
+  name: Parent and child are deleted
+  type: http
+  seq: 9
+}
+
+get {
+  url: {{baseUrl}}/api/v1/tags
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data: isArray
+}
+
+tests {
+  const body = res.getBody().data;
+  const ids = body.map((tag) => tag.id);
+  const parentId = bru.getVar("parentTagId");
+  const childId = bru.getVar("childTagId");
+  
+  test("must not contain parent id", function () {
+    expect(ids).to.not.contain(parentId)  
+  });
+  
+  test("must not contain child id", function () {
+    expect(ids).to.not.contain(childId)  
+  });
+}
