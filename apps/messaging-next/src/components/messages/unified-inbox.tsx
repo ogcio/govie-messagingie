@@ -14,14 +14,10 @@ import {
   Spinner,
   Stack,
 } from "@ogcio/design-system-react"
-import {
-  useGatewayDownload,
-  useGatewayFetch,
-  useGatewayMutation,
-} from "@ogcio/sag-client/react"
+import { useGatewayDownload, useGatewayFetch } from "@ogcio/sag-client/react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { BackButton } from "@/components/button/back-button"
 import {
   findMockMessageById,
@@ -39,6 +35,7 @@ import {
   type DeleteMessagesResult,
   useDeleteMessages,
 } from "./use-delete-messages"
+import { useMarkMessageAsRead } from "./use-mark-message-as-read"
 import { useMessageSelection } from "./use-message-selection"
 
 const DEFAULT_PAGE_SIZE = 6
@@ -122,9 +119,10 @@ function UnifiedInboxListView({
    * In every deployed environment the fallback collapses to an empty list.
    */
   const messages = useMemo(() => {
+    if (isLoading && apiMessages.length === 0) return []
     if (apiMessages.length > 0) return apiMessages
     return getMockMessagesPage({ search, page, pageSize })
-  }, [apiMessages, search, page, pageSize])
+  }, [apiMessages, isLoading, search, page, pageSize])
 
   const totalCount = useMemo(() => {
     if (metadata?.totalCount) return metadata.totalCount
@@ -274,7 +272,6 @@ function UnifiedInboxListView({
 }
 
 function MessageDetailView({ id }: { id: string }) {
-  const hasMarkedRead = useRef(false)
   const router = useRouter()
   const pathname = usePathname()
   const t = useTranslations("home.detail")
@@ -290,20 +287,10 @@ function MessageDetailView({ id }: { id: string }) {
     return findMockMessageById(id)
   }, [apiData, id])
 
-  const { trigger: markAsSeen } = useGatewayMutation(
-    `/messaging/api/v1/message-actions/${id}`,
-    { method: "PUT" },
-  )
+  useMarkMessageAsRead(id, Boolean(data))
 
   const { deleteIds, isLoading: isDeleting } = useDeleteMessages()
   const [isConfirmOpen, setConfirmOpen] = useState(false)
-
-  useEffect(() => {
-    if (data && !hasMarkedRead.current) {
-      hasMarkedRead.current = true
-      markAsSeen({ messageId: id, isSeen: true }).catch(() => {})
-    }
-  }, [data, id, markAsSeen])
 
   const handleDelete = useCallback(async () => {
     setConfirmOpen(false)
@@ -391,13 +378,15 @@ function AttachmentCard({ id }: { id: string }) {
   const { data } = useGatewayFetch<FileMetadata>(
     `/upload/api/v1/metadata/${id}`,
   )
-  const { download, isDownloading } = useGatewayDownload()
+  const { download, isDownloading } = useGatewayDownload({
+    openInNewTab: true,
+  })
 
   if (!data) return null
 
   const sizeKb = Math.round(data.fileSize / 1024)
 
-  const handleDownload = (e: React.MouseEvent) => {
+  const handleOpen = (e: React.MouseEvent) => {
     e.preventDefault()
     if (!isDownloading) {
       download(`/upload/api/v1/files/${id}`, data.fileName).catch(() => {})
@@ -421,7 +410,7 @@ function AttachmentCard({ id }: { id: string }) {
               <button
                 data-testid='attachment-download-action'
                 type='button'
-                onClick={handleDownload}
+                onClick={handleOpen}
                 aria-busy={isDownloading}
                 disabled={isDownloading}
               >

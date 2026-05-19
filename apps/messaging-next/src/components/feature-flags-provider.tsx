@@ -23,10 +23,12 @@ const FeatureFlagNames = {
 
 interface AvailableFeatureFlags {
   isUnifiedInboxEnabled: boolean
+  isFlagsReady: boolean
 }
 
 const defaultFeatureFlags: AvailableFeatureFlags = {
   isUnifiedInboxEnabled: false,
+  isFlagsReady: true,
 }
 
 const FeatureFlagsContext =
@@ -47,6 +49,7 @@ function FeatureFlagsBridge({ children }: { children: ReactNode }) {
 
   const value = useMemo<AvailableFeatureFlags>(
     () => ({
+      isFlagsReady: flagsReady,
       isUnifiedInboxEnabled: flagsReady ? isUnifiedInboxEnabled : false,
     }),
     [flagsReady, isUnifiedInboxEnabled],

@@ -296,6 +296,7 @@ async function queryMessagesForList(params: {
               messages.organisation_id AS "organisationId",
               messages.user_id AS "recipientUserId",
               messages.scheduled_at AS "createdAt",
+              messages.is_seen AS "isSeen",
               COUNT(*) OVER() AS "count",
               (SELECT COUNT(*) FROM attachments_messages WHERE attachments_messages.message_id = messages.id) AS "attachmentsCount"
           FROM messages

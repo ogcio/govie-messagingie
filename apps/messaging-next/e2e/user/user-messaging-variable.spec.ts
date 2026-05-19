@@ -43,7 +43,6 @@ test.describe("User Messages page", () => {
 
     await logout(page)
     //login as citizen to view the message
-    await page.goto("/")
     if (
       page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
     ) {
@@ -71,11 +70,11 @@ test.describe("User Messages page", () => {
       "michael.clarkson+4@nearform.com",
     )
     await page
-      .getByRole("link", {
-        name: "mikex clarksonx michael.clarkson+4@nearform.com",
-      })
-      .first()
+      .locator(
+        "body > main > div > div > div > div > div > div > section > div.unified-inbox-table-module__iNj3tG__desktopTable > table > tbody > tr:nth-child(1)",
+      )
       .click()
+
     await expect(
       page.getByText("{{publicName}} {{ppsn}} {{email}}"),
     ).not.toBeVisible()

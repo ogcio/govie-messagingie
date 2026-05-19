@@ -14,7 +14,72 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => currentSearchParams,
 }))
 
+/**
+ * The `<SenderName>` component looks up `organisationId` against the
+ * profile service via SWR, so the table now triggers a real network
+ * dependency in jsdom. We stub the SWR-backed hook with a synchronous
+ * fixture map so tests can assert the resolved org name without spinning
+ * up a fake fetch + suspending on micro-tasks. Unknown ids fall through
+ * to `data: undefined`, which the component renders as the localized
+ * "Unknown sender" fallback — useful for the negative-path test below.
+ */
+const ORG_FIXTURES: Record<
+  string,
+  {
+    id: string
+    translations: {
+      en: { name: string; shortName: string }
+      ga: { name: string; shortName: string }
+    }
+  }
+> = {
+  "org-dsp": {
+    id: "org-dsp",
+    translations: {
+      en: {
+        name: "Department of Social Protection",
+        shortName: "DSP",
+      },
+      ga: {
+        name: "An Roinn Coimirce Sóisialaí",
+        shortName: "RCS",
+      },
+    },
+  },
+  "org-rev": {
+    id: "org-rev",
+    translations: {
+      en: { name: "Revenue", shortName: "REV" },
+      ga: { name: "Na Coimisinéirí Ioncaim", shortName: "NCI" },
+    },
+  },
+}
+
+vi.mock("@ogcio/sag-client/react", () => ({
+  useGatewayFetch: (path: string | null) => {
+    if (!path) {
+      return {
+        data: undefined,
+        metadata: undefined,
+        error: null,
+        isLoading: false,
+        refresh: vi.fn(),
+      }
+    }
+    const orgMatch = path.match(/^\/profile\/api\/v1\/organisations\/(.+)$/)
+    const data = orgMatch ? ORG_FIXTURES[orgMatch[1]] : undefined
+    return {
+      data,
+      metadata: undefined,
+      error: null,
+      isLoading: false,
+      refresh: vi.fn(),
+    }
+  },
+}))
+
 vi.mock("next-intl", () => ({
+  useLocale: () => "en",
   useTranslations:
     (namespace: string) =>
     (key: string, params?: { [k: string]: string | number }) => {
@@ -29,6 +94,7 @@ vi.mock("next-intl", () => ({
         "home.table.rowsPerPage": "Rows per page",
         "home.table.from": "From",
         "home.table.unknownSender": "Unknown sender",
+        "home.table.systemSender.support": "MessagingIE",
         "home.table.empty.all": "You have no messages",
         "home.table.empty.search": `No messages found for "${params?.query ?? ""}"`,
         "home.table.select": "Select",
@@ -61,12 +127,18 @@ vi.mock("next-intl", () => ({
     },
 }))
 
+// `threadName` mirrors `subject` here on purpose: that's how the
+// messaging-api list endpoint actually returns rows (the field is a
+// grouping key, not a sender name). Pinning the fixture this way locks
+// in the AB#37868 regression — the Sender column must resolve from
+// `organisationId` via the profile lookup, never echo `threadName` /
+// `subject` back at the user.
 const baseMessage: Message = {
   id: "msg-1",
   subject: "Your annual statement is available",
   createdAt: "2025-01-15T10:30:00Z",
-  threadName: "Department of Social Protection",
-  organisationId: "org-1",
+  threadName: "Your annual statement is available",
+  organisationId: "org-dsp",
   recipientUserId: "user-1",
   excerpt: "Please review your updated annual statement in the portal.",
   isSeen: false,
@@ -79,6 +151,8 @@ const messages: Message[] = [
     ...baseMessage,
     id: "msg-2",
     subject: "Payment confirmation",
+    threadName: "Payment confirmation",
+    organisationId: "org-rev",
     isSeen: true,
     attachmentsCount: 0,
   },
@@ -138,6 +212,91 @@ describe("UnifiedInboxTable", () => {
     expect(
       screen.getAllByText("Payment confirmation").length,
     ).toBeGreaterThan(0)
+  })
+
+  // AB#37868 regression: the Sender column must surface the
+  // organisation's localized display name resolved from
+  // `organisationId`, never `threadName` (which the messaging-api wires
+  // up to the subject for thread grouping). The fixtures above
+  // intentionally set `threadName === subject`, so a sloppy "show
+  // whatever's in threadName" implementation would render the subject
+  // in this column.
+  it("renders the resolved organisation name in the Sender column", () => {
+    render(<UnifiedInboxTable {...defaultProps} />)
+
+    const senderTexts = Array.from(
+      screen
+        .getByTestId("unified-inbox-table")
+        .querySelectorAll<HTMLElement>("tbody tr td:nth-child(1) span"),
+    ).map((node) => node.textContent?.trim())
+
+    expect(senderTexts).toEqual([
+      "Department of Social Protection",
+      "Revenue",
+    ])
+    // The subject must NOT leak into the Sender column even though
+    // `threadName === subject` for both rows.
+    expect(senderTexts).not.toContain("Your annual statement is available")
+    expect(senderTexts).not.toContain("Payment confirmation")
+  })
+
+  it("falls back to the unknown-sender label when the organisation lookup has no data", () => {
+    const orphan: Message[] = [
+      {
+        ...baseMessage,
+        id: "msg-orphan",
+        subject: "Quarterly tax return reminder",
+        threadName: "Quarterly tax return reminder",
+        organisationId: "org-not-seeded",
+      },
+    ]
+
+    render(<UnifiedInboxTable {...defaultProps} messages={orphan} />)
+
+    const senderTexts = Array.from(
+      screen
+        .getByTestId("unified-inbox-table")
+        .querySelectorAll<HTMLElement>("tbody tr td:nth-child(1) span"),
+    ).map((node) => node.textContent?.trim())
+
+    expect(senderTexts).toEqual(["Unknown sender"])
+    // Defensive: the subject must NOT be used as a fallback either, even
+    // when the org lookup misses.
+    expect(senderTexts).not.toContain("Quarterly tax return reminder")
+    // Raw UUID must never reach the UI.
+    expect(senderTexts).not.toContain("org-not-seeded")
+  })
+
+  // AB#37866 regression: messages produced by the messaging-api itself
+  // (e.g. data-export-ready notifications) carry `organisationId =
+  // "support"`, which is the literal default of the messaging-api
+  // SUPPORT_ORGANISATION_ID env var, NOT a real UUID. The Sender column
+  // must short-circuit the doomed profile lookup for these and render a
+  // localized brand label instead of the "Unknown sender" fallback.
+  it("renders the system-sender brand label for messages stamped with the support slug", () => {
+    const systemMessage: Message[] = [
+      {
+        ...baseMessage,
+        id: "msg-system",
+        subject: "Your MessagingIE Data Export is Ready",
+        threadName: "Your MessagingIE Data Export is Ready",
+        organisationId: "support",
+      },
+    ]
+
+    render(<UnifiedInboxTable {...defaultProps} messages={systemMessage} />)
+
+    const senderTexts = Array.from(
+      screen
+        .getByTestId("unified-inbox-table")
+        .querySelectorAll<HTMLElement>("tbody tr td:nth-child(1) span"),
+    ).map((node) => node.textContent?.trim())
+
+    expect(senderTexts).toEqual(["MessagingIE"])
+    // The slug must NEVER reach the UI raw, and the unknown-sender
+    // fallback must NEVER fire for known system slugs.
+    expect(senderTexts).not.toContain("support")
+    expect(senderTexts).not.toContain("Unknown sender")
   })
 
   it("shows unread count when there are unread messages", () => {

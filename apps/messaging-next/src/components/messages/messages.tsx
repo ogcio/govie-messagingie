@@ -17,14 +17,10 @@ import {
   TabPanel,
   Tabs,
 } from "@ogcio/design-system-react"
-import {
-  useGatewayDownload,
-  useGatewayFetch,
-  useGatewayMutation,
-} from "@ogcio/sag-client/react"
+import { useGatewayDownload, useGatewayFetch } from "@ogcio/sag-client/react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { BackButton } from "@/components/button/back-button"
 import type { FileMetadata, Message } from "@/types"
 import { MessageTable } from "./message-table"
@@ -33,6 +29,7 @@ import { PaginationWrapper } from "./pagination-wrapper"
 import { parseTab } from "./parse-tab"
 import { SearchBar } from "./search-bar"
 import { SecureEmailViewer } from "./secure-email-viewer"
+import { useMarkMessageAsRead } from "./use-mark-message-as-read"
 
 export function MessagesPage() {
   const router = useRouter()
@@ -135,23 +132,11 @@ function MessageListView({ onSelect }: { onSelect: (id: string) => void }) {
 }
 
 function MessageDetailView({ id }: { id: string }) {
-  const hasMarkedRead = useRef(false)
-
   const { data, error, isLoading } = useGatewayFetch<Message>(
     `/messaging/api/v1/messages/${id}`,
   )
 
-  const { trigger: markAsSeen } = useGatewayMutation(
-    `/messaging/api/v1/message-actions/${id}`,
-    { method: "PUT" },
-  )
-
-  useEffect(() => {
-    if (data && !hasMarkedRead.current) {
-      hasMarkedRead.current = true
-      markAsSeen({ messageId: id, isSeen: true }).catch(() => {})
-    }
-  }, [data, markAsSeen, id])
+  useMarkMessageAsRead(id, Boolean(data))
 
   if (isLoading) {
     return (

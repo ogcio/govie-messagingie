@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test"
 import { giveConsent } from "../utils/consent-helper"
 
-test.describe("User Messaging page", () => {
+test.describe("User Consent", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
     if (
@@ -19,7 +19,6 @@ test.describe("User Messaging page", () => {
     await expect(
       page.getByRole("alert", { name: "Consent Updated" }),
     ).toBeVisible()
-    await expect(page.locator("#tab-unread")).toBeVisible()
     await expect(
       page.locator(
         "body > main > div > div > div > div.gi-mb-4 > div > div > p",
@@ -32,7 +31,6 @@ test.describe("User Messaging page", () => {
     await expect(
       page.getByRole("alert", { name: "Consent Updated" }),
     ).toBeVisible()
-    await expect(page.locator("#tab-unread")).toBeVisible()
     await expect(
       page.locator(
         "body > main > div > div > div > div.gi-mb-4 > div > div > p",
@@ -48,7 +46,6 @@ test.describe("User Messaging page", () => {
     await expect(
       page.getByRole("alert", { name: "Consent Updated" }),
     ).toBeVisible()
-    await expect(page.locator("#tab-unread")).toBeVisible()
     await expect(
       page.locator(
         "body > main > div > div > div > div.gi-mb-4 > div > div > p",
@@ -73,7 +70,6 @@ test.describe("User Messaging page", () => {
     await expect(
       page.getByRole("alert", { name: "Consent Updated" }),
     ).toBeVisible()
-    await expect(page.locator("#tab-unread")).toBeVisible()
     await expect(
       page.locator(
         "body > main > div > div > div > div.gi-mb-4 > div > div > p",

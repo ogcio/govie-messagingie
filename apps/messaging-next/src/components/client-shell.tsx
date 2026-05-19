@@ -17,6 +17,7 @@ import {
   Stack,
   ToastProvider,
 } from "@ogcio/design-system-react"
+import { signIn } from "@ogcio/sag-client"
 import {
   CONNECTOR_MYGOVID,
   ROLE_NAME_ONBOARDED_CITIZEN,
@@ -30,9 +31,11 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react"
+import { AnnouncementsFlow } from "@/components/announcements-flow"
 import { ConsentBanner } from "@/components/consent-banner"
 import { FeatureFlagsProvider } from "@/components/feature-flags-provider"
 import { MainContainer } from "@/components/layout/containers"
@@ -41,8 +44,15 @@ import { PageHeader } from "@/components/navigation/page-header"
 import { TRACE_MESSAGES } from "@/const/traces"
 import { env } from "@/env/env.client"
 import { useRouter } from "@/i18n/navigation"
+import {
+  clearPersistedForceConsent,
+  persistForceConsentFromUrl,
+} from "@/util/force-consent"
 
 const AUTH_TIMEOUT_MS = 15_000
+const LANGUAGE_SWITCHER = {
+  translations: { english: "English", irish: "Gaeilge" },
+} as const
 
 // One-shot guard against the post-onboarding stale-claims race: when the user
 // returns from the profile-service onboarding flow, the SAG session can still
@@ -102,6 +112,10 @@ function useAuthTimeout(resolved: boolean) {
 }
 
 function ShellContent({ children }: { children: ReactNode }) {
+  useLayoutEffect(() => {
+    persistForceConsentFromUrl()
+  }, [])
+
   const { resolved } = useOnboardingGuard({
     profileUrl: env.NEXT_PUBLIC_PROFILE_URL,
     appBaseUrl: env.NEXT_PUBLIC_BASE_URL,
@@ -223,6 +237,11 @@ function AuthenticatedShell({ children }: { children: ReactNode }) {
   const locale = useLocale()
   const router = useRouter()
   const signInTriggered = useRef(false)
+  const currentLocale = locale as ConsentStatementLanguages
+
+  useLayoutEffect(() => {
+    persistForceConsentFromUrl()
+  }, [])
 
   const isReady = !loading && !!user
   const timedOut = useAuthTimeout(isReady)
@@ -263,12 +282,10 @@ function AuthenticatedShell({ children }: { children: ReactNode }) {
         <ToastProvider />
         <ConsentProvider
           subject={MESSAGING_CONSENT_SUBJECT}
-          locale={locale as ConsentStatementLanguages}
+          locale={currentLocale}
           isPublicServant={false}
           onLocaleChange={handleLocaleChange}
-          languageSwitcher={{
-            translations: { english: "English", irish: "Gaeilge" },
-          }}
+          languageSwitcher={LANGUAGE_SWITCHER}
           events={{
             onConsentDecision: (accepted) => {
               faro.api?.pushLog([
@@ -280,28 +297,35 @@ function AuthenticatedShell({ children }: { children: ReactNode }) {
                 url.searchParams.delete(FORCE_CONSENT_PARAM)
                 window.history.replaceState(history.state, "", url)
               }
+              clearPersistedForceConsent()
             },
             onConsentError: (error) => {
               faro.api?.pushLog([`Consent error: ${error}`])
             },
           }}
         >
-          <Suspense fallback={<LayoutLoading />}>
-            <PageHeader
-              publicName={user.name ?? user.email ?? user.sub}
-              onSignOut={signOut}
-            />
-            <MainContainer>
-              <Container fullWidth>
-                <Stack direction='row' wrap gap={10}>
-                  <div className='gi-w-full'>
-                    <ConsentBanner />
-                    {children}
-                  </div>
-                </Stack>
-              </Container>
-            </MainContainer>
-          </Suspense>
+          <AnnouncementsFlow
+            locale={currentLocale}
+            onLocaleChange={handleLocaleChange}
+            languageSwitcher={LANGUAGE_SWITCHER}
+          >
+            <Suspense fallback={<LayoutLoading />}>
+              <PageHeader
+                publicName={user.name ?? user.email ?? user.sub}
+                onSignOut={signOut}
+              />
+              <MainContainer>
+                <Container fullWidth>
+                  <Stack direction='row' wrap gap={10}>
+                    <div className='gi-w-full'>
+                      <ConsentBanner />
+                      {children}
+                    </div>
+                  </Stack>
+                </Container>
+              </MainContainer>
+            </Suspense>
+          </AnnouncementsFlow>
         </ConsentProvider>
       </FeatureFlagsProvider>
     </MessagingAnalyticsProvider>
@@ -309,10 +333,19 @@ function AuthenticatedShell({ children }: { children: ReactNode }) {
 }
 
 export function ClientShell({ children }: { children: ReactNode }) {
+  const handleSessionExpired = useCallback(() => {
+    persistForceConsentFromUrl()
+    signIn(env.NEXT_PUBLIC_SAG_URL, env.NEXT_PUBLIC_SAG_APP_NAME, {
+      connector: CONNECTOR_MYGOVID,
+      redirectUrl: window.location.href,
+    })
+  }, [])
+
   return (
     <SagClientProvider
       gatewayUrl={env.NEXT_PUBLIC_SAG_URL}
       appName={env.NEXT_PUBLIC_SAG_APP_NAME}
+      onSessionExpired={handleSessionExpired}
     >
       {/*
        * Inject the DS <link rel=stylesheet> to the Material Symbols font so

@@ -39,6 +39,9 @@
       "loading": "Teachtaireachtaí á lódáil...",
       "from": "Ó",
       "unknownSender": "Seoltóir anaithnid",
+      "systemSender": {
+        "support": "MessagingIE"
+      },
       "attachment": "{count, plural, one {ceangaltán} other {ceangaltáin}}",
       "unreadCount": "{count} neamhléite",
       "select": "Roghnaigh",
@@ -120,6 +123,12 @@
   },
   "consent": {
     "banner": "Tá tú tar éis diúltú do theachtaireachtaí a fháil ó Bhoinn an tSeirbhíse Phoiblí. Is féidir leat <link>do roghanna a nuashonrú</link> chun teachtaireachtaí a fháil arís."
+  },
+  "announcements": {
+    "modalHeader": {
+      "title": "Tá do bhosca isteach nuashonraithe",
+      "description": "Tá cúpla athrú tagtha isteach - seo a bhfuil le fios agat."
+    }
   },
   "accountLinking": {
     "title": "Cén fhreagra is atá agat?",

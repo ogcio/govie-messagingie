@@ -34,6 +34,8 @@ description:
       - Sending secure messages to citizens
       - MyGovID integration for login and signup
       - Digital-Postbox replacement
+logo: assets/harp-gold-text-green.svg
+landingURL: https://messaging.services.gov.ie/
 legal:
   license: MIT
 maintenance:

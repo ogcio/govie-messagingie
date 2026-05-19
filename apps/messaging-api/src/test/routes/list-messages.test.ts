@@ -129,6 +129,42 @@ describe("GET /api/v1/messages", {}, () => {
     expect(body[0].threadName).toBeNull();
   });
 
+  it("should expose isSeen on each list item so the inbox can render read state", async () => {
+    // The list endpoint historically omitted `isSeen` from its response, which
+    // forced the unified inbox UI to treat every row as unread (because
+    // `!undefined` is truthy). The mark-as-read PUT was working server-side
+    // but the next list refetch couldn't surface the state change. AB#37868.
+    const seenRecipientId = `seen-${randomUUID().substring(0, 6)}`;
+    const orgId = randomUUID().substring(0, 12);
+    const seenMsg = await insertMessage(seenRecipientId, orgId, pool); // is_seen=true
+    await pool.query("UPDATE messages SET is_seen = false WHERE id = $1", [
+      seenMsg.id,
+    ]);
+    const unseenMsgId = seenMsg.id;
+    const seenAgain = await insertMessage(seenRecipientId, orgId, pool); // is_seen=true
+
+    app = await getServer(seenRecipientId, undefined);
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/v1/messages",
+      query: {
+        recipientUserId: seenRecipientId,
+        status: "delivered",
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json().data as Array<{ id: string; isSeen: boolean }>;
+    expect(body).toHaveLength(2);
+    for (const item of body) {
+      expect(item).toHaveProperty("isSeen");
+      expect(typeof item.isSeen).toBe("boolean");
+    }
+    const byId = Object.fromEntries(body.map((m) => [m.id, m.isSeen]));
+    expect(byId[unseenMsgId]).toBe(false);
+    expect(byId[seenAgain.id]).toBe(true);
+  });
+
   it("should not return soft-deleted messages by default", async () => {
     const delRecipientId = randomUUID().substring(0, 12);
     const orgId = randomUUID().substring(0, 10);

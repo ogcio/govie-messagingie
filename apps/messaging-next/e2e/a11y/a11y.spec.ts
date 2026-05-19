@@ -3,8 +3,7 @@ import { expect, test } from "@playwright/test"
 import { createAuthenticatedPage } from "../helpers/user-auth.helper"
 
 const citizenUrls = [
-  "/en/home?tab=unread",
-  "/en/home?tab=all",
+  "/en/messages",
   "/en/secure-messages/05bcc336-5b19-4717-9223-16a68fc08a2e",
 ]
 

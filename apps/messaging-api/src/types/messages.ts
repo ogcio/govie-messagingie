@@ -209,6 +209,9 @@ export const MessageListItemSchema = Type.Object({
   organisationId: Type.String({ description: "Organisation sender id" }),
   recipientUserId: Type.String({ description: "Unique id of the recipient" }),
   attachmentsCount: Type.Integer({ description: "Number of attachments" }),
+  isSeen: Type.Boolean({
+    description: "True if the message has already been seen by the recipient",
+  }),
 });
 export const MessageListSchema = Type.Array(MessageListItemSchema);
 export type MessageList = Static<typeof MessageListSchema>;

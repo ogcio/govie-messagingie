@@ -8,3 +8,12 @@ export async function navigateAndVerifyHeading(
   await page.goto(path)
   await expect(page.getByRole("heading", { name: headingText })).toBeVisible()
 }
+
+export async function navigateAndVerifySearch(
+  page: Page,
+  path: string,
+  headingText: string,
+) {
+  await page.goto(path)
+  await expect(page.getByRole("textbox", { name: headingText })).toBeVisible()
+}

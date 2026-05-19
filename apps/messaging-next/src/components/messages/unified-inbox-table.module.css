@@ -158,6 +158,16 @@
 }
 
 /*
+ * Section root. On desktop a no-op block element. On mobile it becomes a
+ * flex column so the pagination footer below can be pushed to the bottom
+ * of the available viewport via `margin-top: auto`. See the mobile media
+ * query at the bottom of this file for the rest of the wiring.
+ */
+.tableRoot {
+  display: block;
+}
+
+/*
  * Footer selects (initial UX): (1) Chevron uses DS transform vars that can drop out —
  * use a single translateY. (2) Same fixed width on both: native <select> grows for the
  * widest <option> (“50” vs “1”), so boxes looked mismatched. (3) Cell vertical-align.
@@ -587,8 +597,39 @@
     display: block;
   }
 
+  /*
+   * Mobile section root stretches to fill the remaining viewport height
+   * (between the page header above and the application footer below) so
+   * `.mobileFooter` can be pushed to the bottom via `margin-top: auto`
+   * even when the message list is short (e.g. one page, one message).
+   * The 16rem reservation approximates the page-header crest, the main
+   * container's vertical margins (space-10 + space-16), and the app
+   * footer height — picking it slightly tall is harmless because the
+   * section will simply grow with the content past that floor.
+   *
+   * Combined with `position: sticky; bottom: 0` on `.mobileFooter`
+   * below, this gives both behaviours users expect from a "sticky"
+   * pagination: it sits at the visual bottom of the inbox when the
+   * list is short, and remains pinned to the viewport edge while
+   * scrolling once the list overflows.
+   */
+  .tableRoot {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100dvh - 16rem);
+  }
+
   .mobileFooter {
     display: block;
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+    background-color: var(--gieds-color-white, #ffffff);
+    border-top: var(--gieds-border-width-100) solid
+      var(--gieds-color-gray-200, #d8dadf);
+    z-index: 10;
+    /* Respect iOS home-indicator safe area without crowding the chevrons */
+    padding-bottom: max(var(--gieds-space-3), env(safe-area-inset-bottom, 0px));
   }
 
   .mobileSelectHeader {

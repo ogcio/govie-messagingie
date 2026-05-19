@@ -31,9 +31,7 @@ export function DeleteResultToast({
   useEffect(() => {
     if (!result) return
     const count = result.ids.length
-    const title = result.ok
-      ? t("success", { count })
-      : t("failure", { count })
+    const title = result.ok ? t("success", { count }) : t("failure", { count })
     // `toaster.create` expects `ToastProps`, which extends `div` attributes,
     // so `data-*` is valid at runtime. TypeScript's excess-property check
     // rejects `data-testid` on a direct object literal at the call site, so

@@ -117,6 +117,7 @@ paths:
                         - organisationId
                         - recipientUserId
                         - attachmentsCount
+                        - isSeen
                       properties:
                         id:
                           type: string
@@ -141,6 +142,9 @@ paths:
                         attachmentsCount:
                           type: integer
                           description: Number of attachments
+                        isSeen:
+                          type: boolean
+                          description: True if the message has already been seen by the recipient
                   metadata:
                     type: object
                     properties:
@@ -739,6 +743,7 @@ paths:
                         - organisationId
                         - recipientUserId
                         - attachmentsCount
+                        - isSeen
                       properties:
                         id:
                           type: string
@@ -763,6 +768,9 @@ paths:
                         attachmentsCount:
                           type: integer
                           description: Number of attachments
+                        isSeen:
+                          type: boolean
+                          description: True if the message has already been seen by the recipient
                   metadata:
                     type: object
                     properties:

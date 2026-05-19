@@ -39,6 +39,9 @@
       "loading": "Loading messages...",
       "from": "From",
       "unknownSender": "Unknown sender",
+      "systemSender": {
+        "support": "MessagingIE"
+      },
       "attachment": "{count, plural, one {attachment} other {attachments}}",
       "unreadCount": "{count} unread",
       "select": "Select",
@@ -120,6 +123,12 @@
   },
   "consent": {
     "banner": "You have opted-out of receiving messages from Public Sector Bodies. You can <link>update your preferences</link> to start receiving messages again."
+  },
+  "announcements": {
+    "modalHeader": {
+      "title": "Your inbox has been updated",
+      "description": "A few things have changed — here's what to know."
+    }
   },
   "accountLinking": {
     "title": "Is this you?",

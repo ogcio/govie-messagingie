@@ -1,6 +1,6 @@
 import { expect, type Page, test } from "@playwright/test"
 import { createAuthenticatedPage } from "../helpers/user-auth.helper"
-import { navigateAndVerifyHeading } from "../utils/navigation-helpers"
+import { navigateAndVerifySearch } from "../utils/navigation-helpers"
 
 let page: Page
 
@@ -25,11 +25,18 @@ test.describe("User Messages page", () => {
   })
 
   test("a user can open a message @smoke @regression", async () => {
-    await navigateAndVerifyHeading(page, "/en/home?tab=all", "Messages")
+    await navigateAndVerifySearch(page, "/en/messages", "Search")
     await page.getByRole("textbox", { name: "Search" }).fill("test")
-    await page.getByRole("button", { name: "Search" }).click()
-    await page.getByRole("link", { name: "test" }).first().click()
-    await expect(page.getByRole("heading", { name: "test" })).toBeVisible()
+    await page.getByRole("textbox", { name: "Search" }).press("Enter")
+    await page.waitForLoadState("networkidle")
+    await page
+      .locator(
+        "body > main > div > div > div > div > div > div > section > div.unified-inbox-table-module__iNj3tG__desktopTable > table > tbody > tr:nth-child(1)",
+      )
+      .click()
+    await expect(
+      page.getByRole("heading", { name: "Test Subject" }),
+    ).toBeVisible()
     await expect(
       page
         .locator('iframe[title="Secure email content viewer"]')
@@ -43,8 +50,8 @@ test.describe("User Messages page", () => {
     //this next page is now in a new tab so we need to get the new page
     const [newPage] = await Promise.all([
       page.context().waitForEvent("page"),
-      //page.getByRole("link", { name: "test123.txt" }).click(),
-      page.getByTestId("attachment-download-action").click(),
+      page.getByRole("button", { name: "test123.txt" }).click(),
+      //page.getByTestId("attachment-download-action").click(),
     ])
     await newPage.waitForLoadState("domcontentloaded")
     await expect(newPage.getByText("46546546546546")).toBeVisible()
@@ -54,6 +61,7 @@ test.describe("User Messages page", () => {
     await page.waitForLoadState("networkidle")
 
     await page.goto("https://dashboard.dev.services.gov.ie/en/my-dashboard")
+    await page.waitForLoadState("networkidle")
     await expect(
       page.getByRole("heading", { name: "Welcome back, Toby Tobyson" }),
     ).toBeVisible()

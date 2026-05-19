@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test"
-import { createAuthenticatedPage } from "./helpers/user-auth.helper"
+import { createAuthenticatedPage } from "../helpers/user-auth.helper"
+import { navigateAndVerifySearch } from "../utils/navigation-helpers"
 
 // These tests exercise the soft-delete UX on the Unified Inbox
 // (feature flag `unified-inbox`). The list + delete APIs are stubbed so the
@@ -65,7 +66,7 @@ async function stubMessagingApis(
   })
 }
 
-test.describe("Unified Inbox delete", () => {
+test.describe("Unified Inbox delete @regression", () => {
   test("desktop: selecting a single row and confirming deletes it via the bulk toolbar", async ({
     browser,
   }) => {
@@ -73,8 +74,7 @@ test.describe("Unified Inbox delete", () => {
     const deletedIds: string[][] = []
     await stubMessagingApis(page, (ids) => deletedIds.push(ids))
 
-    await page.goto("/en/messages")
-    await expect(page.getByRole("heading", { name: "Messages" })).toBeVisible()
+    await navigateAndVerifySearch(page, "/en/messages", "Search")
 
     // There is no per-row trash icon any more; the row checkbox is the
     // entry point for both single and bulk deletes.

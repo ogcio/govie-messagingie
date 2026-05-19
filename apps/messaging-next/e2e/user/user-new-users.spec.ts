@@ -27,7 +27,11 @@ test.describe("User Messaging page", () => {
   }) => {
     await setSafeLevel(page, "1")
     await expect(
-      page.locator("body > main > div > div > div > div > h1").first(),
+      page
+        .locator(
+          "body > main > div > div > div > div > div > output > div > h1",
+        )
+        .first(),
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
   })
 
@@ -36,7 +40,11 @@ test.describe("User Messaging page", () => {
   }) => {
     await setSafeLevel(page, "0")
     await expect(
-      page.locator("body > main > div > div > div > div > h1").first(),
+      page
+        .locator(
+          "body > main > div > div > div > div > div > output > div > h1",
+        )
+        .first(),
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
   })
 
@@ -47,7 +55,11 @@ test.describe("User Messaging page", () => {
     const userEmail = `testAccount+${uuid}@mail.ie`
     await setSafeLevelAndUser(page, "1", userEmail)
     await expect(
-      page.locator("body > main > div > div > div > div > h1").first(),
+      page
+        .locator(
+          "body > main > div > div > div > div > div > output > div > h1",
+        )
+        .first(),
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
     await logout(page)
     await page.goto("/")
@@ -70,7 +82,11 @@ test.describe("User Messaging page", () => {
     const userEmail = `testAccount+${uuid}@mail.ie`
     await setSafeLevelAndUser(page, "0", userEmail)
     await expect(
-      page.locator("body > main > div > div > div > div > h1").first(),
+      page
+        .locator(
+          "body > main > div > div > div > div > div > output > div > h1",
+        )
+        .first(),
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
     await logout(page)
     await page.goto("/")
@@ -100,7 +116,11 @@ test.describe("User Messaging page", () => {
     await setSafeLevel(page, "1")
     await page.goto("https://dashboard.dev.services.gov.ie")
     await expect(
-      page.locator("body > main > div > div > div > div > h1").first(),
+      page
+        .locator(
+          "body > main > div > div > div > div > div > output > div > h1",
+        )
+        .first(),
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
   })
 
@@ -110,7 +130,11 @@ test.describe("User Messaging page", () => {
     await setSafeLevel(page, "0")
     await page.goto("https://dashboard.dev.services.gov.ie")
     await expect(
-      page.locator("body > main > div > div > div > div > h1").first(),
+      page
+        .locator(
+          "body > main > div > div > div > div > div > output > div > h1",
+        )
+        .first(),
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
   })
 
@@ -132,7 +156,11 @@ test.describe("User Messaging page", () => {
     await setSafeLevel(page, "1")
     await page.goto("https://profile.dev.services.gov.ie")
     await expect(
-      page.locator("body > main > div > div > div > div > h1").first(),
+      page
+        .locator(
+          "body > main > div > div > div > div > div > output > div > h1",
+        )
+        .first(),
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
   })
 
@@ -142,7 +170,11 @@ test.describe("User Messaging page", () => {
     await setSafeLevel(page, "0")
     await page.goto("https://profile.dev.services.gov.ie")
     await expect(
-      page.locator("body > main > div > div > div > div > h1").first(),
+      page
+        .locator(
+          "body > main > div > div > div > div > div > output > div > h1",
+        )
+        .first(),
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
   })
 })

@@ -1,9 +1,9 @@
-import { redirect } from "next/navigation"
 import { use } from "react"
+import { MessagesPageContent } from "@/components/messages/messages-page-content"
 
 export { generateStaticParams } from "@/util/route-helpers"
 
 export default function LocaleIndexPage({ params }: PageProps<"/[locale]">) {
   const { locale } = use(params)
-  redirect(`/${locale}/messages`)
+  return <MessagesPageContent locale={locale} />
 }

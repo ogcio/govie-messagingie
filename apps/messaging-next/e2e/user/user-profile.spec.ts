@@ -38,7 +38,7 @@ test.describe("User Profile Features", () => {
 
     await expect(page.getByRole("heading", { name: "PPSN" })).toBeVisible()
     await expect(page.getByText("****")).toBeVisible()
-    await page.getByTestId("ppsn-reveal-link").click()
+    await page.getByText("Click to reveal").click()
     await expect(page.getByText("****")).not.toBeVisible()
   })
 

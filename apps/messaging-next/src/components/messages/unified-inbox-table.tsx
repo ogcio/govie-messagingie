@@ -31,10 +31,17 @@ import {
 } from "@tanstack/react-table"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react"
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
 import { CheckboxIndicatorIcon, SearchIcon } from "@/components/icons"
 import type { Message } from "@/types"
 import { formatDate } from "@/util/datetime"
+import { SenderName } from "./sender-name"
 import styles from "./unified-inbox-table.module.css"
 import type { MessageSelection } from "./use-message-selection"
 
@@ -58,11 +65,7 @@ function selectionCheckboxProps(args: {
     size: "sm" as const,
     checked: allSelected || indeterminate,
     indeterminate,
-    "aria-checked": indeterminate
-      ? ("mixed" as const)
-      : allSelected
-        ? true
-        : false,
+    "aria-checked": indeterminate ? ("mixed" as const) : !!allSelected,
   }
 }
 
@@ -190,8 +193,20 @@ export function UnifiedInboxTable({
         cell: ({ row }) => (
           <InputCheckbox
             size='sm'
+            /*
+             * The aria-label is synchronous, but the human-readable
+             * sender name is fetched per-org on render (see
+             * `<SenderName>`), so we can't surface it here without
+             * plumbing a parent-level lookup map. The subject already
+             * uniquely identifies the row for screen-reader users; we
+             * intentionally fall back to the localized "Unknown
+             * sender" string instead of leaking the raw `organisationId`
+             * UUID or echoing the subject (which used to ship through
+             * `threadName` and was the original "Sender shows the
+             * subject" bug).
+             */
             aria-label={t("ariaLabel.selectRow", {
-              sender: row.original.threadName ?? t("unknownSender"),
+              sender: t("unknownSender"),
               subject: row.original.subject,
             })}
             checked={selection.isSelected(row.original.id)}
@@ -206,10 +221,24 @@ export function UnifiedInboxTable({
     cols.push(
       {
         id: "sender",
-        accessorFn: (row) => row.threadName ?? t("unknownSender"),
+        /*
+         * The messaging-api list endpoint only exposes `organisationId`
+         * (a UUID), never a human-readable sender name. Resolution to a
+         * localized name happens client-side per row inside
+         * `<SenderName>` against `/profile/api/v1/organisations/{id}`,
+         * with SWR deduping rows that share an org down to a single
+         * request per page. The accessor is kept on `organisationId`
+         * purely so react-table's row model has a stable scalar value
+         * for the column — sorting and filtering by raw UUID are not
+         * exposed in the UI.
+         */
+        accessorFn: (row) => row.organisationId,
         header: t("column.sender"),
-        cell: ({ getValue }) => (
-          <span className={styles.senderCell}>{getValue<string>()}</span>
+        cell: ({ row }) => (
+          <SenderName
+            organisationId={row.original.organisationId}
+            className={styles.senderCell}
+          />
         ),
       },
       {
@@ -273,10 +302,22 @@ export function UnifiedInboxTable({
 
   const showBulkActionBar = Boolean(bulkActionBar)
   const mobileInSelectMode = Boolean(effectiveSelectMode && selection)
+  const isInitialLoading = isLoading && messages.length === 0
+
+  if (isInitialLoading) {
+    return (
+      <section className={`gi-w-full ${styles.tableRoot}`}>
+        <div className={styles.loadingState}>
+          <Icon icon='refresh' className='gi-animate-spin' ariaHidden />
+          <span>{t("loading")}</span>
+        </div>
+      </section>
+    )
+  }
 
   return (
     <section
-      className={`gi-w-full ${showBulkActionBar ? styles.containerWithBanner : ""}`}
+      className={`gi-w-full ${styles.tableRoot} ${showBulkActionBar ? styles.containerWithBanner : ""}`}
     >
       {/*
        * Search row. Always mounted (desktop + mobile) so the URL-synced
@@ -372,10 +413,7 @@ export function UnifiedInboxTable({
                   data-testid='mobile-select-all-checkbox'
                   onChange={() => selection.toggleAll()}
                 />
-                <span
-                  className={styles.mobileSelectedCount}
-                  aria-live='polite'
-                >
+                <span className={styles.mobileSelectedCount} aria-live='polite'>
                   {tToolbar("selectedCount", {
                     count: selection.selectedCount,
                   })}
@@ -597,7 +635,6 @@ function MobileMessageRow({
   selectMode?: boolean
 }) {
   const t = useTranslations("home.table")
-  const from = message.threadName ?? t("unknownSender")
   const shortDate = formatDate(message.createdAt, "short")
 
   const inSelectMode = Boolean(selectMode && selection)
@@ -632,7 +669,10 @@ function MobileMessageRow({
       ) : null}
       <div className='gi-flex gi-flex-col gi-gap-1 gi-flex-1 gi-min-w-0'>
         <div className={styles.mobileRowTop}>
-          <span className={styles.mobileSender}>{from}</span>
+          <SenderName
+            organisationId={message.organisationId}
+            className={styles.mobileSender}
+          />
           <time className={styles.mobileDate} dateTime={message.createdAt}>
             {shortDate}
           </time>

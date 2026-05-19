@@ -40,13 +40,25 @@ export async function clickButton(page: Page, buttonName: string) {
 }
 
 export async function logout(page: Page) {
-  await page.goto("https://messaging-admin.dev.services.gov.ie/api/signout")
-  //await page.locator("#ItemActionDrawerTrigger-0").click()
-  //await clickButton(page, "Logout")
-  //await expect(page).toHaveURL("https://profile.dev.services.gov.ie/global-signout/")
-  //await expect(page.getByText("We’re logging you out")).toBeVisible()
-  //await expect(page.getByText("We’re logging you out")).toBeHidden()
-  await expect(page.getByText("Sign in to your account")).toBeVisible({
+  if (page.url().includes("-admin")) {
+    await page.context().clearCookies()
+    await page.goto("/")
+  } else {
+    await clickButton(page, "Menu")
+    await clickButton(page, "Logout")
+
+    await confirmSignout(page)
+  }
+}
+
+export async function confirmSignout(page: Page) {
+  if (
+    page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
+  ) {
+    // Click the MyGovID login button
+    await page.getByRole("button", { name: "Continue with MyGovId" }).click()
+  }
+  await expect(page.getByText("Summary")).toBeVisible({
     timeout: 15000,
   })
 }

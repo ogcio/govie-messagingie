@@ -1,9 +1,7 @@
 import { expect, type Page, test } from "@playwright/test"
-import {
-  createAuthenticatedPage,
-  loginAsCitizen,
-} from "../helpers/user-auth.helper"
-import { logout } from "../utils/functions"
+import { createAuthenticatedPage } from "../helpers/user-auth.helper"
+import { confirmSignout, logout } from "../utils/functions"
+import { navigateAndVerifySearch } from "../utils/navigation-helpers"
 
 let page: Page
 
@@ -30,25 +28,18 @@ test.describe("User Features", () => {
     await page.waitForLoadState("networkidle")
 
     await page.goto("/ga")
-    await expect(
-      page.getByRole("heading", { name: "Teachtaireachtaí" }),
-    ).toBeVisible()
+    await expect(page.getByRole("textbox", { name: "Cuardach" })).toBeVisible()
   })
 
   test("a user can logout @smoke @regression", async () => {
-    // Add a locator handler to automatically handle login page if it appears
-    await page.addLocatorHandler(
-      page.getByText("Sign in to your account"),
-      async () => {
-        await loginAsCitizen(page, "e2e_citizen_1@user.com")
-      },
-      { times: 1 },
-    )
-
-    await page.goto("/")
-
-    await expect(page.getByRole("heading", { name: "Messages" })).toBeVisible()
-    await page.removeLocatorHandler(page.getByText("Sign in to your account"))
+    await navigateAndVerifySearch(page, "/en/messages", "Search")
     await logout(page)
+  })
+
+  test("a user can use global signout @smoke @regression", async () => {
+    // Logout method used by Payments and Journey Builder, which logs the user out of all sessions
+    await navigateAndVerifySearch(page, "/en/messages", "Search")
+    await page.goto("https://profile.dev.services.gov.ie/global-signout")
+    await confirmSignout(page)
   })
 })

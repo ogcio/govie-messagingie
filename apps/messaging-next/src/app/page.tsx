@@ -3,6 +3,7 @@
 import { useEffect } from "react"
 import { DEFAULT_LOCALE } from "@/const"
 import { useLocalePreference } from "@/hooks/use-locale-preference"
+import { messagesPathWithForceConsent } from "@/util/force-consent"
 
 /**
  * Root redirect page.
@@ -21,7 +22,7 @@ export default function RootPage() {
 
   useEffect(() => {
     if (isReady) {
-      window.location.replace(`/${locale}/messages`)
+      window.location.replace(messagesPathWithForceConsent(locale))
     }
   }, [locale, isReady])
 
