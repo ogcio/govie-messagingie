@@ -5,7 +5,6 @@ import {
   FlagProvider,
   type IConfig,
   useFlag,
-  useFlagsStatus,
   useUnleashContext,
 } from "@unleash/proxy-client-react"
 import {
@@ -16,6 +15,7 @@ import {
   useMemo,
 } from "react"
 import { env } from "@/env/env.client"
+import { useFlagsReadyWithFallback } from "@/hooks/use-flags-ready-with-fallback"
 
 const FeatureFlagNames = {
   UnifiedInbox: "unified-inbox",
@@ -37,7 +37,7 @@ const FeatureFlagsContext =
 function FeatureFlagsBridge({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const updateContext = useUnleashContext()
-  const { flagsReady } = useFlagsStatus()
+  const { isFlagsReady, useFallbackValues } = useFlagsReadyWithFallback()
 
   useEffect(() => {
     if (user?.sub) {
@@ -49,10 +49,10 @@ function FeatureFlagsBridge({ children }: { children: ReactNode }) {
 
   const value = useMemo<AvailableFeatureFlags>(
     () => ({
-      isFlagsReady: flagsReady,
-      isUnifiedInboxEnabled: flagsReady ? isUnifiedInboxEnabled : false,
+      isFlagsReady,
+      isUnifiedInboxEnabled: useFallbackValues ? false : isUnifiedInboxEnabled,
     }),
-    [flagsReady, isUnifiedInboxEnabled],
+    [isFlagsReady, useFallbackValues, isUnifiedInboxEnabled],
   )
 
   return (

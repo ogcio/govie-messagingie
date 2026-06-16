@@ -33,11 +33,7 @@ export function PageHeader({
   const t = useTranslations("navigation.header")
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 
-  const {
-    NEXT_PUBLIC_PROFILE_URL,
-    NEXT_PUBLIC_DASHBOARD_URL,
-    NEXT_PUBLIC_BASE_URL,
-  } = env
+  const { NEXT_PUBLIC_PROFILE_URL, NEXT_PUBLIC_DASHBOARD_URL } = env
 
   const isEnglish = locale === LANG_EN
   const oppositeLocale = isEnglish ? LANG_GA : LANG_EN
@@ -82,13 +78,13 @@ export function PageHeader({
         <DrawerBody>
           <UserMenuDrawer
             name={publicName}
-            profileHref={`${NEXT_PUBLIC_PROFILE_URL}/${locale}`}
+            profileHref={`${NEXT_PUBLIC_PROFILE_URL}/${locale}/my-profile`}
             onSignOut={onSignOut}
           >
-            <DrawerLink bold href={`${NEXT_PUBLIC_DASHBOARD_URL}/${locale}`}>
+            <DrawerLink bold href={`${NEXT_PUBLIC_DASHBOARD_URL}/${locale}/my-dashboard`}>
               {t("drawer.dashboard")}
             </DrawerLink>
-            <DrawerLink bold href={`${NEXT_PUBLIC_BASE_URL}/${locale}`}>
+            <DrawerLink bold href={`/${locale}/messages`}>
               {t("drawer.messaging")}
             </DrawerLink>
             <DrawerLink href={languageHref}>{oppositeLabel}</DrawerLink>

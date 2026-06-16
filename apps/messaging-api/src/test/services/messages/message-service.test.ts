@@ -348,6 +348,41 @@ describe("Message Service", () => {
       );
     });
 
+    it("should process message for opted-out recipient when bypassConsent is true", async () => {
+      schedulerWorks = true;
+      const message = getMockMessage();
+      message.recipientUserId = optedOutProfileId;
+      message.bypassConsent = true;
+
+      const output = await processMessage({
+        pool,
+        sender: { ...sender, id: sender.id },
+        message,
+        logger: getMockBaseLogger(),
+      });
+
+      expect(output.messageId).toBeDefined();
+
+      const gotMessage = await getMessage({
+        pool,
+        userId: message.recipientUserId,
+        messageId: output.messageId,
+        loggedInUser: { userId: message.recipientUserId, accessToken: "123" },
+        hasOnboardingPermission: false,
+        logger: getMockBaseLogger(),
+      });
+
+      expect(gotMessage).toMatchObject({
+        subject: message.message.subject,
+        excerpt: message.message.excerpt,
+        plainText: message.message.plainText,
+        richText: message.message.richText,
+        threadName: message.message.threadName,
+        security: message.security,
+        externalId: message.message.externalId,
+      });
+    });
+
     it("should handle deleted profile error during messaging processing", async () => {
       const message = getMockMessage();
       message.recipientUserId = deletedProfileId;

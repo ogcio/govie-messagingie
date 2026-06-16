@@ -1,4 +1,5 @@
 import { httpErrors } from "@fastify/sensible";
+import { getErrorMessage } from "@ogcio/shared-errors";
 import type { FastifyBaseLogger } from "fastify";
 import type { Pool, PoolClient } from "pg";
 import type {
@@ -27,7 +28,10 @@ export async function supportListMessages(params: {
       deletedAfterDateTime,
     });
   } catch (error) {
-    logger.error({ error }, "Error retrieving messages for support list");
+    logger.error(
+      { error: getErrorMessage(error) },
+      "Error retrieving messages for support list",
+    );
     throw httpErrors.createError(
       500,
       "Failed retrieving messages for support list",

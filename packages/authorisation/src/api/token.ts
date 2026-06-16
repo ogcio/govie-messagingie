@@ -1,6 +1,7 @@
 import type { LogtoRequestError } from "@logto/node"
 import { NextResponse } from "next/server"
 import { SelectedOrganizationHandler } from "../selected-organization-handler"
+import { serializeErrorForLog } from "../serialize-error"
 import { getUserAccessToken } from "../token"
 import type { AuthSessionContext, ConfigFactory, Logger } from "../types"
 
@@ -37,7 +38,7 @@ export const createTokenHandler = (
       }
 
       logger.error(
-        { error },
+        { error: serializeErrorForLog(error) },
         "[TokenRoute] Unexpected error while getting token",
       )
       return NextResponse.json(
@@ -113,25 +114,8 @@ export const createOrganizationTokenHandler = (
           { status: 403 },
         )
       }
-      const cause =
-        error &&
-        typeof error === "object" &&
-        "cause" in error &&
-        (error as { cause: unknown }).cause
-      const err =
-        error instanceof Error
-          ? {
-              name: error.name,
-              message: error.message,
-              stack: error.stack,
-              cause:
-                cause instanceof Error
-                  ? { name: cause.name, message: cause.message }
-                  : cause,
-            }
-          : error
       logger.error(
-        { error: err },
+        { error: serializeErrorForLog(error) },
         "[OrganizationTokenRoute] Error while getting token",
       )
       return NextResponse.json(

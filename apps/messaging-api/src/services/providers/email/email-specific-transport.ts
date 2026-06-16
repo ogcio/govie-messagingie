@@ -22,7 +22,6 @@ export class EmailSpecificTransport {
   }) {
     const { recipientAddress, message } = params;
     const transporter = await this.getNodemailerTransporter();
-
     const headers: Headers | undefined = this.provider.headers ?? undefined;
 
     await transporter.sendMail({

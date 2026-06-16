@@ -78,6 +78,7 @@ pids
 # ------------------------------------------------------------------------------
 .DS_Store
 *.pem
+!global-bundle.pem
 next-env.d.ts
 
 # ------------------------------------------------------------------------------
@@ -127,7 +128,29 @@ tsconfig.tsbuildinfo
 .copilot
 .cursor
 
+# ------------------------------------------------------------------------------
+# BMad workflow artefacts
+# ------------------------------------------------------------------------------
+# PRDs, epics, story files, sprint status, audit reports, distillates,
+# and any other planning/agent output produced by the BMad skill suite.
+# Kept entirely out of the repo — neither committed nor shipped in
+# container images (the dockerignore mirrors these patterns).
+# Patterns are wide so any future BMad layout variant (root
+# `_bmad-output/`, scoped `_bmad/`, alternate `bmad-output/`) is also
+# excluded.
+_bmad-output/
+bmad-output/
+_bmad/
+.bmad/
+
 .github/agents
 .github/prompts
 .specsmd
 .specs-fire
+CONTEXT.md
+.github/instructions/fastify.instructions.md
+apps/messaging-api/src/scripts/send-message-batches/template/digital-wallet*
+apps/messaging-api/src/scripts/send-message-batches/template/digital-wallet-pilot.txt
+apps/messaging-api/src/scripts/send-message-batches/template/recipients*.csv
+docs/superpowers/plans
+docs/superpowers/specs

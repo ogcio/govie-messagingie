@@ -31,6 +31,11 @@ export class MessagesProcessor {
       this.pool,
       this.logger,
     );
+
+    if (message.message.richText) {
+      message.message.richText = this.parseRichText(message.message.richText);
+    }
+
     try {
       await client.query("BEGIN");
       const createMessageResult = await this.createMessage({
@@ -86,6 +91,7 @@ export class MessagesProcessor {
       client,
       messagingEventLogger,
     } = params;
+
     const messageInsertResult = await this.insertMessage({
       messageBody: message,
       senderUser,
@@ -112,6 +118,7 @@ export class MessagesProcessor {
       receiverUserId: message.recipientUserId,
       senderApplicationId: params.senderApplication?.id || "",
       attachments: message.attachments,
+      bypassConsent: message.bypassConsent ?? false,
     });
 
     return messageInsertResult;
@@ -172,6 +179,7 @@ export class MessagesProcessor {
       recipientUserProfileId: message.recipientUserId,
       senderUser: senderUser.isM2MApplication ? undefined : senderUser,
       organizationId: senderUser.organizationId,
+      bypassConsent: message.bypassConsent ?? false,
     });
 
     // TODO: Optimise Check and restore
@@ -197,6 +205,7 @@ export class MessagesProcessor {
     recipientUserProfileId: string;
     senderUser?: SenderUser;
     organizationId: string;
+    bypassConsent: boolean;
   }): Promise<{
     recipientProfile: GetProfileResponse;
     senderProfile?: GetProfileResponse;
@@ -210,10 +219,12 @@ export class MessagesProcessor {
       [MESSAGING_CONSENT_SUBJECT],
     );
 
-    profileWrapper.ensureUserConsented(
-      recipientProfile.consentStatuses,
-      recipientProfile.status,
-    );
+    if (!params.bypassConsent) {
+      profileWrapper.ensureUserConsented(
+        recipientProfile.consentStatuses,
+        recipientProfile.status,
+      );
+    }
 
     if (!params.senderUser) {
       return { recipientProfile };
@@ -376,5 +387,62 @@ export class MessagesProcessor {
     }
 
     return jobs;
+  }
+
+  private parseRichText(richText: string | undefined): string | undefined {
+    try {
+      if (richText === undefined) {
+        return undefined;
+      }
+
+      if (this.isValidBase64(richText)) {
+        return Buffer.from(richText, "base64").toString("utf8");
+      }
+
+      return richText;
+    } catch (error) {
+      this.logger.error(
+        { err: error, richText },
+        "Failed to parse richText as Base64, returning original string",
+      );
+      return richText;
+    }
+  }
+
+  /**
+   * Returns true if `value` is a valid Base64 string.
+   *
+   * Supports:
+   * - Standard Base64
+   * - Optional padding (=)
+   * - Rejects malformed strings
+   */
+  private isValidBase64(value: string): boolean {
+    if (!value || typeof value !== "string") {
+      return false;
+    }
+
+    // Remove whitespace/newlines
+
+    const normalized = value.trim();
+
+    // Base64 format check
+
+    const base64Regex =
+      /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+
+    if (!base64Regex.test(normalized)) {
+      return false;
+    }
+
+    try {
+      // Decode and re-encode to verify integrity
+
+      return (
+        Buffer.from(normalized, "base64").toString("base64") === normalized
+      );
+    } catch {
+      return false;
+    }
   }
 }

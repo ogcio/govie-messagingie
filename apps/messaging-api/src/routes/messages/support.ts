@@ -33,17 +33,15 @@ export default async function supportMessages(app: FastifyInstance) {
       schema: SupportListMessagesRequestSchema,
     },
     async function postMessagesHandler(request, reply) {
-      if (!request.userData) {
-        return reply.status(401).send({ message: "User must be logged in" });
-      }
+      const userData = request.ensureUserIsSet();
 
-      if (request.userData.organizationId) {
+      if (userData.organizationId) {
         return reply
           .status(403)
           .send({ message: "User must not be part of an organisation" });
       }
 
-      if (!request.userData.isM2MApplication) {
+      if (!userData.isM2MApplication) {
         return reply.status(403).send({
           message:
             "This endpoint is only accessible by system-to-system applications",
@@ -82,11 +80,9 @@ export default async function supportMessages(app: FastifyInstance) {
       },
     },
     async function createMessageHandler(request, reply) {
-      if (!request.userData) {
-        return reply.status(401).send({ message: "User must be logged in" });
-      }
+      const userData = request.ensureUserIsSet();
 
-      if (!request.userData.isM2MApplication) {
+      if (!userData.isM2MApplication) {
         return reply.status(403).send({
           message:
             "This endpoint is only accessible by system-to-system applications",
@@ -94,7 +90,7 @@ export default async function supportMessages(app: FastifyInstance) {
       }
 
       const senderUser = {
-        id: request.userData.userId,
+        id: userData.userId,
         organizationId: app.config.SUPPORT_ORGANISATION_ID,
         isM2MApplication: true,
       };

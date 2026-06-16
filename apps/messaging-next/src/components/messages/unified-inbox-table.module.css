@@ -72,7 +72,19 @@
 .desktopTable {
   display: block;
   width: 100%;
-  overflow-x: auto;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.desktopTable :global(.gi-table) {
+  width: 100%;
+}
+
+.desktopTable :global(.gi-table-td),
+.desktopTable :global(.gi-table-th) {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .desktopTable :global(.gi-table-head),
@@ -110,15 +122,16 @@
 .senderCell {
   font-weight: inherit;
   color: var(--gieds-color-gray-900, #252526);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   display: block;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /* Details text */
 .detailsText {
   font-weight: inherit;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 /*

@@ -4,3 +4,16 @@
 **/docs
 **/.next
 **/k6
+
+# ──────────────────────────────────────────────────────────────────────
+# BMad workflow artefacts — PRDs, epics, story files, sprint status,
+# audit reports, and other developer-facing planning output. Tracked in
+# git for collaboration but never shipped inside container images.
+# Keep the patterns wide so any of the BMad layout variants (root
+# `_bmad-output/`, scoped `_bmad/`, alternate `bmad-output/`) get
+# excluded if a future install lands one of them.
+# ──────────────────────────────────────────────────────────────────────
+**/_bmad-output
+**/bmad-output
+**/_bmad
+**/.bmad

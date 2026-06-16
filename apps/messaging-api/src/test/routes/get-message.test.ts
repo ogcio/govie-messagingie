@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { Permissions } from "../../types/permissions.js";
 import { utils } from "../../utils/utils.js";
 import {
   DATABASE_TEST_URL_KEY,
@@ -39,7 +40,9 @@ describe("GET /api/v1/messages/{id}", {}, () => {
   });
 
   it("should return 404 if message not exist with onboarding permission", async () => {
-    app = await getServer(randomUUID().substring(0, 12), true);
+    app = await getServer(randomUUID().substring(0, 12), [
+      Permissions.MessageOnboarding.Read,
+    ]);
     const res = await app.inject({
       method: "GET",
       url: `/api/v1/messages/${randomUUID()}`,
@@ -49,7 +52,10 @@ describe("GET /api/v1/messages/{id}", {}, () => {
   });
 
   it("should return 404 if message not exist with self permission", async () => {
-    app = await getServer(randomUUID().substring(0, 12), false);
+    app = await getServer(randomUUID().substring(0, 12), [
+      Permissions.MessageSelf.Read,
+      Permissions.OnboardedCitizen,
+    ]);
     const res = await app.inject({
       method: "GET",
       url: `/api/v1/messages/${randomUUID()}`,
@@ -64,7 +70,7 @@ describe("GET /api/v1/messages/{id}", {}, () => {
     const organisationId = "an-org";
     const message = await insertMessage(recipientUserId, organisationId, pool);
 
-    app = await getServer(loggedInUserId, true);
+    app = await getServer(loggedInUserId, [Permissions.MessageOnboarding.Read]);
 
     const res = await app.inject({
       method: "GET",
@@ -85,7 +91,10 @@ describe("GET /api/v1/messages/{id}", {}, () => {
     const organisationId = "an-org";
     const message = await insertMessage(recipientUserId, organisationId, pool);
 
-    app = await getServer(loggedInUserId, false);
+    app = await getServer(loggedInUserId, [
+      Permissions.MessageSelf.Read,
+      Permissions.OnboardedCitizen,
+    ]);
 
     const res = await app.inject({
       method: "GET",
@@ -105,7 +114,7 @@ describe("GET /api/v1/messages/{id}", {}, () => {
     const organisationId = "an-org";
     const message = await insertMessage(recipientUserId, organisationId, pool);
 
-    app = await getServer(loggedInUserId, true);
+    app = await getServer(loggedInUserId, [Permissions.MessageOnboarding.Read]);
 
     const res = await app.inject({
       method: "GET",
@@ -120,7 +129,7 @@ describe("GET /api/v1/messages/{id}", {}, () => {
   });
 
   it("with illegal id url parameter should fail", async () => {
-    app = await getServer(randomUUID().substring(0, 12), true);
+    app = await getServer(randomUUID().substring(0, 12));
 
     const res = await app.inject({
       method: "GET",
@@ -145,7 +154,7 @@ describe("GET /api/v1/messages/{id}", {}, () => {
       true,
     );
 
-    app = await getServer(loggedInUserId, false);
+    app = await getServer(loggedInUserId);
 
     const res = await app.inject({
       method: "GET",
@@ -174,7 +183,7 @@ describe("GET /api/v1/messages/{id}", {}, () => {
       message.id,
     ]);
 
-    app = await getServer(loggedInUserId, false);
+    app = await getServer(loggedInUserId);
     const res = await app.inject({
       method: "GET",
       url: `/api/v1/messages/${message.id}`,
@@ -190,7 +199,7 @@ describe("GET /api/v1/messages/{id}", {}, () => {
       message.id,
     ]);
 
-    app = await getServer(loggedInUserId, false);
+    app = await getServer(loggedInUserId);
     const res = await app.inject({
       method: "GET",
       url: `/api/v1/messages/${message.id}`,
@@ -206,7 +215,7 @@ describe("GET /api/v1/messages/{id}", {}, () => {
     const loggedInUserId = randomUUID().substring(0, 12);
     const message = await insertMessage(loggedInUserId, "an-org", pool);
 
-    app = await getServer(loggedInUserId, false);
+    app = await getServer(loggedInUserId);
     const res = await app.inject({
       method: "GET",
       url: `/api/v1/messages/${message.id}`,
@@ -219,7 +228,10 @@ describe("GET /api/v1/messages/{id}", {}, () => {
 
 async function getServer(
   userId: string,
-  hasOnboardingPermissions: boolean,
+  scopes: string[] = [
+    Permissions.MessageSelf.Read,
+    Permissions.OnboardedCitizen,
+  ],
 ): Promise<FastifyInstance> {
   const server = await build();
   server.decorate("checkPermissionsCount", 0);
@@ -242,15 +254,11 @@ async function getServer(
           accessToken: "accesstoken",
           organizationId: "organisationId",
           isM2MApplication: false,
+          scopes,
         };
         editableServer.checkPermissionsCount += 1;
         request.userData = req.userData;
         return;
-      }
-
-      // next check when getMessage invokes it
-      if (!hasOnboardingPermissions) {
-        throw new Error();
       }
     };
   });

@@ -118,6 +118,7 @@ type MessageUpsertEvent = {
   scheduledAt: string;
   security: SecurityLevels;
   attachments?: string[];
+  bypassConsent?: boolean;
 };
 
 type MessageScheduleEvent = {

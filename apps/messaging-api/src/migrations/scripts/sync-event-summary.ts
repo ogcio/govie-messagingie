@@ -1,22 +1,10 @@
-import pg, { type Pool } from "pg";
-import type { EnvDbConfig } from "../../plugins/external/env.js";
+import type { Pool } from "pg";
 import { syncSummaryForMessage } from "../../services/messages/summary-event-logger.js";
 
-function getPgConnection(envDbConfig: EnvDbConfig): Pool {
-  return new pg.Pool({
-    host: envDbConfig.POSTGRES_HOST,
-    port: envDbConfig.POSTGRES_PORT,
-    database: envDbConfig.POSTGRES_DB_NAME,
-    user: envDbConfig.POSTGRES_USER,
-    password: envDbConfig.POSTGRES_PASSWORD,
-  });
-}
-
 export async function syncEventSummaryCommand(
-  envDbConfig: EnvDbConfig,
+  pool: Pool,
   fullResync: boolean,
 ): Promise<void> {
-  const pool = getPgConnection(envDbConfig);
   const batchSize = 500;
 
   try {
@@ -109,8 +97,6 @@ export async function syncEventSummaryCommand(
   } catch (e) {
     console.error("Error while syncing event summary:", e);
     throw e;
-  } finally {
-    await pool.end();
   }
 }
 

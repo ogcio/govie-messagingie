@@ -41,14 +41,12 @@ export async function clickButton(page: Page, buttonName: string) {
 
 export async function logout(page: Page) {
   if (page.url().includes("-admin")) {
-    await page.context().clearCookies()
-    await page.goto("/")
+    await page.goto("https://profile.dev.services.gov.ie/global-signout")
   } else {
     await clickButton(page, "Menu")
     await clickButton(page, "Logout")
-
-    await confirmSignout(page)
   }
+  await confirmSignout(page)
 }
 
 export async function confirmSignout(page: Page) {
@@ -61,10 +59,6 @@ export async function confirmSignout(page: Page) {
   await expect(page.getByText("Summary")).toBeVisible({
     timeout: 15000,
   })
-}
-
-export async function goToDashboard(page: Page) {
-  await page.goto("https://dashboard-admin.dev.services.gov.ie")
 }
 
 export async function sendMessageToDevCitizen(page: Page, nonSecure = false) {

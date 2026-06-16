@@ -7,6 +7,7 @@ import {
 import { createRemoteJWKSet, decodeJwt, type JWTPayload, jwtVerify } from "jose"
 import { headers } from "next/headers"
 import { GetTokenError, NoOrganizationError } from "./get-token-error"
+import { serializeErrorForLog } from "./serialize-error"
 import type { AppConfig, ConfigFactory, Logger, RedisConnection } from "./types"
 
 function normalizeRedisTokenError(error: unknown): never {
@@ -82,7 +83,10 @@ export const createGetSigninMethodRSC = (
         return undefined
       }
 
-      logger.error({ error }, "Cannot get the signin method")
+      logger.error(
+        { error: serializeErrorForLog(error) },
+        "Cannot get the signin method",
+      )
 
       // For other errors, log and treat as "no signin method"
       return undefined

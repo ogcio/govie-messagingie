@@ -6,6 +6,7 @@ import { Client, Pool } from "pg";
 import { createDatabase } from "../migrations/scripts/create-database.js";
 import { dropDatabase } from "../migrations/scripts/drop-database.js";
 import { doMigration } from "../migrations/scripts/migrate.js";
+import { getPgConnection } from "../migrations/scripts/shared.js";
 
 export const DATABASE_TEST_URL_KEY = "DATABASE_TEST_URL";
 
@@ -28,7 +29,12 @@ export async function migrateContainer(
 ) {
   const startConfig = getConfigFromContainer(toUseContainer);
   await createDatabase(startConfig);
-  await doMigration(startConfig);
+  const pool = getPgConnection(startConfig);
+  try {
+    await doMigration(startConfig, pool);
+  } finally {
+    await pool.end();
+  }
 }
 
 export async function dropContainer(

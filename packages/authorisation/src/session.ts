@@ -13,6 +13,7 @@ import {
   isPublicServant,
 } from "./roles"
 import { SelectedOrganizationHandler } from "./selected-organization-handler"
+import { serializeErrorForLog } from "./serialize-error"
 import { getUserSignInMethod } from "./token"
 import type { AuthSessionContext, Logger } from "./types"
 
@@ -169,7 +170,7 @@ export const createGetAuthSessionContextOptional = (
         token = await getCachedUserToken(userId)
       } catch (error) {
         logger.warn(
-          { error },
+          { error: serializeErrorForLog(error) },
           "[GetAuthSessionContextOptional] Failed to get token",
         )
         // Continue without token - we can still provide partial session info
@@ -198,7 +199,7 @@ export const createGetAuthSessionContextOptional = (
       }
     } catch (error) {
       logger.warn(
-        { error },
+        { error: serializeErrorForLog(error) },
         "[GetAuthSessionContextOptional] Error getting context",
       )
       return null

@@ -5,6 +5,7 @@ import {
   type LoggingError,
   toLoggingError,
 } from "@ogcio/fastify-logging-wrapper";
+import { getErrorMessage } from "@ogcio/shared-errors";
 import type { FastifyBaseLogger } from "fastify";
 import { isHttpError } from "http-errors";
 import type { Pool, PoolClient } from "pg";
@@ -785,10 +786,14 @@ export async function getPendingJobPerOrganization(params: {
       organizationId: row.organizationId,
     }));
   } catch (err) {
+    const errorMessage = getErrorMessage(err);
     if (isHttpError(err)) {
-      logger.error({ error: err }, "HTTP error fetching pending jobs");
+      logger.error(
+        { error: errorMessage, statusCode: err.statusCode },
+        "HTTP error fetching pending jobs",
+      );
     }
-    logger.error({ error: err }, "Error fetching pending jobs");
+    logger.error({ error: errorMessage }, "Error fetching pending jobs");
   }
 
   return [];

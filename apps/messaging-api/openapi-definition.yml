@@ -370,6 +370,12 @@ paths:
                   items:
                     type: string
                     format: uuid
+                bypassConsent:
+                  type: boolean
+                  default: false
+                  description: Set to true to bypass recipient messaging consent checks. Requires
+                    platform:messaging:write; omitted or false preserves normal
+                    consent enforcement.
       responses:
         "201":
           description: Default Response
@@ -4905,6 +4911,12 @@ paths:
                   items:
                     type: string
                     format: uuid
+                bypassConsent:
+                  type: boolean
+                  default: false
+                  description: Set to true to bypass recipient messaging consent checks. Requires
+                    platform:messaging:write; omitted or false preserves normal
+                    consent enforcement.
       responses:
         "201":
           description: Default Response

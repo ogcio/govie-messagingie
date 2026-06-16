@@ -14,6 +14,7 @@ export interface EnvDbConfig {
   POSTGRES_HOST: string;
   POSTGRES_PORT: number;
   POSTGRES_DB_NAME: string;
+  POSTGRES_SSL?: boolean;
 }
 
 export interface EnvEmailConfig {
@@ -107,6 +108,11 @@ export const EnvKeys: Record<
   POSTGRES_DB_NAME: {
     type: "string",
     required: true,
+  },
+  POSTGRES_SSL: {
+    type: "boolean",
+    required: false,
+    default: false,
   },
   PROFILE_BACKEND_URL: {
     type: "string",

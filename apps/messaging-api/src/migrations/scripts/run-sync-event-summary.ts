@@ -1,4 +1,4 @@
-import { getDbEnvs } from "./shared.js";
+import { getDbEnvs, getPgConnection } from "./shared.js";
 import { syncEventSummaryCommand } from "./sync-event-summary.js";
 
 let fullResync = false;
@@ -9,4 +9,15 @@ for (const arg of process.argv.slice(2)) {
   }
 }
 
-syncEventSummaryCommand(getDbEnvs(), fullResync);
+const pool = getPgConnection(getDbEnvs());
+
+try {
+  await syncEventSummaryCommand(pool, fullResync);
+} catch (err) {
+  console.error("Error during sync event summary", err);
+  process.exit(1);
+} finally {
+  await pool.end();
+}
+
+process.exit(0);

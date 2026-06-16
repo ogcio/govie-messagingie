@@ -1,3 +1,4 @@
+import { logger } from "../logger"
 import { profilePool } from "../pg"
 import type {
   Consent,
@@ -12,12 +13,11 @@ import {
   GENERIC_USER_ERROR,
   PROFILE_NOT_FOUND_FOR_EMAIL,
   PROFILE_NOT_FOUND_FOR_ID,
+  serializeErrorForLog,
   success,
 } from "../utils"
 
-export async function queryRelatedUsersByUserId(
-  userId: string,
-): Promise<
+export async function queryRelatedUsersByUserId(userId: string): Promise<
   Result<
     {
       id: string
@@ -247,7 +247,10 @@ export async function queryConsentsForProfile(
 
     return success(stuff.rows)
   } catch (err) {
-    console.error(err)
+    logger.error(
+      { error: serializeErrorForLog(err) },
+      "Failed to query profile consents",
+    )
     return failure(err, GENERIC_USER_ERROR)
   }
 }

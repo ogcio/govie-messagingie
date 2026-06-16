@@ -167,6 +167,10 @@ export class EmailSpecificProvider {
       return this.getDefault();
     }
 
+    if (provider.password && provider.password.length > 0) {
+      provider.password = this.cryptographyService.decrypt(provider.password);
+    }
+
     return provider;
   }
 

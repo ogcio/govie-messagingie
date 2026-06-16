@@ -1,24 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
-import pg from "pg";
+import type { Pool } from "pg";
 import Postgrator from "postgrator";
 import type { EnvDbConfig } from "../../plugins/external/env.js";
 
 export async function doMigration(
   envDbConfig: EnvDbConfig,
+  pool: Pool,
   version = "max",
 ): Promise<void> {
-  const client = new pg.Client({
-    host: envDbConfig.POSTGRES_HOST,
-    port: envDbConfig.POSTGRES_PORT,
-    database: envDbConfig.POSTGRES_DB_NAME,
-    user: envDbConfig.POSTGRES_USER,
-    password: envDbConfig.POSTGRES_PASSWORD,
-  });
+  const client = await pool.connect();
 
   try {
-    await client.connect();
-
     const migrationDir = path.join(import.meta.dirname, "../sql");
 
     if (!fs.existsSync(migrationDir)) {
@@ -46,6 +39,6 @@ export async function doMigration(
     console.error(err);
     throw err;
   } finally {
-    await client.end();
+    client.release();
   }
 }

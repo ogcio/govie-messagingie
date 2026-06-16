@@ -31,12 +31,7 @@ import type {
   FastifyRequestTypebox,
 } from "../../types/shared.js";
 import { AssignTagReqSchema } from "../../types/tags.js";
-import {
-  ensureOrganizationIdIsSet,
-  ensureUserIdIsSet,
-  getM2MAnalyticsSdk,
-} from "../../utils/authentication-factory.js";
-import { hasPermission } from "../../utils/has-permission.js";
+import { getM2MAnalyticsSdk } from "../../utils/authentication-factory.js";
 import {
   formatAPIResponse,
   sanitizePagination,
@@ -62,11 +57,9 @@ export default async function messages(app: FastifyInstance) {
       schema: ListMessagesReqGetSchema,
     },
     async function getMessagesHandler(request, _reply) {
-      if (!request.userData) {
-        throw httpErrors.unauthorized("User needs to be logged in");
-      }
-      const loggedInUserId = request.userData.userId;
-      const loggedInOrgId = request.userData.organizationId;
+      const userData = request.ensureUserIsSet();
+      const loggedInUserId = userData.userId;
+      const loggedInOrgId = userData.organizationId;
       const queryRecipientUserId = request.query.recipientUserId;
       const queryOrganisationId = request.query.organisationId;
       const pagination = sanitizePagination({
@@ -78,7 +71,7 @@ export default async function messages(app: FastifyInstance) {
         loggedInUserData: {
           userId: loggedInUserId,
           organizationId: loggedInOrgId,
-          accessToken: request.userData.accessToken,
+          accessToken: userData.accessToken,
         },
         query: {
           recipientUserId: queryRecipientUserId,
@@ -121,12 +114,9 @@ export default async function messages(app: FastifyInstance) {
         ),
       schema: ListMessagesReqPostSchema,
     },
-    async function postMessagesHandler(request, reply) {
-      if (!request.userData) {
-        return reply.status(401).send({ message: "User must be logged in" });
-      }
-
-      const { userId, organizationId, accessToken } = request.userData;
+    async function postMessagesHandler(request) {
+      const userData = request.ensureUserIsSet();
+      const organizationId = userData.organizationId;
 
       const pagination = sanitizePagination({
         limit: request.body.limit,
@@ -134,7 +124,7 @@ export default async function messages(app: FastifyInstance) {
       });
 
       const messages = await listMessages({
-        loggedInUserData: { userId, organizationId, accessToken },
+        loggedInUserData: { ...userData, organizationId },
         query: {
           recipientUserId: request.body.recipientUserId,
           organisationId: request.body.organisationId,
@@ -211,20 +201,15 @@ export default async function messages(app: FastifyInstance) {
       },
       schema: GetMessageReqSchema,
     },
-    async function getMessageHandler(request, reply) {
-      if (!request.userData) {
-        throw httpErrors.unauthorized("User needs to be logged in");
-      }
-      const hasOnboardingPermission = await hasPermission({
-        app,
-        request,
-        reply,
-        permission: Permissions.MessageOnboarding.Read,
-      });
+    async function getMessageHandler(request, _reply) {
+      const userData = request.ensureUserIsSet();
+      const hasOnboardingPermission = userData.scopes.includes(
+        Permissions.MessageOnboarding.Read,
+      );
 
       const loggedInUser = {
-        userId: ensureUserIdIsSet(request),
-        accessToken: request.userData.accessToken,
+        userId: userData.userId,
+        accessToken: userData.accessToken,
       };
       request.log.debug(
         {
@@ -258,15 +243,26 @@ export default async function messages(app: FastifyInstance) {
         app.checkPermissions(req, res, [
           Permissions.Message.Write,
           Permissions.Scheduler.Write,
+          Permissions.Platform.Write,
         ]),
       schema: CreateMessageReqSchema,
     },
     async function createMessageHandler(request, reply) {
       ensureUserCanAccessUser(request.userData, request.body.recipientUserId);
+      const userData = request.ensureUserIsSet();
+      if (
+        request.body.bypassConsent === true &&
+        !userData.scopes.includes(Permissions.Platform.Write)
+      ) {
+        throw httpErrors.forbidden(
+          "Cannot bypass recipient consent without platform write permission",
+        );
+      }
+      const organizationId = request.ensureIsPublicServant().organisationId;
       const senderUser = {
-        id: ensureUserIdIsSet(request),
-        organizationId: ensureOrganizationIdIsSet(request),
-        isM2MApplication: request.userData?.isM2MApplication ?? false,
+        id: userData.userId,
+        organizationId,
+        isM2MApplication: userData.isM2MApplication ?? false,
       };
 
       const message = await processMessage({
@@ -292,7 +288,7 @@ export default async function messages(app: FastifyInstance) {
       request: FastifyRequestTypebox<typeof GetEventsForMessageReqSchema>,
     ) {
       const messageId = request.params.messageId;
-      const organizationId = ensureOrganizationIdIsSet(request);
+      const organizationId = request.ensureIsPublicServant().organisationId;
 
       (await getM2MAnalyticsSdk(request.log)).track.event({
         event: {
@@ -328,24 +324,16 @@ export default async function messages(app: FastifyInstance) {
       request: FastifyRequestTypebox<typeof DeleteMessagesReqSchema>,
       reply: FastifyReplyTypebox<typeof DeleteMessagesReqSchema>,
     ) {
-      if (!request.userData) {
-        throw httpErrors.unauthorized("User needs to be logged in");
-      }
-      const userId = ensureUserIdIsSet(request);
+      const userData = request.ensureUserIsSet();
 
-      const organizationId = request.userData?.organizationId;
-      if (organizationId) {
-        throw httpErrors.forbidden(
-          "Public servant users cannot delete messages",
-        );
-      }
+      request.ensureIsCitizen();
 
       const messageIds = request.body.ids;
       await deleteMessages({
         pool: app.pg.pool,
         messageIds,
         logger: request.log,
-        loggedInUser: { userId, accessToken: request.userData.accessToken },
+        loggedInUser: userData,
       });
 
       return reply.status(200).send({ data: { ids: messageIds } });
@@ -364,13 +352,11 @@ export default async function messages(app: FastifyInstance) {
       request: FastifyRequestTypebox<typeof AssignTagReqSchema>,
       reply,
     ) {
-      if (!request.userData) {
-        throw httpErrors.unauthorized("User needs to be logged in");
-      }
+      const userData = request.ensureUserIsSet();
 
       const result = await assignMessageTag({
         pool: app.pg.pool,
-        userId: request.userData.userId,
+        userId: userData.userId,
         messageIds: request.body.messageIds,
         tagId: request.body.tagId,
       });

@@ -1,0 +1,160 @@
+FROM base-deps AS citizen-portal-base-deps
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+FROM citizen-portal-base-deps AS builder
+WORKDIR /app
+
+# Copy dependency files for better layer caching
+COPY package.json pnpm-*.yaml /app/
+COPY patches/ /app/patches/
+
+# Workspace package.json files needed before `pnpm install` so pnpm can
+# resolve the workspace graph from manifests alone (and benefit from
+# layer caching when only sources change).
+COPY apps/citizen-portal/package.json      /app/apps/citizen-portal/package.json
+COPY packages/citizen-shared/package.json  /app/packages/citizen-shared/package.json
+
+RUN apk update && \
+    apk upgrade && \
+    apk add envsubst
+
+# Install dependencies with cache mount for faster builds
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
+# Copy source for the unified app and its shared workspace package.
+COPY ./apps/citizen-portal/      /app/apps/citizen-portal/
+COPY ./packages/citizen-shared/  /app/packages/citizen-shared/
+
+# Refresh the injected workspace package copies — same reasoning as the
+# production Dockerfile (see the longer comment there).
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile --prefer-offline
+
+ENV NODE_ENV=production
+ENV CI=true
+
+ARG NEXT_PUBLIC_CITIZEN_PORTAL_BASE_URL
+ARG NEXT_PUBLIC_SAG_URL
+ARG NEXT_PUBLIC_PROFILE_SERVICE_ENTRY_POINT
+ARG NEXT_PUBLIC_MESSAGING_ADMIN_SERVICE_ENTRY_POINT
+ARG NEXT_PUBLIC_DASHBOARD_SERVICE_ENTRY_POINT
+ARG NEXT_PUBLIC_FARO_URL
+ARG NEXT_PUBLIC_FARO_SERVICE_NAME
+ARG NEXT_PUBLIC_FARO_SERVICE_NAMESPACE
+ARG NEXT_PUBLIC_FARO_PROPAGATE_TRACE_HEADER
+ARG NEXT_PUBLIC_UNLEASH_URL
+ARG NEXT_PUBLIC_UNLEASH_CLIENT_KEY
+ARG NEXT_PUBLIC_UNLEASH_APP_NAME
+
+ARG NEXT_PUBLIC_MATOMO_URL=//analytics.ogcio.gov.ie
+ARG NEXT_PUBLIC_MATOMO_PROTOCOL=https
+ARG NEXT_PUBLIC_ANALYTICS_WEBSITE_ID
+ARG NEXT_PUBLIC_ANALYTICS_ORGANIZATION_ID=ogcio
+ARG NEXT_PUBLIC_ANALYTICS_DRY_RUN="true"
+
+ENV NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_CITIZEN_PORTAL_BASE_URL:-http://localhost:8080}
+# Default to sag.local.test (not localhost) so SAG cookies — set with
+# Domain=.local.test and SameSite=Lax — are sent on /auth/status calls
+# made from messaging.local.test:8080 etc. The host is added to
+# /etc/hosts (127.0.0.1 sag.local.test) and inside the container via
+# --add-host=sag.local.test:host-gateway from scripts/dev/docker-run-citizen-portal.mjs.
+ENV NEXT_PUBLIC_SAG_URL=${NEXT_PUBLIC_SAG_URL:-http://sag.local.test:3333}
+# Cross-zone hostnames for the consolidated citizen-portal. All three
+# hostnames are served from THIS same container on port 8080 via the
+# unified nginx server block, so the defaults must match the
+# *.local.test hostnames the browser uses (paired with /etc/hosts
+# entries). Keeping these aligned with the NEXT_PUBLIC_MESSAGING_URL
+# fallback in packages/citizen-shared/src/env/client.ts is what makes
+# the drawer's cross-zone links resolve correctly when no --build-arg
+# overrides are supplied (e.g. `pnpm docker:build:citizen-portal:local`).
+ENV NEXT_PUBLIC_MESSAGING_URL=${NEXT_PUBLIC_CITIZEN_PORTAL_BASE_URL:-http://messaging.local.test:8080}
+ENV NEXT_PUBLIC_PROFILE_URL=${NEXT_PUBLIC_PROFILE_SERVICE_ENTRY_POINT:-http://profile.local.test:8080}
+ENV NEXT_PUBLIC_MESSAGING_ADMIN_URL=${NEXT_PUBLIC_MESSAGING_ADMIN_SERVICE_ENTRY_POINT:-http://localhost:3022}
+ENV NEXT_PUBLIC_DASHBOARD_URL=${NEXT_PUBLIC_DASHBOARD_SERVICE_ENTRY_POINT:-http://dashboard.local.test:8080}
+ENV NEXT_PUBLIC_FARO_URL=${NEXT_PUBLIC_FARO_URL:-http://localhost:12347/collect}
+ENV NEXT_PUBLIC_FARO_SERVICE_NAME=${NEXT_PUBLIC_FARO_SERVICE_NAME:-citizen-portal}
+ENV NEXT_PUBLIC_FARO_SERVICE_NAMESPACE=${NEXT_PUBLIC_FARO_SERVICE_NAMESPACE:-citizen-portal}
+ENV NEXT_PUBLIC_FARO_PROPAGATE_TRACE_HEADER=${NEXT_PUBLIC_FARO_PROPAGATE_TRACE_HEADER:-http://localhost:8080/*}
+ENV NEXT_PUBLIC_UNLEASH_URL=${NEXT_PUBLIC_UNLEASH_URL:-http://localhost:4242/api/frontend}
+ENV NEXT_PUBLIC_UNLEASH_CLIENT_KEY=${NEXT_PUBLIC_UNLEASH_CLIENT_KEY:-default:development.unleash-insecure-frontend-api-token}
+ENV NEXT_PUBLIC_UNLEASH_APP_NAME=${NEXT_PUBLIC_UNLEASH_APP_NAME:-citizen-portal}
+
+ENV NEXT_PUBLIC_MATOMO_URL=${NEXT_PUBLIC_MATOMO_URL}
+ENV NEXT_PUBLIC_MATOMO_PROTOCOL=${NEXT_PUBLIC_MATOMO_PROTOCOL}
+ENV NEXT_PUBLIC_ANALYTICS_URL=${NEXT_PUBLIC_CITIZEN_PORTAL_BASE_URL:-http://localhost:8080}/_next/analytics-api
+ENV NEXT_PUBLIC_ANALYTICS_WEBSITE_ID=${NEXT_PUBLIC_ANALYTICS_WEBSITE_ID}
+ENV NEXT_PUBLIC_ANALYTICS_ORGANIZATION_ID=${NEXT_PUBLIC_ANALYTICS_ORGANIZATION_ID}
+ENV NEXT_PUBLIC_ANALYTICS_DRY_RUN=${NEXT_PUBLIC_ANALYTICS_DRY_RUN:-true}
+
+ARG PORT
+ARG OTEL_ENABLE
+ARG OTEL_SERVICE_NAME
+ARG OTEL_COLLECTOR_URL
+
+ENV PORT=${PORT:-8080}
+ENV OTEL_ENABLE=${OTEL_ENABLE:-false}
+ENV OTEL_SERVICE_NAME=${OTEL_SERVICE_NAME:-citizen-portal}
+ENV OTEL_COLLECTOR_URL=${OTEL_COLLECTOR_URL:-http://localhost:1234}
+
+ARG TRUSTED_PROXY_CIDR
+ENV TRUSTED_PROXY_CIDR=${TRUSTED_PROXY_CIDR:-0.0.0.0/0}
+
+# Per-zone server_name values for the canonicalisation map — defaults
+# match docker-compose.yaml /etc/hosts setup (added inside the container
+# via --add-host from scripts/dev/docker-run-citizen-portal.mjs).
+ARG MESSAGING_HOST
+ARG PROFILE_HOST
+ARG DASHBOARD_HOST
+ENV MESSAGING_HOST=${MESSAGING_HOST:-messaging.local.test}
+ENV PROFILE_HOST=${PROFILE_HOST:-profile.local.test}
+ENV DASHBOARD_HOST=${DASHBOARD_HOST:-dashboard.local.test}
+
+ARG ANALYTICS_MANAGEMENT_API_ORIGIN=http://localhost:8075
+ARG ANALYTICS_MANAGEMENT_API_HOST=localhost:8075
+ENV ANALYTICS_MANAGEMENT_API_ORIGIN=${ANALYTICS_MANAGEMENT_API_ORIGIN}
+ENV ANALYTICS_MANAGEMENT_API_HOST=${ANALYTICS_MANAGEMENT_API_HOST}
+
+ARG ANALYTICS_TRACKER_ORIGIN=https://track.analytics.dev.services.gov.ie
+ENV ANALYTICS_TRACKER_ORIGIN=${ANALYTICS_TRACKER_ORIGIN}
+
+ENV CSP_CONNECT_SRC="${NEXT_PUBLIC_SAG_URL} ${NEXT_PUBLIC_FARO_URL} ${NEXT_PUBLIC_UNLEASH_URL} ${NEXT_PUBLIC_ANALYTICS_URL}"
+
+# Build the unified citizen-portal app (single out/).
+RUN pnpm --filter @citizen-portal/app build
+
+# Prune dev dependencies for production
+RUN pnpm prune --prod
+
+# Pre-compress static assets at max level for gzip_static serving.
+RUN find \
+    /app/apps/citizen-portal/out \
+    -type f \( -name '*.html' -o -name '*.css' -o -name '*.js' -o -name '*.json' -o -name '*.svg' -o -name '*.xml' -o -name '*.txt' \) \
+    -exec gzip -k -9 {} +
+
+RUN envsubst '${OTEL_ENABLE} ${OTEL_SERVICE_NAME} ${OTEL_COLLECTOR_URL} ${PORT} ${TRUSTED_PROXY_CIDR} ${CSP_CONNECT_SRC} ${ANALYTICS_MANAGEMENT_API_ORIGIN} ${ANALYTICS_MANAGEMENT_API_HOST} ${ANALYTICS_TRACKER_ORIGIN} ${MESSAGING_HOST} ${PROFILE_HOST} ${DASHBOARD_HOST}' <"/app/apps/citizen-portal/docker/nginx.conf.template" > "/app/apps/citizen-portal/docker/nginx.conf"
+
+# Production stage — nginx serves the single static export under the
+# three configured server_names. The canonicalisation map inside
+# nginx.conf handles URL-content parity (off-zone paths 301 to owner).
+FROM nginxinc/nginx-unprivileged:1.29-alpine-otel AS runner
+
+USER root
+
+# Remove default site
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Single root for all three hostnames.
+COPY --from=builder /app/apps/citizen-portal/out/        /usr/share/nginx/html/
+COPY --from=builder /app/apps/citizen-portal/docker/nginx.conf  /etc/nginx/nginx.conf
+
+ARG PORT
+ENV PORT=${PORT:-8080}
+EXPOSE ${PORT}
+
+USER nginx
+
+CMD ["nginx", "-g", "daemon off;"]

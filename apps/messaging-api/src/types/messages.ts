@@ -88,6 +88,13 @@ export const CreateMessageBodySchema = Type.Object({
   }),
   message: MessageInputSchema,
   attachments: Type.Optional(Type.Array(Type.String({ format: "uuid" }))),
+  bypassConsent: Type.Optional(
+    Type.Boolean({
+      default: false,
+      description:
+        "Set to true to bypass recipient messaging consent checks. Requires platform:messaging:write; omitted or false preserves normal consent enforcement.",
+    }),
+  ),
 });
 
 export type CreateMessageBody = Static<typeof CreateMessageBodySchema>;

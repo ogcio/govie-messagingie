@@ -9,11 +9,13 @@
   },
   "scripts": {
     "dev": "concurrently \"pnpm dev:api\" \"pnpm dev:www\" \"pnpm dev:admin\"",
-    "dev:next": "concurrently \"pnpm dev:api\" \"pnpm dev:admin\" \"pnpm dev:next-app\"",
+    "dev:next": "concurrently \"pnpm dev:api\" \"pnpm dev:admin-next\" \"pnpm dev:citizen-next\"",
+    "dev:admin-next": "pnpm --filter messaging-admin-next dev 2>&1 | tee logs/dev-admin-next.log",
+    "dev:citizen-next": "pnpm --filter messaging-next dev 2>&1 | tee logs/dev-citizen-next.log",
+    "dev:citizen-portal": "pnpm --filter @citizen-portal/app dev",
     "dev:api": "pnpm --filter messaging-api dev 2>&1 | tee logs/messaging-api.log",
     "dev:www": "pnpm --filter messaging dev 2>&1 | tee logs/messaging.log",
     "dev:admin": "pnpm --filter messaging-admin dev 2>&1 | tee logs/messaging-admin.log",
-    "dev:next-app": "pnpm --filter messaging-next dev 2>&1 | tee logs/messaging-next.log",
     "dev:setup": "node scripts/dev/setup.mjs",
     "dev:health": "node scripts/dev/health-check.mjs",
     "dev:reset": "pnpm clean && pnpm dev:setup",
@@ -22,6 +24,8 @@
     "build:www": "pnpm --filter messaging build",
     "build:www:watt": "pnpm --filter messaging build:watt",
     "build:admin": "pnpm --filter messaging-admin build",
+    "build:admin-next": "pnpm --filter messaging-admin-next build",
+    "build:citizen-portal": "pnpm --filter \"@citizen-portal/*\" -r build",
     "format": "pnpm -r format",
     "format:api": "pnpm --filter messaging-api format",
     "format:www": "pnpm --filter messaging format",
@@ -34,6 +38,7 @@
     "test:api": "pnpm --filter messaging-api test",
     "test:www": "pnpm --filter messaging test",
     "test:admin": "pnpm --filter messaging-admin test",
+    "test:admin-next": "pnpm --filter messaging-admin-next test",
     "prepare": "husky || true",
     "preinstall": "npx only-allow pnpm",
     "db:up": "docker compose -f docker-compose.yaml up --detach",
@@ -54,6 +59,12 @@
     "docker:build:www": "docker build -f apps/messaging/Dockerfile -t messaging .",
     "docker:build:next": "docker build -f apps/messaging-next/Dockerfile -t messaging-next .",
     "docker:build:admin": "docker build -f apps/messaging-admin/Dockerfile -t messaging-admin .",
+    "docker:build:admin-next": "docker build -f apps/messaging-admin-next/Dockerfile -t messaging-admin-next .",
+    "docker:build:citizen-portal": "docker build -f apps/citizen-portal/Dockerfile -t citizen-portal .",
+    "docker:build:citizen-portal:local": "docker build -f apps/citizen-portal/Dockerfile.local -t citizen-portal:local .",
+    "docker:run:citizen-portal": "node scripts/dev/docker-run-citizen-portal.mjs --image citizen-portal",
+    "docker:run:citizen-portal:local": "node scripts/dev/docker-run-citizen-portal.mjs --image citizen-portal:local",
+    "docker:up:citizen-portal:local": "node scripts/dev/docker-run-citizen-portal.mjs --image citizen-portal:local --build",
     "run:dev": "pnpm dev:setup && pnpm dev",
     "deps:smart-update": "tsx scripts/smart-workspace-update.ts"
   },
@@ -62,19 +73,19 @@
   "license": "ISC",
   "devDependencies": {
     "@axe-core/playwright": "4.11.3",
-    "@biomejs/biome": "2.4.15",
-    "@commitlint/cli": "21.0.0",
-    "@commitlint/config-conventional": "21.0.0",
-    "@types/node": "25.7.0",
-    "@vitest/coverage-v8": "4.1.6",
-    "concurrently": "9.2.1",
+    "@biomejs/biome": "2.4.16",
+    "@commitlint/cli": "21.0.2",
+    "@commitlint/config-conventional": "21.0.2",
+    "@types/node": "25.9.1",
+    "@vitest/coverage-v8": "4.1.8",
+    "concurrently": "10.0.3",
     "husky": "9.1.7",
     "nodemon": "3.1.14",
     "tsc-alias": "1.8.17",
-    "tsx": "4.21.0",
+    "tsx": "4.22.4",
     "typescript": "6.0.3",
-    "vite": "8.0.12",
-    "vitest": "4.1.6",
+    "vite": "8.0.16",
+    "vitest": "4.1.8",
     "yaml": "2.9.0"
   },
   "resolutions": {
@@ -82,7 +93,9 @@
   },
   "pnpm": {
     "overrides": {
-      "protobufjs": "8.2.0"
+      "protobufjs": "8.4.1",
+      "@grpc/grpc-js": ">=1.14.4",
+      "esbuild": ">=0.28.1"
     },
     "patchedDependencies": {
       "@ogcio/design-system-react@1.34.0": "patches/@ogcio__design-system-react@1.34.0.patch"

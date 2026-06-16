@@ -12,6 +12,9 @@ const nextConfig: NextConfig = {
     "require-in-the-middle",
   ],
   output: "standalone",
+  outputFileTracingIncludes: {
+    "/**": ["./data/certificates/global-bundle.pem"],
+  },
   transpilePackages: ["@ogcio/nextjs-analytics", "@ogcio/analytics-sdk"],
 }
 

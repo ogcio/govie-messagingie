@@ -208,26 +208,6 @@ const loadPersonalSdk = (
   });
 };
 
-export const ensureUserIdIsSet = (request: {
-  userData?: { userId?: string };
-}): string => {
-  if (request.userData?.userId) {
-    return request.userData.userId;
-  }
-
-  throw httpErrors.forbidden("User id is not set");
-};
-
-export const ensureOrganizationIdIsSet = (request: {
-  userData?: { organizationId?: string };
-}): string => {
-  if (request.userData?.organizationId) {
-    return request.userData.organizationId;
-  }
-
-  throw httpErrors.forbidden("Organization id is not set");
-};
-
 export const getM2MUploadSdk = async (
   logger: FastifyBaseLogger,
   organizationId: string,

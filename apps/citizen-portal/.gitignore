@@ -1,0 +1,18 @@
+node_modules/
+.next/
+out/
+tsconfig.tsbuildinfo
+zones/*/out/
+zones/*/.next/
+zones/*/next-env.d.ts
+zones/*/tsconfig.tsbuildinfo
+docker/nginx.conf
+results.xml
+test-results/
+playwright-report/
+*.log
+
+# Local env files (sample stays tracked)
+.env
+.env.*
+!.env.sample

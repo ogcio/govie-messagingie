@@ -1,0 +1,51 @@
+# Local Host-based testing for the consolidated citizen-portal image.
+#
+# Build context is the repo root because Dockerfile.local copies pnpm
+# workspace files (package.json, pnpm-*.yaml, patches/, packages/
+# citizen-shared/) that live above this directory.
+#
+# Prerequisites:
+#   1. The `base-deps` image must already exist locally. Build it once with:
+#        pnpm docker:build:base
+#   2. Add the test hostnames to /etc/hosts:
+#        127.0.0.1 messaging.local.test profile.local.test dashboard.local.test
+#
+# Run with:
+#   cd apps/citizen-portal
+#   docker compose up --build citizen-portal
+#
+# Then verify each zone responds:
+#   curl -H "Host: messaging.local.test" http://localhost:8080/health
+#   curl -H "Host: profile.local.test"   http://localhost:8080/health
+#   curl -H "Host: dashboard.local.test" http://localhost:8080/health
+#
+# And in a browser:
+#   http://messaging.local.test:8080/
+#   http://profile.local.test:8080/
+#   http://dashboard.local.test:8080/
+
+services:
+  citizen-portal:
+    container_name: citizen-portal
+    build:
+      context: ../..
+      dockerfile: apps/citizen-portal/Dockerfile.local
+    image: citizen-portal:local
+    ports:
+      - "${CITIZEN_PORTAL_PORT:-8080}:8080"
+    environment:
+      PORT: 8080
+      MESSAGING_HOST: messaging.local.test
+      PROFILE_HOST: profile.local.test
+      DASHBOARD_HOST: dashboard.local.test
+    restart: unless-stopped
+    healthcheck:
+      # Health check uses the messages zone Host header; nginx returns 200 on /health.
+      test:
+        - CMD-SHELL
+        - >-
+          wget -q -O - --header="Host: messaging.local.test"
+          http://127.0.0.1:8080/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5

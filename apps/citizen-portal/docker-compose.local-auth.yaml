@@ -1,0 +1,284 @@
+# ── Local auth chain for the consolidated citizen-portal ──────────────
+#
+# This compose file stands up the same auth chain the dev cluster runs,
+# entirely on the host's docker daemon, so the playwright `e2e/user/**`,
+# `e2e/visual/**`, and `e2e/a11y/**` suites — plus the un-skipped
+# `e2e/cross-zone-sag-session.spec.ts` — can run without VPN, without
+# leasing dev credentials, and without an external mock-login service.
+#
+# Topology (mirrors the dev cluster, minus the AWS-managed bits):
+#
+#   Browser ──► nginx (citizen-portal:local on :8080)
+#               │
+#               ├─► /auth/* ──► secure-api-gateway:3333 (Redis-backed session)
+#               │                │
+#               │                ├─► OIDC ──► logto:3301
+#               │                │            │
+#               │                │            └─► MyGovId connector ──► mygovid-mock-service:4005
+#               │                │
+#               │                └─► Redis (6379)
+#               │
+#               └─► Logto (3301) ── (Postgres on 5433)
+#
+# This file is OPT-IN. Bring up the base citizen-portal compose first,
+# then layer this one on top:
+#
+#     docker compose \
+#       -f docker-compose.yaml \
+#       -f docker-compose.local-auth.yaml \
+#       up -d
+#
+# The combined stack listens on:
+#   - http://messaging.local.test:8080   (zone landing — messages)
+#   - http://profile.local.test:8080     (zone landing — profile)
+#   - http://dashboard.local.test:8080   (zone landing — dashboard)
+#   - http://localhost:3301              (Logto sign-in / OIDC issuer)
+#   - http://localhost:3302              (Logto admin)
+#   - http://localhost:3333              (Secure API Gateway)
+#   - http://localhost:4005              (MyGovId mock IdP)
+#
+# Prerequisites (one-time):
+#   1. /etc/hosts entries (see docker-compose.yaml header for the base set)
+#      plus:
+#        127.0.0.1 authorization.local.test secure-api-gateway.local.test
+#   2. Local source checkouts of the sibling repos that produce the SAG
+#      and mygovid-mock images:
+#        ${LOGTO_UTILS_PATH:-../../../@ogcio/logto-utils}
+#        ${SAG_PATH:-../../../@ogcio/secure-api-gateway}
+#   3. The `base-deps` image must exist (the SAG override Dockerfile
+#      `FROM base-deps`-es it):  pnpm docker:build:base
+#
+# Why an override Dockerfile for SAG?
+#   The upstream SAG Dockerfile's runner stage uses a private AWS ECR
+#   mirror (`428528001781.dkr.ecr.eu-west-1.amazonaws.com/...`) that
+#   contributors can't pull without AWS credentials. The local override
+#   in `local-auth/Dockerfile.sag-local` keeps the build steps identical
+#   but swaps the runner base to public `node:24-alpine`. See the
+#   comment block at the top of that file for the upkeep contract.
+
+services:
+  # ── Datastores ──────────────────────────────────────────────────────
+  # `host_port:5432` is the publish target on the host so Logto can
+  # reach postgres via `postgres:5432`. The OGCIO logto-utils stack
+  # historically used port 5433; this file uses 5432 inside the
+  # container with no host port collision (override via env if needed).
+  postgres:
+    image: postgres:18-alpine
+    container_name: citizen-portal-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: p0stgr3s
+      POSTGRES_DB: logto
+    ports:
+      # 5434 on the host avoids collision with a typical host-installed
+      # postgres on 5432 and with the existing logto-utils-postgres on
+      # 5433. Inside the docker network the service is still :5432.
+      - "${LOCAL_AUTH_POSTGRES_HOST_PORT:-5434}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # Redis publishes to a non-default host port to avoid the very common
+  # collision with a host-installed redis (or another compose stack's
+  # redis on 6379). The SAG container reads `REDIS_URL=redis://redis:6379`
+  # which uses the internal docker DNS name + port — unaffected.
+  redis:
+    image: redis:7-alpine
+    container_name: citizen-portal-redis
+    ports:
+      - "${LOCAL_AUTH_REDIS_HOST_PORT:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ── Mock IdP ────────────────────────────────────────────────────────
+  # MyGovId mock — the same image dev runs against
+  # (`mock-login-service.dev.*`) but built locally from the
+  # @ogcio/logto-utils workspace. The dev image ships HTML forms that
+  # the playwright helpers already know how to drive, so this slot keeps
+  # `e2e/helpers/user-auth.helper.ts` portable between dev and local.
+  mygovid-mock-service:
+    container_name: citizen-portal-mygovid-mock
+    build:
+      # Path resolves from the compose file's directory
+      # (`apps/citizen-portal/`):
+      #   `../../..` → the `@ogcio/` directory (the parent of this repo)
+      #   `../../../logto-utils` → the sibling logto-utils repo checkout.
+      # Override via LOGTO_UTILS_PATH if the layout differs.
+      context: ${LOGTO_UTILS_PATH:-../../../logto-utils}
+      dockerfile: apps/mygovid-mock-service/Dockerfile
+    ports:
+      - "${LOCAL_AUTH_MYGOVID_HOST_PORT:-4005}:4005"
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: info
+    restart: unless-stopped
+
+  # ── Logto ───────────────────────────────────────────────────────────
+  # `svhd/logto:1.38.0` is the upstream image. The OGCIO fork ships
+  # additional CLI subcommands (`db ogcio`) that perform a full
+  # citizen-portal redirect-URI seed on first boot, but those live in
+  # a custom `local-logto:latest` image built from the logto-utils
+  # repo — see `logto-utils/logto/Dockerfile` — which requires the
+  # base-image chain (Dockerfile.base + dhi.io/node from private
+  # ECR), and is therefore not buildable from a contributor's laptop
+  # without AWS credentials.
+  #
+  # The compose file falls back to the upstream image with the
+  # standard `db seed` + `db alteration deploy` entrypoint. The
+  # OGCIO seeding (mygovid connector + citizen-portal OIDC clients)
+  # must then be applied via the Logto admin API — see
+  # scripts/dev/seed-local-logto.mjs for a wrapper that does it.
+  logto:
+    container_name: citizen-portal-logto
+    image: svhd/logto:1.38.0
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mygovid-mock-service:
+        condition: service_started
+    ports:
+      # Defaults bumped to 3303/3304 (from upstream Logto's 3301/3302)
+      # so an existing developer-mode `pnpm start` Logto from the
+      # logto-utils sibling repo can keep running alongside the
+      # docker stack. Override via env if you want the canonical
+      # ports.
+      - "${LOCAL_AUTH_LOGTO_HOST_PORT:-3303}:3301"
+      - "${LOCAL_AUTH_LOGTO_ADMIN_HOST_PORT:-3304}:3302"
+    entrypoint:
+      - sh
+      - -c
+      - |
+        node ./node_modules/@logto/cli/bin/logto.js db seed -- --swe \
+        ; node ./node_modules/@logto/cli/bin/logto.js db alteration deploy latest \
+        && cd packages/core && NODE_ENV=production node .
+    # `db seed` is allowed to fail (postgres already has the role
+    # from a previous boot — that's why the `&&` becomes `;` for that
+    # step). The alteration deploy + core start are still gated on
+    # each other.
+    environment:
+      TRUST_PROXY_HEADER: "1"
+      DB_URL: postgres://postgres:p0stgr3s@postgres:5432/logto
+      # The browser-visible URL is :3303 (host-published port);
+      # internal docker-to-docker traffic still uses logto:3301.
+      ENDPOINT: http://localhost:3303
+      ADMIN_ENDPOINT: http://localhost:3304
+      PORT: "3301"
+      ADMIN_PORT: "3302"
+      SEEDER_FILE_NAME: ogcio-seeder-testing
+      # Local-host redirect URIs the seeder writes into the OIDC clients.
+      # MUST stay in lockstep with scripts/dev/seed-local-logto.mjs.
+      SEEDER_SAG_REDIRECT_URI: http://localhost:3333/auth/callback
+      SEEDER_SAG_LOGOUT_REDIRECT_URI: http://localhost:3333/auth/post-sign-out
+      SEEDER_MESSAGING_APP_REDIRECT_URI: http://messaging.local.test:8080/api/callback
+      SEEDER_MESSAGING_APP_LOGOUT_REDIRECT_URI: http://messaging.local.test:8080
+      SEEDER_PROFILE_APP_REDIRECT_URI: http://profile.local.test:8080/callback
+      SEEDER_PROFILE_APP_LOGOUT_REDIRECT_URI: http://profile.local.test:8080
+      SEEDER_DASHBOARD_APP_REDIRECT_URI: http://dashboard.local.test:8080/callback
+      SEEDER_DASHBOARD_APP_LOGOUT_REDIRECT_URI: http://dashboard.local.test:8080
+      # The mock IdP is reached via the docker network DNS name from
+      # the Logto container, but the BROWSER reaches the same endpoint
+      # via localhost (since this is what the Logto sign-in page
+      # generates as the authorization redirect). Set both via
+      # /etc/hosts mapping if you need the browser to hit the mock too.
+      SEEDER_MYGOVID_CONNECTOR_TOKEN_ENDPOINT: http://mygovid-mock-service:4005/mock/mygovid/token
+      SEEDER_MYGOVID_CONNECTOR_AUTHORIZATION_ENDPOINT: http://localhost:4005/mock/mygovid/auth
+      SEEDER_MYGOVID_CONNECTOR_JWS_URI: http://mygovid-mock-service:4005/mock/mygovid/keys
+      SEEDER_MYGOVID_CONNECTOR_CLIENT_ID: mock_client_id
+    restart: unless-stopped
+
+  # ── Secure API Gateway ──────────────────────────────────────────────
+  # Built from the local override Dockerfile (see
+  # local-auth/Dockerfile.sag-local for the rationale on the runner
+  # base swap from private ECR -> public node:24-alpine).
+  secure-api-gateway:
+    container_name: citizen-portal-sag
+    build:
+      # Same `../../../<sibling>` story as mygovid-mock-service above.
+      context: ${SAG_PATH:-../../../secure-api-gateway}
+      # Docker compose resolves `dockerfile` relative to the build
+      # context, so we tunnel back into this repo via the
+      # `../govie-services-messaging/...` path (the messaging repo dir
+      # name must match — see the comment in `local-auth/Dockerfile.sag-local`).
+      # Override via env if the layout differs.
+      dockerfile: ${SAG_DOCKERFILE_OVERRIDE_PATH:-../govie-services-messaging/apps/citizen-portal/local-auth/Dockerfile.sag-local}
+    depends_on:
+      redis:
+        condition: service_healthy
+      logto:
+        condition: service_started
+    ports:
+      - "${LOCAL_AUTH_SAG_HOST_PORT:-3333}:3333"
+    environment:
+      NODE_ENV: development
+      PORT: "3333"
+      LOG_LEVEL: info
+      HOST_URL: http://localhost:3333
+      LOGTO_BASE_URL: http://logto:3301
+      LOGTO_COOKIE_SECRET: local-cookie-secret-rotate-me
+      REDIS_URL: redis://redis:6379
+      SESSION_COOKIE_DOMAIN: .local.test
+      # ──────────────────────────────────────────────────────────────
+      # Placeholder per-service Logto app credentials.
+      #
+      # These are the OIDC client IDs/secrets the OGCIO fork's
+      # `db ogcio` seeder writes into Logto on first boot. With the
+      # upstream Logto image we don't get that step automatically, so
+      # the values below are placeholders that satisfy SAG's
+      # env-schema validation and let the container start.
+      #
+      # Real OIDC handshakes (sign-in, token exchange) will FAIL until
+      # you either:
+      #   a) build the OGCIO Logto fork from `logto-utils/logto/Dockerfile`
+      #      (requires AWS ECR access for the dhi.io base image), or
+      #   b) open Logto admin at http://localhost:3304 and register
+      #      each application manually with the redirect URIs from
+      #      scripts/dev/seed-local-logto.mjs, then paste the
+      #      generated app-id / app-secret into the matching pair
+      #      below and restart SAG.
+      # ──────────────────────────────────────────────────────────────
+      SERVICE_MESSAGING_URL: http://messaging.local.test:8080
+      SERVICE_MESSAGING_LOGTO_APP_ID: placeholder-messaging-app-id
+      SERVICE_MESSAGING_LOGTO_APP_SECRET: placeholder-messaging-app-secret
+      SERVICE_PROFILE_URL: http://profile.local.test:8080
+      SERVICE_PROFILE_LOGTO_APP_ID: placeholder-profile-app-id
+      SERVICE_PROFILE_LOGTO_APP_SECRET: placeholder-profile-app-secret
+      SERVICE_UPLOAD_URL: http://upload.local.test:8080
+      SERVICE_UPLOAD_LOGTO_APP_ID: placeholder-upload-app-id
+      SERVICE_UPLOAD_LOGTO_APP_SECRET: placeholder-upload-app-secret
+      SERVICE_DASHBOARD_LOGTO_APP_ID: placeholder-dashboard-app-id
+      SERVICE_DASHBOARD_LOGTO_APP_SECRET: placeholder-dashboard-app-secret
+      SERVICE_PROFILE_ADMIN_LOGTO_APP_ID: placeholder-profile-admin-app-id
+      SERVICE_PROFILE_ADMIN_LOGTO_APP_SECRET: placeholder-profile-admin-app-secret
+      SERVICE_MESSAGING_ADMIN_LOGTO_APP_ID: placeholder-messaging-admin-app-id
+      SERVICE_MESSAGING_ADMIN_LOGTO_APP_SECRET: placeholder-messaging-admin-app-secret
+      PROFILE_FRONTEND_URL: http://profile.local.test:8080
+    restart: unless-stopped
+
+  # ── Wire the auth chain into the citizen-portal nginx ───────────────
+  # The base service is defined in docker-compose.yaml; this override
+  # only adds the dependency edges + extra host mappings so the
+  # bundle's /auth/* requests resolve when called from inside the
+  # browser via http://messaging.local.test:8080/auth/*.
+  citizen-portal:
+    depends_on:
+      secure-api-gateway:
+        condition: service_started
+      logto:
+        condition: service_started
+    # Extra hosts so the nginx upstream resolver inside the container
+    # can resolve the local-test hostnames. Browser-side, the user's
+    # /etc/hosts handles it.
+    extra_hosts:
+      - "authorization.local.test:host-gateway"
+      - "secure-api-gateway.local.test:host-gateway"
+
+volumes:
+  postgres-data:
+  redis-data:

@@ -20,6 +20,7 @@ import {
 import { signIn } from "@ogcio/sag-client"
 import {
   CONNECTOR_MYGOVID,
+  MESSAGING_PUBLIC_SERVANT_ROLE_NAME,
   ROLE_NAME_ONBOARDED_CITIZEN,
   SagClientProvider,
   useAuth,
@@ -48,6 +49,7 @@ import {
   clearPersistedForceConsent,
   persistForceConsentFromUrl,
 } from "@/util/force-consent"
+import { suppressAuthRedirectNoise } from "@/util/suppress-auth-redirect-noise"
 
 const AUTH_TIMEOUT_MS = 15_000
 const LANGUAGE_SWITCHER = {
@@ -121,6 +123,12 @@ function ShellContent({ children }: { children: ReactNode }) {
     appBaseUrl: env.NEXT_PUBLIC_BASE_URL,
     connector: CONNECTOR_MYGOVID,
     publicServantRedirectUrl: env.NEXT_PUBLIC_MESSAGING_ADMIN_URL,
+    // Match messaging-admin-next's `usePublicServantGuard` definition so both
+    // apps agree on who is a Messaging public servant. Without this, a user
+    // with org roles for a different service (e.g. "Profile Public Servant")
+    // would be redirected here ↔ messaging-admin-next and stranded on the
+    // NotAuthorized panel.
+    publicServantRoles: [MESSAGING_PUBLIC_SERVANT_ROLE_NAME],
   })
 
   const timedOut = useAuthTimeout(resolved)
@@ -256,6 +264,9 @@ function AuthenticatedShell({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!loading && !user && !signInTriggered.current) {
       signInTriggered.current = true
+      // The redirect below aborts any in-flight SAG auth fetch; silence the
+      // resulting benign "Error checking auth: Load failed" telemetry (AB#39103).
+      suppressAuthRedirectNoise()
       // Pass the full current URL (including query string) as the post-login
       // redirect target. Without this, the gateway falls back to the Referer
       // header which — under the "strict-origin-when-cross-origin" policy
@@ -335,6 +346,8 @@ function AuthenticatedShell({ children }: { children: ReactNode }) {
 export function ClientShell({ children }: { children: ReactNode }) {
   const handleSessionExpired = useCallback(() => {
     persistForceConsentFromUrl()
+    // Same benign aborted-fetch noise as the initial sign-in redirect (AB#39103).
+    suppressAuthRedirectNoise()
     signIn(env.NEXT_PUBLIC_SAG_URL, env.NEXT_PUBLIC_SAG_APP_NAME, {
       connector: CONNECTOR_MYGOVID,
       redirectUrl: window.location.href,

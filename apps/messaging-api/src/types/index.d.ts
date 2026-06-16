@@ -16,12 +16,6 @@ declare module "fastify" {
       RawReplyDefaultExpression<RawServer> = RawReplyDefaultExpression<RawServer>,
     Logger = FastifyLoggerInstance,
   > {
-    checkPermissions: (
-      request: FastifyRequest,
-      reply: FastifyReply,
-      permissions: string[],
-      matchConfig?: { method: "AND" | "OR" },
-    ) => Promise<void>;
     dirname: string;
   }
 }

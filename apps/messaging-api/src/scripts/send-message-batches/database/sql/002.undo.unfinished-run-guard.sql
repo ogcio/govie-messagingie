@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS batch_runs_unfinished_fingerprint_uidx;

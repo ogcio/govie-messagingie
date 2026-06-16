@@ -118,11 +118,6 @@ vi.mock("nodemailer", () => ({
   }),
 }));
 
-const getCryptographyService = () =>
-  new CryptographyService({
-    EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
-  });
-
 vi.mock("../../../services/users/profile-sdk-wrapper.js", () => {
   return {
     // biome-ignore lint/complexity/useArrowFunction: Vitest 4 requires function (not arrow) for class constructor mocks
@@ -380,10 +375,13 @@ describe("Execute job", () => {
   });
 
   it("should set jobs as succesful if email succeeds", async () => {
+    const encryptionKey = randomBytes(32).toString("base64");
     const provider = new EmailSpecificProvider(
       pool,
       organizationId,
-      getCryptographyService(),
+      new CryptographyService({
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
+      }),
     );
     await provider.create({
       inputBody: {
@@ -420,7 +418,7 @@ describe("Execute job", () => {
       eventLogger,
       i18n: new Translator(),
       config: {
-        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
       } as EnvConfig,
       cache,
     });
@@ -446,10 +444,13 @@ describe("Execute job", () => {
 
   it("should set jobs as failed if email sending fails", async () => {
     hoisted.state.mustEmailSendingFail = true;
+    const encryptionKey = randomBytes(32).toString("base64");
     const provider = new EmailSpecificProvider(
       pool,
       organizationId,
-      getCryptographyService(),
+      new CryptographyService({
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
+      }),
     );
     await provider.create({
       inputBody: {
@@ -486,7 +487,7 @@ describe("Execute job", () => {
       eventLogger,
       i18n: new Translator(),
       config: {
-        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
       } as EnvConfig,
       cache,
     });
@@ -516,11 +517,13 @@ describe("Execute job", () => {
 
   it("should set jobs as failed if email address is empty", async () => {
     hoisted.state.hasProfileValidEmail = false;
-
+    const encryptionKey = randomBytes(32).toString("base64");
     const provider = new EmailSpecificProvider(
       pool,
       organizationId,
-      getCryptographyService(),
+      new CryptographyService({
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
+      }),
     );
     await provider.create({
       inputBody: {
@@ -557,7 +560,7 @@ describe("Execute job", () => {
       eventLogger,
       i18n: new Translator(),
       config: {
-        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
       } as EnvConfig,
       cache,
     });
@@ -585,10 +588,13 @@ describe("Execute job", () => {
   });
 
   it("should set jobs as failed if cannot fetch organisation", async () => {
+    const encryptionKey = randomBytes(32).toString("base64");
     const provider = new EmailSpecificProvider(
       pool,
       hoisted.organizationNotExistId,
-      getCryptographyService(),
+      new CryptographyService({
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
+      }),
     );
     await provider.create({
       inputBody: {
@@ -625,7 +631,7 @@ describe("Execute job", () => {
       eventLogger,
       i18n: new Translator(),
       config: {
-        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
       } as EnvConfig,
       cache,
     });
@@ -704,10 +710,13 @@ describe("Execute job", () => {
   });
 
   it("should send confidential message body when requested", async () => {
+    const encryptionKey = randomBytes(32).toString("base64");
     const provider = new EmailSpecificProvider(
       pool,
       organizationId,
-      getCryptographyService(),
+      new CryptographyService({
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
+      }),
     );
     await provider.create({
       inputBody: {
@@ -745,7 +754,7 @@ describe("Execute job", () => {
       eventLogger,
       i18n: new Translator(),
       config: {
-        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
       } as EnvConfig,
       cache,
     });
@@ -790,11 +799,14 @@ describe("Execute job", () => {
   });
 
   it("should send confidential message body when requested  - ga translation", async () => {
+    const encryptionKey = randomBytes(32).toString("base64");
     hoisted.state.preferredLanguage = "ga";
     const provider = new EmailSpecificProvider(
       pool,
       organizationId,
-      getCryptographyService(),
+      new CryptographyService({
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
+      }),
     );
     await provider.create({
       inputBody: {
@@ -832,7 +844,7 @@ describe("Execute job", () => {
       eventLogger,
       i18n: new Translator(),
       config: {
-        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: randomBytes(32).toString("base64"),
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
       } as EnvConfig,
       cache,
     });

@@ -1,0 +1,331 @@
+{
+  "metadata": {
+    "title": "MessagingIE"
+  },
+  "scaffold": {
+    "heading": "Citizen Portal",
+    "subheading": "Unified app shell — routes from messages, profile and dashboard land here in Phase B."
+  },
+  "pages": {
+    "messages": {
+      "title": "Messages"
+    },
+    "myDashboard": {
+      "title": "My Dashboard"
+    }
+  },
+  "dashboard": {
+    "welcome": "Welcome back, {name}",
+    "messages": {
+      "title": "Your messages",
+      "link": "View all messages",
+      "view": "View message",
+      "empty": "No new messages",
+      "error": "Error loading messages: {message}"
+    },
+    "help": {
+      "title": "Search for services or information",
+      "description": "Gov.ie is your main access point to government services and information in Ireland. Here, you can find help with things like social welfare, employment, health, education, and housing. The site brings together updates on government policies and emergency announcements, and it makes it easier to find the right department or local office you may need. Whether you're looking for support, applying for services, or just trying to understand your entitlements, this is a good place to start.",
+      "link": "Launch gov.ie"
+    }
+  },
+  "home": {
+    "heading": "Messages",
+    "tab": {
+      "unread": "Unread",
+      "all": "All"
+    },
+    "ariaLabel": {
+      "all": "All messages",
+      "unread": "Unread messages",
+      "mainContent": "Main content"
+    },
+    "table": {
+      "column": {
+        "status": "Status",
+        "sender": "Sender",
+        "date": "Date",
+        "details": "Details",
+        "attachment": "Attachment"
+      },
+      "rowsPerPage": "Rows per page",
+      "aria": {
+        "messageList": "Message list"
+      },
+      "filter": {
+        "status": "Filter by status",
+        "all": "All messages",
+        "unread": "Unread",
+        "read": "Read"
+      },
+      "from": "From",
+      "unknownSender": "Unknown sender",
+      "systemSender": {
+        "support": "MessagingIE"
+      },
+      "attachment": "{count, plural, one {attachment} other {attachments}}",
+      "unreadCount": "{count} unread",
+      "select": "Select",
+      "selectAll": "Select All",
+      "close": "Close",
+      "ariaLabel": {
+        "selectAll": "Select all messages on this page",
+        "selectRow": "Select message from {sender}: {subject}"
+      },
+      "empty": {
+        "unread": "You have no unread messages",
+        "read": "You have no read messages",
+        "all": "You have no messages",
+        "search": "No messages matched your search."
+      }
+    },
+    "button": {
+      "back": "Back"
+    },
+    "delete": {
+      "toolbar": {
+        "ariaLabel": "Bulk actions",
+        "selectedCount": "{count} selected",
+        "delete": "Delete"
+      },
+      "confirm": {
+        "title": "{count, plural, one {Delete message?} other {Delete # messages?}}",
+        "body": "{count, plural, one {This message will be removed from your inbox.} other {These # messages will be removed from your inbox.}}",
+        "cta": "Delete",
+        "cancel": "Cancel",
+        "close": "Close"
+      },
+      "alert": {
+        "success": "{count, plural, one {# message has been deleted} other {# messages have been deleted}}",
+        "failure": "{count, plural, one {# message could not be deleted} other {# messages could not be deleted}}"
+      }
+    },
+    "detail": {
+      "delete": "Delete"
+    }
+  },
+  "search": {
+    "button": {
+      "search": "Search",
+      "reset": "Reset"
+    },
+    "input": {
+      "placeholder": "Search"
+    },
+    "ariaLabel": "Search messages"
+  },
+  "navigation": {
+    "title": {
+      "messages": "MessagingIE",
+      "profile": "My Profile",
+      "dashboard": "Dashboard"
+    },
+    "header": {
+      "title": "MessagingIE",
+      "onboarding": "Onboarding",
+      "drawer": {
+        "dashboard": "Dashboard",
+        "messaging": "MessagingIE",
+        "close": "Close"
+      },
+      "menu": "Menu",
+      "language": {
+        "english": "English",
+        "irish": "Gaeilge"
+      }
+    },
+    "userMenu": {
+      "viewMyProfile": "View my Profile",
+      "logout": "Logout"
+    },
+    "footer": {
+      "link": {
+        "privacy": "Privacy",
+        "cookies": "Cookies",
+        "accessibilityStatement": "Accessibility statement",
+        "termsOfUse": "Terms of use",
+        "contactSupport": "Contact Support"
+      },
+      "text": {
+        "trademark": "© 2025 Government of Ireland Design System"
+      }
+    },
+    "back": {
+      "ariaLabel": "Go back"
+    }
+  },
+  "consent": {
+    "banner": "You have opted-out of receiving messages from Public Sector Bodies. You can <link>update your preferences</link> to start receiving messages again.",
+    "title": "Enable or Disable Electronic Messages",
+    "description": "You can decide whether or not you wish to receive electronic messages from Public Service Bodies at any time.",
+    "currentStatus": {
+      "description": "MessagingIE (Electronic Message Delivery) is currently <bold>{status}</bold>",
+      "enabled": "Enabled",
+      "disabled": "Disabled",
+      "unset": "Unset"
+    },
+    "linkedAccounts": {
+      "title": "Linked accounts",
+      "notice": "Your consent preference will automatically apply to <bold>{count}</bold> linked account(s). Any changes you make will affect all your associated accounts."
+    },
+    "actions": {
+      "update": {
+        "title": "Do you want to update your preference?",
+        "action": "Update"
+      }
+    }
+  },
+  "announcements": {
+    "modalHeader": {
+      "title": "Your inbox has been updated",
+      "description": "A few things have changed — here's what to know."
+    }
+  },
+  "accountLinking": {
+    "title": "Is this you?",
+    "description": "We believe that we have matched your records below.",
+    "footer": "If this is correct, please select <bold>Confirm</bold>. We will send you an email to confirm the match on your User Profile.<br></br><br></br>If this is incorrect, please select <bold>Report an Issue</bold>",
+    "confirm": "Confirm",
+    "report": "Report an Issue",
+    "loading": "Loading...",
+    "error": {
+      "server": "Failed to load account information. Please report an issue if the problem persists.",
+      "linking": "Failed to link accounts"
+    }
+  },
+  "profile": {
+    "title": "My Profile",
+    "information": "The information below includes everything we have sourced from your MyGovID and currently have on file.",
+    "form": {
+      "title": "Public name",
+      "description": "Your public name can be updated at any time and will appear across this platform. Updating this name will not affect your MyGovID public name."
+    },
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "update": "Update",
+    "name": "Name",
+    "dateOfBirth": "Date of birth",
+    "clickToReveal": "Click to reveal",
+    "clickToHide": "Click to hide",
+    "contactDetails": "Contact details",
+    "email": "Email",
+    "emptyPublicName": "You cannot remove your public name - please enter a name",
+    "publicNameUpdatedToast": "Public Name has been updated",
+    "publicNameFailedUpdatedToast": "Public Name failed to update"
+  },
+  "contactSupport": {
+    "title": {
+      "main": "Contact support",
+      "departmentOfEducation": "Department of Education and Youth",
+      "departmentOfSocialProtection": "Department of Social Protection"
+    },
+    "paragraph": {
+      "main": "To get the right support, select the option that corresponds to the public service body that sent you the secure message.",
+      "departmentOfEducation": "If you received a notification from <bold>Department of Education and Youth</bold>, select this option to access their support services.",
+      "departmentOfSocialProtection": "If you received a notification from <bold>Department of Social Protection/Welfare.ie</bold>, select this option to access their support services"
+    },
+    "button": {
+      "departmentOfEducation": "Contact DoEY Support",
+      "departmentOfSocialProtection": "Contact DSP Support"
+    }
+  },
+  "title": {
+    "termsOfUse": "Terms of use",
+    "accessibilityStatement": "Accessibility statement",
+    "privacy": "Privacy",
+    "cookies": "Cookies",
+    "contactSupport": "Contact Support"
+  },
+  "onboard": {
+    "heading": {
+      "main": "Complete Your MyGovID Account Verification to Proceed"
+    },
+    "paragraph": {
+      "safeLevel2": "You've already verified your email and phone number, but to use this service, you also need to fully verify your MyGovID account by linking it to your Public Services Card (PPSN). This extra step confirms your identity for secure access to public services. Please follow <link>these instructions</link> to complete the verification process."
+    },
+    "profileCreation": {
+      "loading": "Waiting for your profile to be created...",
+      "failed": "Profile creation takes longer than expected. Please refresh the page."
+    }
+  },
+  "wrongLoginMethod": {
+    "title": "Different log in method required",
+    "description": "The service you're trying to open requires a different login method than the one you're currently using.",
+    "stepsLabel": "To continue, you'll need to:",
+    "step1": "Log out of your current session",
+    "step2": "Sign in again using the required login method for this service",
+    "logOutBttn": "Log out",
+    "invalidReturnUrl": "This page requires a valid return link. Please use the link from the service or go back."
+  },
+  "wrongAccountPage": {
+    "title": "Wrong account detected",
+    "descriptionLine1": "You were logged in using the email login method.",
+    "descriptionLine2": "This method is allowed to be used with personal accounts only.",
+    "logOutBttn": "Log out",
+    "invalidReturnUrl": "This page requires a valid return link. Please use the link from the service or go back."
+  },
+  "exportUserData": {
+    "title": "Export data",
+    "paragraph": {
+      "main": "You can export and download your profile information, messages and attachments. Click the Export data button to select which data you want to export. When your data is ready for download, you will receive an email. The data will be available for download here at the profile page for 30 days.",
+      "pending": "Button will be available again in 30 days after completion",
+      "cooldown": "Next export available in {days, plural, =0 {today} one {# day} other {# days}}"
+    },
+    "button": {
+      "request": "Request data export",
+      "download": "Download"
+    },
+    "alert": {
+      "info": {
+        "paragraph": "You can export and download your profile information, messages and attachments. Click the Export data button to select which data you want to export. When your data is ready for download, you will receive an email. The data will be available for download here at the profile page for 30 days.",
+        "title": "Information"
+      },
+      "success": {
+        "paragraph1": "Your prepared download will be available until {date}",
+        "paragraph2": "days remaining",
+        "title": "Your data export is ready!"
+      },
+      "failed": {
+        "paragraph": "We couldn't prepare your file this time. Please try requesting it again",
+        "title": "Export failed"
+      }
+    },
+    "toast": {
+      "title": {
+        "requestSuccess": "Export request submitted",
+        "requestError": "Export request failed",
+        "errorUnableToStart": "Unable to start download",
+        "serverError": "Service temporarily unavailable"
+      },
+      "description": {
+        "requestSuccess": "Your data export is being prepared. You will receive an email when it's ready.",
+        "requestError": "We couldn't start your export. Please try again later.",
+        "errorUnableToStart": "We couldn't prepare your file. Please wait a moment and click download again.",
+        "serverError": "We're having trouble connecting to our file service. Please try again in a few minutes."
+      }
+    }
+  },
+  "globalSignout": {
+    "loggingOut": "We're logging you out",
+    "pleaseWait": "Please don't close or refresh this page — you'll be redirected shortly."
+  },
+  "notFound": {
+    "heading": "Page not found",
+    "message": "The page you are looking for doesn't exist or has been moved.",
+    "back": "Go to messages"
+  },
+  "errors": {
+    "page": {
+      "title": "Something went wrong",
+      "message": "MessagingIE could not complete your request. Please try again and if the problem persists contact MessagingIE support.",
+      "retry": "Retry"
+    },
+    "global": {
+      "title": "An unexpected error occurred",
+      "retry": "Retry"
+    },
+    "server": "An error occurred while processing your request. Please try again later.",
+    "unknown": "Something went wrong",
+    "tryAgain": "Try again"
+  }
+}

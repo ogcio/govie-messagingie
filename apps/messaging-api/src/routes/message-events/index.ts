@@ -12,10 +12,7 @@ import {
   type ListMessageEventsResponse,
 } from "../../types/message-events.js";
 import { Permissions } from "../../types/permissions.js";
-import {
-  ensureOrganizationIdIsSet,
-  getM2MAnalyticsSdk,
-} from "../../utils/authentication-factory.js";
+import { getM2MAnalyticsSdk } from "../../utils/authentication-factory.js";
 import {
   formatAPIResponse,
   sanitizePagination,
@@ -50,7 +47,7 @@ export default async function messageEvents(app: FastifyInstance) {
 
       const response = await listMessageEvents({
         pagination,
-        organizationId: ensureOrganizationIdIsSet(request),
+        organizationId: request.ensureIsPublicServant().organisationId,
         pool: app.pg.pool,
         search: request.query.search,
         dateFrom: request.query.dateFrom,
@@ -80,7 +77,7 @@ export default async function messageEvents(app: FastifyInstance) {
     },
     async function getEventHandler(request, _reply) {
       const eventId = request.params.eventId;
-      const organizationId = ensureOrganizationIdIsSet(request);
+      const organizationId = request.ensureIsPublicServant().organisationId;
 
       (await getM2MAnalyticsSdk(request.log)).track.event({
         event: {

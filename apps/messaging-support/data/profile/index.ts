@@ -4,7 +4,9 @@ import { AppHttp } from "../http"
 import { logger } from "../logger"
 import { getSupportSdk } from "../sdk"
 import {
+  type Consent,
   type FullProfile,
+  type GetUserConsentDataResponse,
   type LinkProfile,
   type LogtoUser,
   type LogtoUserRole,
@@ -13,13 +15,16 @@ import {
   type ProfileLinkParams,
   type ProfileQueryBase,
   type Result,
-  type GetUserConsentDataResponse,
-  type UserRelations,
   type UpdateUserConsentDataResponse,
   UserRelationStatuses,
-  Consent,
+  type UserRelations,
 } from "../types"
-import { failure, GENERIC_USER_ERROR, success } from "../utils"
+import {
+  failure,
+  GENERIC_USER_ERROR,
+  serializeErrorForLog,
+  success,
+} from "../utils"
 import {
   fetchDeleteAccount,
   fetchLogtoUserRole,
@@ -364,7 +369,10 @@ async function getLatestConsentData(
       const result = await supportSdk.getLatestConsents({ profileId })
 
       if (result.error) {
-        logger.error(result.error)
+        logger.error(
+          { error: serializeErrorForLog(result.error) },
+          "Failed to fetch latest consents",
+        )
         span.recordException(result.error)
         return failure(result.error, GENERIC_USER_ERROR)
       }
@@ -386,7 +394,10 @@ async function updateProfileConsentData(params: {
       const result = await supportSdk.submitConsents({ consents, profileId })
 
       if (result.error) {
-        logger.error(result.error)
+        logger.error(
+          { error: serializeErrorForLog(result.error) },
+          "Failed to submit consents",
+        )
         span.recordException(result.error)
         return failure(result.error, GENERIC_USER_ERROR)
       }

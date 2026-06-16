@@ -13,7 +13,6 @@ import type {
   FastifyReplyTypebox,
   FastifyRequestTypebox,
 } from "../../types/shared.js";
-import { ensureOrganizationIdIsSet } from "../../utils/authentication-factory.js";
 import {
   formatAPIResponse,
   sanitizePagination,
@@ -143,7 +142,7 @@ export default async function providers(app: FastifyInstance) {
   function buildEmailProvider(request: FastifyRequest): EmailSpecificProvider {
     return new EmailSpecificProvider(
       app.pg.pool,
-      ensureOrganizationIdIsSet(request),
+      request.ensureIsPublicServant().organisationId,
       app.cryptographyService,
       undefined,
       request.log,

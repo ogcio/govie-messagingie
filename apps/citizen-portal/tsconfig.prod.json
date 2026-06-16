@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "zones",
+    "out",
+    "coverage",
+    ".next",
+    "test",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "vitest.config.mts"
+  ]
+}

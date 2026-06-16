@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
+import { Permissions } from "../../types/permissions.js";
 import { utils } from "../../utils/utils.js";
 import {
   DATABASE_TEST_URL_KEY,
@@ -395,6 +396,7 @@ async function getServer(
         accessToken: "accesstoken",
         organizationId,
         isM2MApplication: false,
+        scopes: [Permissions.MessageSelf.Read, Permissions.OnboardedCitizen],
       };
       request.userData = req.userData;
     };

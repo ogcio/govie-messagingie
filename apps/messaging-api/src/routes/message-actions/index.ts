@@ -1,4 +1,3 @@
-import { httpErrors } from "@fastify/sensible";
 import type { FastifyInstance } from "fastify";
 import { updateMessageAction } from "../../services/message-actions/message-action-service.js";
 import {
@@ -8,7 +7,6 @@ import {
   type PutMessageActionResponse,
 } from "../../types/message-actions.js";
 import { Permissions } from "../../types/permissions.js";
-import { ensureUserIdIsSet } from "../../utils/authentication-factory.js";
 
 export const prefix = "/message-actions";
 
@@ -30,9 +28,7 @@ export default async function messagesActions(app: FastifyInstance) {
       schema: PutMessageActionReqSchema,
     },
     async function putMessageOptions(req) {
-      if (!req.userData) {
-        throw httpErrors.unauthorized("User needs to be logged in");
-      }
+      const userData = req.ensureUserIsSet();
 
       const messageOptionId = req.params.messageId;
       if (messageOptionId !== req.body.messageId) {
@@ -41,8 +37,8 @@ export default async function messagesActions(app: FastifyInstance) {
 
       await updateMessageAction({
         loggedInUser: {
-          userId: ensureUserIdIsSet(req),
-          accessToken: req.userData?.accessToken,
+          userId: userData.userId,
+          accessToken: userData.accessToken,
         },
         body: req.body,
         pool: app.pg.pool,

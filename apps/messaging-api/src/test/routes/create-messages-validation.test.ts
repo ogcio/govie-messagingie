@@ -1,18 +1,56 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { afterEach, describe, expect, it, suite } from "vitest";
+import { afterEach, describe, expect, it, suite, vi } from "vitest";
+import { Permissions } from "../../types/permissions.js";
 import { build } from "../test-server-builder.js";
 
+const { processMessageMock } = vi.hoisted(() => ({
+  processMessageMock: vi.fn(),
+}));
+
+vi.mock(
+  "../../services/messages/message-service.js",
+  async (importOriginal) => {
+    const original =
+      await importOriginal<
+        typeof import("../../services/messages/message-service.js")
+      >();
+
+    return {
+      ...original,
+      processMessage: processMessageMock,
+    };
+  },
+);
+
 describe("POST /api/v1/messages", {}, () => {
-  const getServer = async (): Promise<FastifyInstance> => {
+  const validMessageBody = {
+    security: "public",
+    preferredTransports: [],
+    recipientUserId: "recipientUserId",
+    scheduleAt: "2024-08-27T07:46:10.290Z",
+    message: {
+      threadName: "thread",
+      subject: "subject",
+      excerpt: "excerpt",
+      plainText: "text",
+      richText: "text",
+      language: "en",
+    },
+  };
+
+  let requestedPermissions: string[][] = [];
+
+  const getServer = async (scopes: string[] = []): Promise<FastifyInstance> => {
     const server = await build();
     server.addHook("onRequest", async (req: FastifyRequest) => {
       // Override the request decorator
       server.checkPermissions = async (
         request: FastifyRequest,
         _reply: FastifyReply,
-        _permissions: string[],
+        permissions: string[],
         _matchConfig?: { method: "AND" | "OR" },
       ) => {
+        requestedPermissions.push(permissions);
         // biome-ignore lint/complexity/noUselessLoneBlockStatements: it's used
         {
           req.userData = {
@@ -20,6 +58,7 @@ describe("POST /api/v1/messages", {}, () => {
             accessToken: "accessToken",
             organizationId: "organisationId",
             isM2MApplication: false,
+            scopes,
           };
 
           request.userData = req.userData;
@@ -33,6 +72,8 @@ describe("POST /api/v1/messages", {}, () => {
   let app: FastifyInstance | undefined;
 
   afterEach(() => {
+    processMessageMock.mockReset();
+    requestedPermissions = [];
     if (app) {
       app.close();
       app = undefined;
@@ -507,6 +548,78 @@ describe("POST /api/v1/messages", {}, () => {
       expect(body.detail).toBe(
         "body/message/language must be equal to one of the allowed values",
       );
+    });
+
+    it("should request platform write permission for create message", async () => {
+      app = await getServer();
+      await app.inject({
+        method: "POST",
+        url: "/api/v1/messages",
+        body: {
+          ...validMessageBody,
+          bypassConsent: null,
+        },
+      });
+
+      expect(requestedPermissions[0]).toEqual([
+        Permissions.Message.Write,
+        Permissions.Scheduler.Write,
+        Permissions.Platform.Write,
+      ]);
+    });
+
+    it("with null bypassConsent should fail", async () => {
+      app = await getServer();
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/v1/messages",
+        body: {
+          ...validMessageBody,
+          bypassConsent: null,
+        },
+      });
+      const body = await res.json();
+
+      expect(res.statusCode).toBe(422);
+      expect(body.code).toBe("VALIDATION_ERROR");
+      expect(body.detail).toBe("body/bypassConsent must be boolean");
+    });
+
+    it("with bypassConsent true should require platform write scope", async () => {
+      app = await getServer([Permissions.Message.Write]);
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/v1/messages",
+        body: {
+          ...validMessageBody,
+          bypassConsent: true,
+        },
+      });
+      const body = await res.json();
+
+      expect(res.statusCode).toBe(403);
+      expect(body.detail).toBe(
+        "Cannot bypass recipient consent without platform write permission",
+      );
+      expect(processMessageMock).not.toHaveBeenCalled();
+    });
+
+    it("with bypassConsent false should not require platform write scope", async () => {
+      processMessageMock.mockResolvedValueOnce({
+        messageId: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+      });
+      app = await getServer([Permissions.Message.Write]);
+      const res = await app.inject({
+        method: "POST",
+        url: "/api/v1/messages",
+        body: {
+          ...validMessageBody,
+          bypassConsent: false,
+        },
+      });
+
+      expect(res.statusCode).toBe(201);
+      expect(processMessageMock).toHaveBeenCalledOnce();
     });
   });
 });

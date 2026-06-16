@@ -1,4 +1,3 @@
-import { httpErrors } from "@fastify/sensible";
 import type { FastifyInstance } from "fastify";
 import {
   createTag,
@@ -35,13 +34,11 @@ export default async function tags(app: FastifyInstance) {
       request: FastifyRequestTypebox<typeof CreateTagReqSchema>,
       reply,
     ) {
-      if (!request.userData) {
-        throw httpErrors.unauthorized("User needs to be logged in");
-      }
+      const userData = request.ensureUserIsSet();
 
       const result = await createTag(
         app.pg.pool,
-        request.userData.userId,
+        userData.userId,
         request.body,
       );
 
@@ -65,11 +62,8 @@ export default async function tags(app: FastifyInstance) {
     async function handleListTags(
       request: FastifyRequestTypebox<typeof ListTagsReqSchema>,
     ) {
-      if (!request.userData) {
-        throw httpErrors.unauthorized("User needs to be logged in");
-      }
-
-      const result = await listTags(app.pg.pool, request.userData.userId);
+      const userData = request.ensureUserIsSet();
+      const result = await listTags(app.pg.pool, userData.userId);
 
       return { data: result };
     },
@@ -91,11 +85,9 @@ export default async function tags(app: FastifyInstance) {
     async function handleGetTagTree(
       request: FastifyRequestTypebox<typeof GetTagTreeReqSchema>,
     ) {
-      if (!request.userData) {
-        throw httpErrors.unauthorized("User needs to be logged in");
-      }
+      const userData = request.ensureUserIsSet();
 
-      const result = await getTagTree(app.pg.pool, request.userData.userId);
+      const result = await getTagTree(app.pg.pool, userData.userId);
 
       return { data: result };
     },
@@ -116,13 +108,11 @@ export default async function tags(app: FastifyInstance) {
       request: FastifyRequestTypebox<typeof UpdateTagReqSchema>,
       reply,
     ) {
-      if (!request.userData) {
-        throw httpErrors.unauthorized("User needs to be logged in");
-      }
+      const userData = request.ensureUserIsSet();
 
       const result = await updateTag(
         app.pg.pool,
-        request.userData.userId,
+        userData.userId,
         request.params.tagId,
         request.body,
       );
@@ -146,13 +136,11 @@ export default async function tags(app: FastifyInstance) {
       request: FastifyRequestTypebox<typeof DeleteTagReqSchema>,
       reply,
     ) {
-      if (!request.userData) {
-        throw httpErrors.unauthorized("User needs to be logged in");
-      }
+      const userData = request.ensureUserIsSet();
 
       const result = await deleteTag(
         app.pg.pool,
-        request.userData.userId,
+        userData.userId,
         request.params.tagId,
       );
 

@@ -12,11 +12,13 @@ export interface EnvConfig {
   POSTGRES_MESSAGING_HOST: string
   POSTGRES_MESSAGING_PORT: string
   POSTGRES_MESSAGING_DATABASE: string
+  POSTGRES_MESSAGING_SSL: string
   POSTGRES_PROFILE_USER: string
   POSTGRES_PROFILE_PASSWORD: string
   POSTGRES_PROFILE_HOST: string
   POSTGRES_PROFILE_PORT: string
   POSTGRES_PROFILE_DATABASE: string
+  POSTGRES_PROFILE_SSL: string
   MICROSOFT_CLIENT_ID: string
   MICROSOFT_CLIENT_SECRET: string
   MICROSOFT_TENANT_ID: string
@@ -90,6 +92,11 @@ export const getEnvConfig = (): EnvConfig => {
     POSTGRES_PROFILE_DATABASE: getEnvOrPlaceholder(
       "POSTGRES_PROFILE_DATABASE",
       "profiles",
+    ),
+    POSTGRES_PROFILE_SSL: getEnvOrPlaceholder("POSTGRES_PROFILE_SSL", "false"),
+    POSTGRES_MESSAGING_SSL: getEnvOrPlaceholder(
+      "POSTGRES_MESSAGING_SSL",
+      "false",
     ),
     MICROSOFT_CLIENT_ID: getEnvOrPlaceholder("MICROSOFT_CLIENT_ID", "dummy-id"),
     MICROSOFT_CLIENT_SECRET: getEnvOrPlaceholder(

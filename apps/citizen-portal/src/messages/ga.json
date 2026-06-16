@@ -1,0 +1,331 @@
+{
+  "metadata": {
+    "title": "MessagingIE"
+  },
+  "scaffold": {
+    "heading": "Tairseach Saoránach",
+    "subheading": "Cabhail aonaithe — beidh bealaí ó na zónaí teachtaireachtaí, próifíle agus deais ag teacht in Phase B."
+  },
+  "pages": {
+    "messages": {
+      "title": "Teachtaireachtaí"
+    },
+    "myDashboard": {
+      "title": "Mo Deais"
+    }
+  },
+  "dashboard": {
+    "welcome": "Fáilte air ais, {name}",
+    "messages": {
+      "title": "Taeachtaireachtaí mo",
+      "link": "Féach ar gach teachtaireacht",
+      "view": "Féach ar teachtaireacht",
+      "empty": "Gan teachtaireachtaí nua",
+      "error": "Thachair mearachd le luchdachadh teachdaireachdan: {message}"
+    },
+    "help": {
+      "title": "Cuardaigh gnéithe nó foinse",
+      "description": "Is ardán Rialtas é seo - tascanna riachtanacha riaracháin a fháil ar an ardán seo.",
+      "link": "Féach gov.ie"
+    }
+  },
+  "home": {
+    "heading": "Teachtaireachtaí",
+    "tab": {
+      "unread": "Neamh-léite",
+      "all": "Gach"
+    },
+    "ariaLabel": {
+      "all": "Gach teachtaireacht",
+      "unread": "Teachtaireachtaí neamhléite",
+      "mainContent": "Príomhábhar"
+    },
+    "table": {
+      "column": {
+        "status": "Stádas",
+        "sender": "Seoltóir",
+        "date": "Dáta",
+        "details": "Sonraí",
+        "attachment": "Ceangaltán"
+      },
+      "rowsPerPage": "Sraitheanna in aghaidh an leathanaigh",
+      "aria": {
+        "messageList": "Liosta teachtaireachtaí"
+      },
+      "filter": {
+        "status": "Scag de réir stádais",
+        "all": "Gach teachtaireacht",
+        "unread": "Neamhléite",
+        "read": "Léite"
+      },
+      "from": "Ó",
+      "unknownSender": "Seoltóir anaithnid",
+      "systemSender": {
+        "support": "MessagingIE"
+      },
+      "attachment": "{count, plural, one {ceangaltán} other {ceangaltáin}}",
+      "unreadCount": "{count} neamhléite",
+      "select": "Roghnaigh",
+      "selectAll": "Roghnaigh Uile",
+      "close": "Dún",
+      "ariaLabel": {
+        "selectAll": "Roghnaigh gach teachtaireacht ar an leathanach seo",
+        "selectRow": "Roghnaigh teachtaireacht ó {sender}: {subject}"
+      },
+      "empty": {
+        "unread": "Níl aon teachtaireachtaí neamhléite agat",
+        "read": "Níl aon teachtaireachtaí léite agat",
+        "all": "Níl aon theachtaireachtaí agat",
+        "search": "Níor aimsíodh aon teachtaireacht."
+      }
+    },
+    "button": {
+      "back": "Ar ais"
+    },
+    "delete": {
+      "toolbar": {
+        "ariaLabel": "Gníomhartha mórchóir",
+        "selectedCount": "{count} roghnaithe",
+        "delete": "Scrios"
+      },
+      "confirm": {
+        "title": "{count, plural, one {Scrios an teachtaireacht?} other {Scrios # teachtaireacht?}}",
+        "body": "{count, plural, one {Bainfear an teachtaireacht seo as do bhosca isteach.} other {Bainfear na # teachtaireachtaí seo as do bhosca isteach.}}",
+        "cta": "Scrios",
+        "cancel": "Cealaigh",
+        "close": "Dún"
+      },
+      "alert": {
+        "success": "{count, plural, one {Scriosadh # teachtaireacht} other {Scriosadh # teachtaireachtaí}}",
+        "failure": "{count, plural, one {Níorbh fhéidir # teachtaireacht a scriosadh} other {Níorbh fhéidir # teachtaireachtaí a scriosadh}}"
+      }
+    },
+    "detail": {
+      "delete": "Scrios"
+    }
+  },
+  "search": {
+    "button": {
+      "search": "Cuardach",
+      "reset": "Athshocraigh"
+    },
+    "input": {
+      "placeholder": "Cuardach"
+    },
+    "ariaLabel": "Cuardaigh teachtaireachtaí"
+  },
+  "navigation": {
+    "title": {
+      "messages": "MessagingIE",
+      "profile": "Mo Próifíl",
+      "dashboard": "Painéal Rialaithe"
+    },
+    "header": {
+      "title": "MessagingIE",
+      "onboarding": "Ionduchtú",
+      "drawer": {
+        "dashboard": "Painéal Rialaithe",
+        "messaging": "MessagingIE",
+        "close": "Dún"
+      },
+      "menu": "Roghchlár",
+      "language": {
+        "english": "English",
+        "irish": "Gaeilge"
+      }
+    },
+    "userMenu": {
+      "viewMyProfile": "Féach ar mo Phróifíl",
+      "logout": "Logáil Amach"
+    },
+    "footer": {
+      "link": {
+        "privacy": "Príobháideacht",
+        "cookies": "Fianáin",
+        "accessibilityStatement": "Tuarascáil Inrochtaineachta",
+        "termsOfUse": "Téarmaí Úsáide",
+        "contactSupport": "Cuir glaoch ar an tacaíocht"
+      },
+      "text": {
+        "trademark": "© 2025 Córas Dearaidh Rialtas na hÉireann"
+      }
+    },
+    "back": {
+      "ariaLabel": "Téigh ar ais"
+    }
+  },
+  "consent": {
+    "banner": "Tá tú tar éis diúltú do theachtaireachtaí a fháil ó Bhoinn an tSeirbhíse Phoiblí. Is féidir leat <link>do roghanna a nuashonrú</link> chun teachtaireachtaí a fháil arís.",
+    "title": "Cumasaigh nó Díchumasaigh Teachtaireachtaí Leictreonacha",
+    "description": "Is féidir leat a chinneadh am ar bith ar mhaith leat teachtaireachtaí leictreonacha a fháil ó Chomhlachtaí Seirbhíse Poiblí.",
+    "currentStatus": {
+      "description": "Tá MessagingIE (Seachadadh Teachtaireachtaí Leictreonacha) faoi láthair: <bold>{status}</bold>",
+      "enabled": "cumasaithe",
+      "disabled": "díchumasaithe",
+      "unset": "gan socrú"
+    },
+    "linkedAccounts": {
+      "title": "Cuntais nasctha",
+      "notice": "Cuirfear do rogha toilithe i bhfeidhm go huathoibríoch ar <bold>{count}</bold> cuntas/cuntais nasctha. Beidh tionchar ag aon athruithe a dhéanfaidh tú ar do chuntais ghaolmhara go léir."
+    },
+    "actions": {
+      "update": {
+        "title": "Ar mhaith leat do rogha a nuashonrú?",
+        "action": "Nuashonraigh"
+      }
+    }
+  },
+  "announcements": {
+    "modalHeader": {
+      "title": "Tá do bhosca isteach nuashonraithe",
+      "description": "Tá cúpla athrú tagtha isteach - seo a bhfuil le fios agat."
+    }
+  },
+  "accountLinking": {
+    "title": "Cén fhreagra is atá agat?",
+    "description": "Cruthaíodh do chuntas mar sheirbhíseach poiblí anois.",
+    "footer": "Má tá an chuntas corrú, déan cinnte go bhfuil <bold>Confirm</bold>. Táimid ag fáilte duit an teachtaireacht a chur ar an phost a phostáil ar do phróifíl.<br></br><br></br>Má tá an chuntas corrú, déan cinnte go bhfuil <bold>Report an Issue</bold>",
+    "confirm": "Cuir in Eagar",
+    "report": "Rapóirt an Chuntas",
+    "loading": "Táimid ag fáilte duit an teachtaireacht a chur ar an phost a phostáil ar do phróifíl.",
+    "error": {
+      "server": "Níor cuireadh an teachtaireacht. Déan iarracht arís le do thoil.",
+      "linking": "Níor cuireadh an teachtaireacht."
+    }
+  },
+  "profile": {
+    "title": "Mo Próifíl",
+    "information": "Tá an fhaisnéis thíos comhdhéanta de gach rud atá faighte againn ó do MyGovID agus atá againn ar comhad faoi láthair.",
+    "form": {
+      "title": "Ainm poiblí",
+      "description": "Is féidir do ainm poiblí a nuashonrú am ar bith agus beidh sé le feiceáil ar fud an ardáin seo. Ní bheidh aon tionchar ag an nuashonrú seo ar d'ainm poiblí MyGovID."
+    },
+    "firstName": "Céad ainm",
+    "lastName": "Sloinne",
+    "update": "Nuashonraigh",
+    "name": "Ainm",
+    "dateOfBirth": "Dáta breithe",
+    "clickToReveal": "Cliceáil chun nochtadh",
+    "clickToHide": "Cliceáil chun a cheilt",
+    "contactDetails": "Sonraí teagmhála",
+    "email": "Ríomhphost",
+    "emptyPublicName": "Ní féidir leat do ainm poiblí a bhaint - le do thoil, cuir isteach ainm",
+    "publicNameUpdatedToast": "Tugadh nuashonrú ar an Ainm Poiblí",
+    "publicNameFailedUpdatedToast": "Theastaigh nuashonrú ainm poiblí, ach níor éirigh leis"
+  },
+  "contactSupport": {
+    "title": {
+      "main": "Cuir glaoch ar an tacaíocht",
+      "departmentOfEducation": "An Roinn Oideachais",
+      "departmentOfSocialProtection": "An Roinn Cosanta Sóisialta"
+    },
+    "paragraph": {
+      "main": "Chun an tacaíocht cheart a fháil, roghnaigh an rogha atá comhoiriúnach leis an gcorp seirbhíse poiblí a chuir an teachtaireacht shlán chugat.",
+      "departmentOfEducation": "Má fuair tú fógra ó <bold>An Roinn Oideachais</bold>, roghnaigh an rogha seo chun rochtain a fháil ar a seirbhísí tacaíochta.",
+      "departmentOfSocialProtection": "Má fuair tú fógra ó <bold>An Roinn Cosanta Sóisialta/Welfare.ie</bold>, roghnaigh an rogha seo chun rochtain a fháil ar a seirbhísí tacaíochta."
+    },
+    "button": {
+      "departmentOfEducation": "Cuir glaoch ar tacaíocht DoE",
+      "departmentOfSocialProtection": "Cuir glaoch ar tacaíocht DSP"
+    }
+  },
+  "title": {
+    "termsOfUse": "Téarmaí Úsáide",
+    "accessibilityStatement": "Tuarascáil Inrochtaineachta",
+    "privacy": "Polasaí Príobháideachta",
+    "cookies": "Fianáin",
+    "contactSupport": "Cuir glaoch ar an tacaíocht"
+  },
+  "onboard": {
+    "heading": {
+      "main": "Críochnaigh Fíorú do Chuntais MyGovID chun Leanúint Ar Aghaidh"
+    },
+    "paragraph": {
+      "safeLevel2": "Tá do r-phost agus d'uimhir gutháin fíoraithe agat cheana féin, ach chun an tseirbhís seo a úsáid, ní mór duit do chuntas MyGovID a fhíorú go hiomlán trí é a nascadh le do Chárta Seirbhísí Poiblí (PPSN). Dearbhaíonn an céim bhreise seo d'aitheantas chun rochtain shlán a fháil ar sheirbhísí poiblí. Lean <link>na treoracha seo</link> le do thoil chun an próiseas fíoraithe a chríochnú."
+    },
+    "profileCreation": {
+      "loading": "Ag fanacht go gcruthófar do phróifíl…",
+      "failed": "Tógann cruthú an phróifíle níos faide ná mar a bhíothas ag súil leis. Athnuaigh an leathanach le do thoil."
+    }
+  },
+  "wrongLoginMethod": {
+    "title": "Tá modh eile logála isteach ag teastáil",
+    "description": "Éilítear leis an tseirbhís a bhfuil tú ag iarraidh í a oscailt go n-úsáidfí modh logála isteach atá difriúil leis an gceann atá á úsáid agat faoi láthair.",
+    "stepsLabel": "Chun leanúint ar aghaidh, beidh ort na nithe seo a leanas a dhéanamh:",
+    "step1": "Logáil amach as do sheisiún reatha",
+    "step2": "Sínigh isteach arís trí úsáid a bhaint as an modh logála isteach a éilítear leis an tseirbhís seo",
+    "logOutBttn": "Logáil amach",
+    "invalidReturnUrl": "Tá nasc filleadh bailí ag teastáil don leathanach seo. Bain úsáid as an nasc ón tseirbhís nó téigh siar."
+  },
+  "wrongAccountPage": {
+    "title": "Aimsíodh cuntas mícheart",
+    "descriptionLine1": "Bhí tú logáilte isteach ag úsáid an mhodha logála isteach le ríomhphost.",
+    "descriptionLine2": "Ní cheadaítear an modh seo ach le cuntais phearsanta amháin.",
+    "logOutBttn": "Logáil amach",
+    "invalidReturnUrl": "Tá nasc filleadh bailí ag teastáil don leathanach seo. Bain úsáid as an nasc ón tseirbhís nó téigh siar."
+  },
+  "exportUserData": {
+    "title": "Easpórtáil sonraí",
+    "paragraph": {
+      "main": "Is féidir leat d'fhaisnéis phróifíle, do theachtaireachtaí agus do cheangaltáin a easpórtáil agus a íoslódáil. Cliceáil ar an gcnaipe 'Easpórtáil sonraí' chun na sonraí is mian leat a easpórtáil a roghnú. Nuair a bheidh do chuid sonraí réidh le híoslódáil, gheobhaidh tú ríomhphost. Beidh na sonraí ar fáil le híoslódáil anseo ar leathanach na próifíle ar feadh 30 lá.",
+      "pending": "Beidh an cnaipe ar fáil arís 30 lá tar éis don phróiseas críochnú",
+      "cooldown": "An chéad easpórtáil eile ar fáil {days, plural, =0 {inniu} one {i gceann # lá} other {i gceann # lá}}"
+    },
+    "button": {
+      "request": "Iarr easpórtáil sonraí",
+      "download": "Íoslódáil"
+    },
+    "alert": {
+      "info": {
+        "paragraph": "Is féidir leat d'fhaisnéis phróifíle, do loga gníomhaíochta agus do theachtaireachtaí a easpórtáil agus a íoslódáil. Cliceáil ar an gcnaipe 'Easpórtáil sonraí' chun na sonraí is mian leat a easpórtáil a roghnú. Nuair a bheidh do chuid sonraí réidh le híoslódáil, gheobhaidh tú ríomhphost. Beidh na sonraí ar fáil le híoslódáil anseo ar leathanach na próifíle ar feadh 30 lá.",
+        "title": "Faisnéis"
+      },
+      "success": {
+        "paragraph1": "Beidh do chomhad réidh le híoslódáil go dtí {date}",
+        "paragraph2": "lá fágtha",
+        "title": "Tá d'easpórtáil sonraí réidh!"
+      },
+      "failed": {
+        "paragraph": "Níorbh fhéidir linn do chomhad a ullmhú an uair seo. Bain triail as arís, le do thoil.",
+        "title": "Theip ar an easpórtáil"
+      }
+    },
+    "toast": {
+      "title": {
+        "requestSuccess": "Iarratas easpórtála curtha isteach",
+        "requestError": "Theip ar an iarratas easpórtála",
+        "errorUnableToStart": "Ní féidir an íoslódáil a thosú",
+        "serverError": "Seirbhís as feidhm go sealadach"
+      },
+      "description": {
+        "requestSuccess": "Tá d'easpórtáil sonraí á hullmhú. Gheobhaidh tú ríomhphost nuair a bheidh sé réidh.",
+        "requestError": "Níorbh fhéidir linn d'easpórtáil a thosú. Bain triail as arís ar ball.",
+        "errorUnableToStart": "Níorbh fhéidir linn do chomhad a ullmhú. Fan nóiméad agus cliceáil ar 'Íoslódáil' arís.",
+        "serverError": "Tá deacrachtaí againn nascadh lenár seirbhís comhad. Bain triail as arís i gceann cúpla nóiméad."
+      }
+    }
+  },
+  "globalSignout": {
+    "loggingOut": "Táimid do logáil amach",
+    "pleaseWait": "Ná dún ná ná athnuaigh an leathanach seo — déanfar tú a atreorú go gairid."
+  },
+  "notFound": {
+    "heading": "Leathanach gan aimsiú",
+    "message": "Níl an leathanach a bhfuil tú ag lorg ann nó tá sé bogtha.",
+    "back": "Téigh go dtí teachtaireachtaí"
+  },
+  "errors": {
+    "page": {
+      "title": "Tharla rud éigin mícheart",
+      "message": "Níor éirigh le MessagingIE d'iarratas a chomhlíonadh. Déan iarracht arís, agus má leanann an fhadhb ar aghaidh, déan teagmháil le tacaíocht MessagingIE.",
+      "retry": "Athsheol"
+    },
+    "global": {
+      "title": "Tharla earráid gan choinne",
+      "retry": "Athsheol"
+    },
+    "server": "Tharla earráid agus do iarratas á phróiseáil. Bain triail as arís ar ball.",
+    "unknown": "Chuaigh rud éigin mícheart",
+    "tryAgain": "Bain triail as arís"
+  }
+}

@@ -22,10 +22,6 @@ import {
   UpdateTemplateReqSchema,
 } from "../../types/templates.js";
 import {
-  ensureOrganizationIdIsSet,
-  ensureUserIdIsSet,
-} from "../../utils/authentication-factory.js";
-import {
   formatAPIResponse,
   sanitizePagination,
 } from "../../utils/pagination.js";
@@ -42,7 +38,7 @@ export default async function templates(app: FastifyInstance) {
       schema: ListTemplatesReqSchema,
     },
     async function handleGetAll(request, _reply) {
-      const organizationId = ensureOrganizationIdIsSet(request);
+      const organizationId = request.ensureIsPublicServant().organisationId;
       const pagination = sanitizePagination({
         limit: request.query.limit,
         offset: request.query.offset,
@@ -71,7 +67,7 @@ export default async function templates(app: FastifyInstance) {
       schema: GetTemplateReqSchema,
     },
     async function handleGetOne(request, _reply) {
-      const organizationId = ensureOrganizationIdIsSet(request);
+      const organizationId = request.ensureIsPublicServant().organisationId;
 
       return {
         data: await getTemplate({
@@ -91,8 +87,9 @@ export default async function templates(app: FastifyInstance) {
       schema: CreateTemplateReqSchema,
     },
     async function handleCreate(request, reply) {
-      const userId = ensureUserIdIsSet(request);
-      const organizationId = ensureOrganizationIdIsSet(request);
+      const userData = request.ensureUserIsSet();
+      const userId = userData.userId;
+      const organizationId = request.ensureIsPublicServant().organisationId;
       const templateId = await createTemplate({
         pool: app.pg.pool,
         inputBody: request.body,
@@ -123,7 +120,7 @@ export default async function templates(app: FastifyInstance) {
         pool: app.pg.pool,
         inputBody: request.body,
         templateId,
-        organizationId: ensureOrganizationIdIsSet(request),
+        organizationId: request.ensureIsPublicServant().organisationId,
       });
 
       return { data: { id: templateId } };
@@ -139,7 +136,7 @@ export default async function templates(app: FastifyInstance) {
     },
     async function handleDelete(request, _reply) {
       const templateId = request.params.templateId;
-      const organizationId = ensureOrganizationIdIsSet(request);
+      const organizationId = request.ensureIsPublicServant().organisationId;
 
       await deleteTemplate({ pool: app.pg.pool, templateId, organizationId });
 

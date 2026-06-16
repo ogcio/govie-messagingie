@@ -1,7 +1,7 @@
+import { getErrorMessage } from "@ogcio/shared-errors";
 import closeWithGrace from "close-with-grace";
-import { Pool } from "pg";
+import type { Pool } from "pg";
 import pino from "pino";
-import type { EnvDbConfig } from "../../plugins/external/env.js";
 import { getPendingJobPerOrganization } from "../../services/jobs/job-service.js";
 import { messagesQueueGauge } from "../../utils/metrics.js";
 
@@ -21,13 +21,11 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function startWorkerLoop(params: {
-  envDbConfig: EnvDbConfig;
-}): Promise<void> {
+export async function startWorkerLoop(params: { pool: Pool }): Promise<void> {
   const logger = pino.pino();
   const intervalSeconds = getIntervalSeconds();
   const intervalMs = intervalSeconds * 1000;
-  const pool = await connectToDatabase(params.envDbConfig, logger);
+  const pool = await checkDbConnection(params.pool, logger);
 
   let running = true;
 
@@ -72,27 +70,17 @@ export async function startWorkerLoop(params: {
   }
 }
 
-async function connectToDatabase(
-  dbConfig: EnvDbConfig,
+async function checkDbConnection(
+  pool: Pool,
   logger: pino.Logger,
 ): Promise<Pool> {
-  const pool = process.env.DATABASE_TEST_URL?.length
-    ? new Pool({
-        connectionString: process.env.DATABASE_TEST_URL,
-      })
-    : new Pool({
-        host: dbConfig.POSTGRES_HOST,
-        port: dbConfig.POSTGRES_PORT,
-        user: dbConfig.POSTGRES_USER,
-        password: dbConfig.POSTGRES_PASSWORD,
-        database: dbConfig.POSTGRES_DB_NAME,
-        idleTimeoutMillis: 3000, // Close idle connections after 3s
-      });
-
   try {
     await pool.query("SELECT 1"); // Test the connection
   } catch (error) {
-    logger.fatal({ error }, "Failed to connect to the database:");
+    logger.fatal(
+      { error: getErrorMessage(error) },
+      "Failed to connect to the database:",
+    );
     throw error;
   }
 

@@ -4,48 +4,52 @@
  * This will be invoked like `node dist/scripts/ci-job.js` in ci.
  */
 
-import { createDatabase } from "../migrations/scripts/create-database.js";
+import type { Pool } from "pg";
 import { doMigration } from "../migrations/scripts/migrate.js";
-import { getDbEnvs } from "../migrations/scripts/shared.js";
+import { getDbEnvs, getPgConnection } from "../migrations/scripts/shared.js";
 import { syncEventSummaryCommand } from "../migrations/scripts/sync-event-summary.js";
 
 const migrationVersion = "max";
 const postgresEnvs = getDbEnvs();
 
-console.log("Creating database if it does not exist...");
-try {
-  await createDatabase(postgresEnvs);
-  console.log("Database setup completed.");
-} catch (err) {
-  console.error("Error during database setup", err);
-  process.exit(1);
+async function main(pool: Pool, migrationVersion: string): Promise<void> {
+  console.log("");
+  console.log("----------------");
+  console.log("");
+
+  console.log(`Running migration for version ${migrationVersion}...`);
+  try {
+    await doMigration(postgresEnvs, pool, migrationVersion);
+  } catch (err) {
+    console.error("Error during migration", err);
+    throw err;
+  }
+  console.log("Migration completed.");
+
+  console.log("");
+  console.log("----------------");
+  console.log("");
+
+  console.log("Sync event summary...");
+
+  try {
+    await syncEventSummaryCommand(pool, false);
+    console.log("Sync event summary completed.");
+  } catch (err) {
+    console.error("Error during sync event summary", err);
+    throw err;
+  }
 }
 
-console.log("");
-console.log("----------------");
-console.log("");
-
-console.log(`Running migration for version ${migrationVersion}...`);
-try {
-  await doMigration(postgresEnvs, migrationVersion);
-} catch (err) {
-  console.error("Error during migration", err);
-  process.exit(1);
-}
-console.log("Migration completed.");
-
-console.log("");
-console.log("----------------");
-console.log("");
-
-console.log("Sync event summary...");
+const dbEnvs = getDbEnvs();
+const pool = getPgConnection(dbEnvs);
 
 try {
-  await syncEventSummaryCommand(getDbEnvs(), false);
-  console.log("Sync event summary completed.");
-} catch (err) {
-  console.error("Error during sync event summary", err);
+  await main(pool, migrationVersion);
+} catch {
   process.exit(1);
+} finally {
+  await pool.end();
 }
 
 process.exit(0);

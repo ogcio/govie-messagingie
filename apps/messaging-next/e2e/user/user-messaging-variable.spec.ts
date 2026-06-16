@@ -42,6 +42,7 @@ test.describe("User Messages page", () => {
     await sendMessageAndVerify(page)
 
     await logout(page)
+    await page.goto("/")
     //login as citizen to view the message
     if (
       page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
