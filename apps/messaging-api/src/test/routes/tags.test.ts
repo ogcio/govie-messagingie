@@ -272,7 +272,7 @@ describe("DELETE /api/v1/tags/:tagId", () => {
     expect(res.json().data.id).toBe(tagId);
   });
 
-  it("returns 409 when tag has messages attached", async () => {
+  it("reassigns attached messages to the inbox and returns 200", async () => {
     app = await getServer();
 
     const createRes = await app.inject({
@@ -283,23 +283,32 @@ describe("DELETE /api/v1/tags/:tagId", () => {
     const tagId = createRes.json().data.id;
 
     // Attach a message to the tag via SQL
-    await pool.query(
+    const insertRes = await pool.query<{ id: string }>(
       `INSERT INTO messages(user_id, subject, excerpt, plain_text, rich_text, security_level, lang, preferred_transports, thread_name, organisation_id, scheduled_at, is_delivered, is_seen, tag_id)
-       VALUES($1, 's', 'e', 'pt', 'rt', 'public', 'en', '{""}', 'tn', 'org1', now(), true, false, $2)`,
+       VALUES($1, 's', 'e', 'pt', 'rt', 'public', 'en', '{""}', 'tn', 'org1', now(), true, false, $2)
+       RETURNING id`,
       [userId, tagId],
     );
+    const messageId = insertRes.rows[0].id;
 
     const res = await app.inject({
       method: "DELETE",
       url: `/api/v1/tags/${tagId}`,
     });
 
-    expect(res.statusCode).toBe(409);
+    expect(res.statusCode).toBe(200);
+    expect(res.json().data.id).toBe(tagId);
+
+    // The message is reassigned to the inbox (tag_id NULL), not deleted.
+    const messageRes = await pool.query<{ tag_id: string | null }>(
+      `SELECT tag_id FROM messages WHERE id = $1`,
+      [messageId],
+    );
+    expect(messageRes.rows).toHaveLength(1);
+    expect(messageRes.rows[0].tag_id).toBeNull();
 
     // Cleanup
-    await pool.query(`UPDATE messages SET tag_id = NULL WHERE tag_id = $1`, [
-      tagId,
-    ]);
+    await pool.query(`DELETE FROM messages WHERE id = $1`, [messageId]);
   });
 
   it("returns 404 for non-existent tag", async () => {

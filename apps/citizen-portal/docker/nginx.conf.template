@@ -29,303 +29,334 @@ pid /tmp/nginx.pid;
 error_log /dev/stderr warn;
 
 events {
-    worker_connections 1024;
+  worker_connections 1024;
 }
 
 http {
-    server_tokens off;
+  server_tokens off;
 
-    otel_trace ${OTEL_ENABLE};
-	otel_service_name ${OTEL_SERVICE_NAME};
-	otel_trace_context propagate;
-	otel_resource_attr "source" "nginx-otel";
+  otel_trace ${OTEL_ENABLE};
+  otel_service_name ${OTEL_SERVICE_NAME};
+  otel_trace_context propagate;
+  otel_resource_attr "source" "nginx-otel";
 
-	otel_exporter {
-		endpoint ${OTEL_COLLECTOR_URL};
-	}
+  otel_exporter {
+    endpoint ${OTEL_COLLECTOR_URL};
+    interval 5s;
+    batch_size 512;
+  }
 
-	include    mime.types;
-	default_type application/octet-stream;
+  include    mime.types;
+  default_type application/octet-stream;
 
-	client_body_temp_path /tmp/client_temp;
-	proxy_temp_path       /tmp/proxy_temp_path;
-	fastcgi_temp_path     /tmp/fastcgi_temp;
-	uwsgi_temp_path       /tmp/uwsgi_temp;
-	scgi_temp_path        /tmp/scgi_temp;
+  client_body_temp_path /tmp/client_temp;
+  proxy_temp_path       /tmp/proxy_temp_path;
+  fastcgi_temp_path     /tmp/fastcgi_temp;
+  uwsgi_temp_path       /tmp/uwsgi_temp;
+  scgi_temp_path        /tmp/scgi_temp;
 
-	client_max_body_size 8k;
-	client_header_buffer_size 4k;
-	large_client_header_buffers 4 8k;
+  client_max_body_size 8k;
+  client_header_buffer_size 4k;
+  large_client_header_buffers 4 8k;
 
-	limit_req_zone $binary_remote_addr zone=general:10m rate=30r/s;
-	limit_req_zone $binary_remote_addr zone=health:1m rate=2r/s;
-	limit_req_status 429;
-	limit_conn_zone $binary_remote_addr zone=addr:10m;
+  limit_req_zone $binary_remote_addr zone=general:10m rate=30r/s;
+  limit_req_zone $binary_remote_addr zone=health:1m rate=2r/s;
+  limit_req_status 429;
+  limit_conn_zone $binary_remote_addr zone=addr:10m;
 
-	set_real_ip_from ${TRUSTED_PROXY_CIDR};
-	real_ip_header X-Forwarded-For;
-	real_ip_recursive on;
+  set_real_ip_from ${TRUSTED_PROXY_CIDR};
+  real_ip_header X-Forwarded-For;
+  real_ip_recursive on;
 
-	map $http_x_forwarded_for $real_client_ip {
-		# If multiple IPs, extract second-to-last IP
-		~^(?:.*,\s*)?(\d+\.\d+\.\d+\.\d+),\s*\d+\.\d+\.\d+\.\d+$ $1;
+  map $http_x_forwarded_for $real_client_ip {
+    # If multiple IPs, extract second-to-last IP
+    ~^(?:.*,\s*)?(\d+\.\d+\.\d+\.\d+),\s*\d+\.\d+\.\d+\.\d+$ $1;
 
-		# If only a single IP (no comma), use that IP
-		~^\s*(\d+\.\d+\.\d+\.\d+)\s*$ $1;
+    # If only a single IP (no comma), use that IP
+    ~^\s*(\d+\.\d+\.\d+\.\d+)\s*$ $1;
 
-		# Fallback to remote_addr if no X-Forwarded-For
-		default $remote_addr;
-	}
+    # Fallback to remote_addr if no X-Forwarded-For
+    default $remote_addr;
+  }
 
-	# Anonymize IP address: keep first 2 octets, set last 2 to 0
-	map $real_client_ip $real_client_ip_log {
-		~^(\d+\.\d+)\.\d+\.\d+$ $1.0.0;
-		default 0.0.0.0;
-	}
+  # Anonymize IP address: keep first 2 octets, set last 2 to 0
+  map $real_client_ip $real_client_ip_log {
+    ~^(\d+\.\d+)\.\d+\.\d+$ $1.0.0;
+    default 0.0.0.0;
+  }
 
-	map $status $log_level {
-		default       "info";
-		~^[45]        "error";  # 4xx and 5xx
-	}
+  map $status $log_level {
+    default       "info";
+    ~^[45]        "error";  # 4xx and 5xx
+  }
 
-	map $query_string $id_site_value {
-		default "";
-		~*idSite=([0-9]+) $1;
-	}
+  map $query_string $id_site_value {
+    default "";
+    ~*idSite=([0-9]+) $1;
+  }
 
-	map $upstream_response_time $safe_upstream_response_time {
-		""      null;
-		default $upstream_response_time;
-	}
+  map $upstream_response_time $safe_upstream_response_time {
+    ""      null;
+    default $upstream_response_time;
+  }
 
-	# Skip logging for health check endpoints
-	map $uri $loggable {
-		/health      0;
-		/api/health  0;
-		default      1;
-	}
+  # Skip logging for health check endpoints
+  map $uri $loggable {
+    /health      0;
+    /api/health  0;
+    default      1;
+  }
 
-	# ----------------------------------------------------------------------
-	# Zone routing table — MUST mirror `src/util/get-zone-from-path.ts`.
-	#
-	# Resolves `$canonical_host` (the hostname that "owns" the path) per
-	# request. Empty string means "shared / asset / landing / no canonical"
-	# and skips the redirect. Locale-prefix is matched as `[a-z]{2}` since
-	# AVAILABLE_LOCALES is ["en", "ga"].
-	# ----------------------------------------------------------------------
-	# Regex map keys are quoted because the `{2}` quantifier in `[a-z]{2}`
-	# would otherwise be parsed as an nginx config block opener.
-	map $uri $canonical_host {
-		default                                                                                                                                                "";
-		"~^/[a-z]{2}/(messages|secure-messages)(/|$)"                                                                                                          ${MESSAGING_HOST};
-		"~^/[a-z]{2}/(my-profile|accessibility-statement|contact-support|cookie-policy|wrong-account-error|wrong-login-method-error|global-signout)(/|$)"      ${PROFILE_HOST};
-		"~^/[a-z]{2}/my-dashboard(/|$)"                                                                                                                        ${DASHBOARD_HOST};
-		"~^/(onboarding|post-global-signout|wrong-login-method-error)(/|$)"                                                                                    ${PROFILE_HOST};
-		"~^/api/(application-signout|clear-session)(/|$)"                                                                                                      ${PROFILE_HOST};
-	}
+  # ----------------------------------------------------------------------
+  # Zone routing table — MUST mirror `src/util/get-zone-from-path.ts`.
+  #
+  # Resolves `$canonical_host` (the hostname that "owns" the path) per
+  # request. Empty string means "shared / asset / landing / no canonical"
+  # and skips the redirect. Locale-prefix is matched as `[a-z]{2}` since
+  # AVAILABLE_LOCALES is ["en", "ga"].
+  # ----------------------------------------------------------------------
+  # Regex map keys are quoted because the `{2}` quantifier in `[a-z]{2}`
+  # would otherwise be parsed as an nginx config block opener.
+  map $uri $canonical_host {
+    default                                                                                                                                                "";
+    "~^/[a-z]{2}/(messages|secure-messages)(/|$)"                                                                                                          ${MESSAGING_HOST};
+    "~^/[a-z]{2}/(my-profile|accessibility-statement|contact-support|cookie-policy|wrong-account-error|wrong-login-method-error|global-signout)(/|$)"      ${PROFILE_HOST};
+    "~^/[a-z]{2}/my-dashboard(/|$)"                                                                                                                        ${DASHBOARD_HOST};
+    "~^/(onboarding|post-global-signout|wrong-login-method-error|global-signout)(/|$)"                                                                    ${PROFILE_HOST};
+    "~^/api/(application-signout|clear-session)(/|$)"                                                                                                      ${PROFILE_HOST};
+  }
 
-	# Canonicalisation decision: "yes" means 301 to $canonical_host.
-	# The two negative cases — empty canonical, or canonical == current
-	# host — are matched by the regex keys; everything else falls through
-	# to the "yes" default.
-	#
-	# PCRE back-reference `\1` in the second key matches when the same
-	# hostname appears on both sides of the `:` separator, which is the
-	# canonical equality test without dynamic comparison.
-	map "$host:$canonical_host" $canonical_decision {
-		default             "yes";
-		"~^[^:]+:$"         "no";   # canonical_host empty → no redirect
-		"~^([^:]+):\1$"     "no";   # host == canonical_host → no redirect
-	}
+  # Canonicalisation decision: "yes" means 301 to $canonical_host.
+  # The two negative cases — empty canonical, or canonical == current
+  # host — are matched by the regex keys; everything else falls through
+  # to the "yes" default.
+  #
+  # PCRE back-reference `\1` in the second key matches when the same
+  # hostname appears on both sides of the `:` separator, which is the
+  # canonical equality test without dynamic comparison.
+  map "$host:$canonical_host" $canonical_decision {
+    default             "yes";
+    "~^[^:]+:$"         "no";   # canonical_host empty → no redirect
+    "~^([^:]+):\1$"     "no";   # host == canonical_host → no redirect
+  }
 
-	# Port preservation for canonicalisation 301s.
-	#
-	# `$host` strips the port from the inbound Host header; `$canonical_host`
-	# never carries one (it's the owner hostname only). If the request came
-	# in on a non-default port, we must re-append it on the Location header,
-	# otherwise the browser follows the 301 to the default :80/:443 and the
-	# redirect breaks in local docker / non-standard-port deployments.
-	#
-	# In production behind Istio/443, $http_host has no port portion and
-	# $canonical_port_suffix is empty — the redirect Location stays clean.
-	#
-	# (`$request_port` is reserved by nginx core, hence the longer name.)
-	map $http_host $canonical_port_suffix {
-		default               "";
-		"~^[^:]+:([0-9]+)$"   ":$1";
-	}
+  # Port preservation for canonicalisation 301s.
+  #
+  # `$host` strips the port from the inbound Host header; `$canonical_host`
+  # never carries one (it's the owner hostname only). If the request came
+  # in on a non-default port, we must re-append it on the Location header,
+  # otherwise the browser follows the 301 to the default :80/:443 and the
+  # redirect breaks in local docker / non-standard-port deployments.
+  #
+  # In production behind Istio/443, $http_host has no port portion and
+  # $canonical_port_suffix is empty — the redirect Location stays clean.
+  #
+  # (`$request_port` is reserved by nginx core, hence the longer name.)
+  map $http_host $canonical_port_suffix {
+    default               "";
+    "~^[^:]+:([0-9]+)$"   ":$1";
+  }
 
-	# Per-request zone label for log/trace correlation
-	map $http_host $citizen_portal_zone {
-		default                   "unknown";
-		~*^${MESSAGING_HOST}(:|$) "messages";
-		~*^${PROFILE_HOST}(:|$)   "profile";
-		~*^${DASHBOARD_HOST}(:|$) "dashboard";
-	}
+  # Per-request zone label for log/trace correlation
+  map $http_host $citizen_portal_zone {
+    default                   "unknown";
+    ~*^${MESSAGING_HOST}(:|$) "messages";
+    ~*^${PROFILE_HOST}(:|$)   "profile";
+    ~*^${DASHBOARD_HOST}(:|$) "dashboard";
+  }
 
-	log_format json_combined escape=json '{'
-	'"level":"$log_level",'
-	'"time":"$time_iso8601",'
-	'"real_ip":"$real_client_ip_log",'
-	'"request":"$request",'
-	'"request_method":"$request_method",'
-	'"status":$status,'
-	'"body_bytes_sent":$body_bytes_sent,'
-	'"request_time":$request_time,'
-	'"upstream_response_time":$safe_upstream_response_time,'
-	'"http_user_agent":"$http_user_agent",'
-	'"http_host":"$http_host",'
-	'"zone":"$citizen_portal_zone",'
-	'"canonical_host":"$canonical_host",'
-	'"canonical_decision":"$canonical_decision",'
-	'"http_referer":"$http_referer",'
-	'"http_accept":"$http_accept",'
-	'"trace_id":"$otel_trace_id",'
-	'"span_id":"$otel_span_id",'
-	'"http_content_type":"$http_content_type"'
-	'}';
+  log_format json_combined escape=json '{'
+  '"level":"$log_level",'
+  '"time":"$time_iso8601",'
+  '"real_ip":"$real_client_ip_log",'
+  '"request":"$request",'
+  '"request_method":"$request_method",'
+  '"status":$status,'
+  '"body_bytes_sent":$body_bytes_sent,'
+  '"request_time":$request_time,'
+  '"upstream_response_time":$safe_upstream_response_time,'
+  '"http_user_agent":"$http_user_agent",'
+  '"http_host":"$http_host",'
+  '"zone":"$citizen_portal_zone",'
+  '"canonical_host":"$canonical_host",'
+  '"canonical_decision":"$canonical_decision",'
+  '"http_referer":"$http_referer",'
+  '"http_accept":"$http_accept",'
+  '"trace_id":"$otel_trace_id",'
+  '"span_id":"$otel_span_id",'
+  '"http_content_type":"$http_content_type"'
+  '}';
 
-	access_log /dev/stdout json_combined if=$loggable;
+  access_log /dev/stdout json_combined if=$loggable;
 
-    sendfile on;
-    tcp_nopush on;
-    keepalive_timeout 65;
+  sendfile on;
+  tcp_nopush on;
+  keepalive_timeout 65;
 
-    gzip_static on;
-    gzip on;
-    gzip_vary on;
-    gzip_proxied any;
-    gzip_comp_level 6;
-    gzip_min_length 256;
-    gzip_types
-        text/plain
-        text/css
-        application/json
-        application/javascript
-        text/xml
-        application/xml
-        application/xml+rss
-        text/javascript
-        image/svg+xml;
+  gzip_static on;
+  gzip on;
+  gzip_vary on;
+  gzip_proxied any;
+  gzip_comp_level 6;
+  gzip_min_length 256;
+  gzip_types
+      text/plain
+      text/css
+      application/json
+      application/javascript
+      text/xml
+      application/xml
+      application/xml+rss
+      text/javascript
+      image/svg+xml;
 
-    # ----------------------------------------------------------------------
-    # Default / fallback server: refuse requests for unknown hosts.
-    # Returning 444 closes the connection without sending a response.
-    # ----------------------------------------------------------------------
-    server {
-        listen ${PORT} default_server;
-        server_name _;
-        return 444;
+  # ----------------------------------------------------------------------
+  # Default / fallback server: refuse requests for unknown hosts.
+  # Returning 444 closes the connection without sending a response.
+  # ----------------------------------------------------------------------
+  server {
+    listen ${PORT} default_server;
+    server_name _;
+    return 444;
+  }
+
+  # ----------------------------------------------------------------------
+  # Citizen portal — serves messaging / profile / dashboard hostnames
+  # from a single static export. Per-host behaviour is limited to the
+  # canonicalisation 301 (above) and the per-host log/otel labels.
+  # ----------------------------------------------------------------------
+  server {
+    listen ${PORT};
+    server_name ${MESSAGING_HOST} ${PROFILE_HOST} ${DASHBOARD_HOST};
+    root /usr/share/nginx/html;
+    index index.html;
+    absolute_redirect off;
+
+    otel_span_name "$request_method $uri";
+    otel_span_attr level "$log_level";
+    otel_span_attr zone "$citizen_portal_zone";
+    otel_span_attr site_id "$id_site_value";
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    add_header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' ${ANALYTICS_TRACKER_ORIGIN}; style-src 'self' 'unsafe-inline'; img-src 'self' data: ${ANALYTICS_TRACKER_ORIGIN}; font-src 'self'; connect-src 'self' https://*.services.gov.ie https://analytics.ogcio.gov.ie ${ANALYTICS_MANAGEMENT_API_ORIGIN} ${ANALYTICS_TRACKER_ORIGIN}; frame-ancestors 'self'; base-uri 'self'; form-action 'self'" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()" always;
+    add_header X-Permitted-Cross-Domain-Policies "none" always;
+    add_header Cross-Origin-Opener-Policy "same-origin" always;
+
+    limit_req zone=general burst=60 nodelay;
+    limit_conn addr 30;
+
+    # URL-content parity guard — single `if` at server scope is safe.
+    # `$canonical_decision = "yes"` exactly when the requested path is
+    # owned by a different hostname (see map above). Port is taken
+    # from the inbound Host header so local-docker (:8080) and
+    # production (no port) both produce a usable Location.
+    if ($canonical_decision = "yes") {
+      return 301 $scheme://$canonical_host$canonical_port_suffix$request_uri;
     }
 
-    # ----------------------------------------------------------------------
-    # Citizen portal — serves messaging / profile / dashboard hostnames
-    # from a single static export. Per-host behaviour is limited to the
-    # canonicalisation 301 (above) and the per-host log/otel labels.
-    # ----------------------------------------------------------------------
-    server {
-        listen ${PORT};
-        server_name ${MESSAGING_HOST} ${PROFILE_HOST} ${DASHBOARD_HOST};
-        root /usr/share/nginx/html;
-        index index.html;
-        absolute_redirect off;
-
-        otel_span_name "$request_method $uri";
-		otel_span_attr level "$log_level";
-		otel_span_attr zone "$citizen_portal_zone";
-		otel_span_attr site_id "$id_site_value";
-
-        add_header X-Frame-Options "SAMEORIGIN" always;
-        add_header X-Content-Type-Options "nosniff" always;
-        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-        add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
-        add_header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self' 'unsafe-inline' ${ANALYTICS_TRACKER_ORIGIN}; style-src 'self' 'unsafe-inline'; img-src 'self' data: ${ANALYTICS_TRACKER_ORIGIN}; font-src 'self'; connect-src 'self' https://*.services.gov.ie https://analytics.ogcio.gov.ie ${ANALYTICS_MANAGEMENT_API_ORIGIN} ${ANALYTICS_TRACKER_ORIGIN}; frame-ancestors 'self'; base-uri 'self'; form-action 'self'" always;
-        add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()" always;
-        add_header X-Permitted-Cross-Domain-Policies "none" always;
-        add_header Cross-Origin-Opener-Policy "same-origin" always;
-
-        limit_req zone=general burst=60 nodelay;
-        limit_conn addr 30;
-
-        # URL-content parity guard — single `if` at server scope is safe.
-        # `$canonical_decision = "yes"` exactly when the requested path is
-        # owned by a different hostname (see map above). Port is taken
-        # from the inbound Host header so local-docker (:8080) and
-        # production (no port) both produce a usable Location.
-        if ($canonical_decision = "yes") {
-            return 301 $scheme://$canonical_host$canonical_port_suffix$request_uri;
-        }
-
-        # Block dotfiles (.env, .git, .htaccess, etc.)
-        location ~ /\. {
-            deny all;
-            return 404;
-        }
-
-        # Block Next.js debug/metadata txt files (__next.*.txt)
-        location ~ __next\. {
-            return 404;
-        }
-
-        # Immutable hashed assets from Next.js build
-        location /_next/static/ {
-            add_header Cache-Control "public, max-age=31536000, immutable" always;
-            add_header X-Content-Type-Options "nosniff" always;
-            add_header X-Frame-Options "SAMEORIGIN" always;
-            add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-            add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
-        }
-
-        # Analytics Management API — same origin for the browser; upstream
-        # is env-specific (e.g. api.analytics.dev.services.gov.ie).
-        # Path must stay under /_next/: CloudFront/WAF on *.services.gov.ie
-        # returns 403 for ad-hoc prefixes (e.g. /ogcio-analytics-api/).
-        location /_next/analytics-api/ {
-            proxy_pass ${ANALYTICS_MANAGEMENT_API_ORIGIN}/;
-            proxy_http_version 1.1;
-            proxy_ssl_server_name on;
-            proxy_set_header Host ${ANALYTICS_MANAGEMENT_API_HOST};
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-            proxy_set_header X-Real-IP $remote_addr;
-            limit_req zone=general burst=60 nodelay;
-        }
-
-        # Static assets not covered by _next/static (favicons, images, fonts, manifests)
-        location ~* \.(?:ico|gif|jpe?g|png|webp|avif|svg|woff2?|ttf|eot|otf|webmanifest|xml|txt)$ {
-            add_header Cache-Control "public, max-age=604800, stale-while-revalidate=86400" always;
-            add_header X-Content-Type-Options "nosniff" always;
-            add_header X-Frame-Options "SAMEORIGIN" always;
-            add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-            add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
-        }
-
-        # Health check endpoint for container orchestration probes
-        location = /health {
-            limit_req zone=health burst=5 nodelay;
-            access_log off;
-            default_type application/json;
-            return 200 '{"ping":"pong","zone":"$citizen_portal_zone"}';
-        }
-
-        # Backward-compat alias so monitoring systems hitting /api/health still work
-        location = /api/health {
-            limit_req zone=health burst=5 nodelay;
-            access_log off;
-            default_type application/json;
-            return 200 '{"ping":"pong","zone":"$citizen_portal_zone"}';
-        }
-
-        # Restrict to safe HTTP methods only (static site + monitoring POST)
-        if ($request_method !~ ^(GET|HEAD|OPTIONS|POST)$) {
-            return 405;
-        }
-
-        # Static export pages — try exact file, then .html variant, then dir index
-        location / {
-            add_header Cache-Control "no-cache" always;
-            try_files $uri $uri.html $uri/ =404;
-            error_page 404 /404.html;
-        }
+    # Block dotfiles (.env, .git, .htaccess, etc.)
+    location ~ /\. {
+      deny all;
+      return 404;
     }
+
+    # Block Next.js debug/metadata txt files (__next.*.txt)
+    location ~ __next\. {
+      return 404;
+    }
+
+    # Immutable hashed assets from Next.js build
+    location /_next/static/ {
+      otel_trace off;
+      add_header Cache-Control "public, max-age=31536000, immutable" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+      add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    }
+
+    # Static assets not covered by _next/static (favicons, images, fonts, manifests)
+    location ~* \.(?:ico|gif|jpe?g|png|webp|avif|svg|woff2?|ttf|eot|otf|webmanifest|xml|txt)$ {
+      otel_trace off;
+      add_header Cache-Control "public, max-age=604800, stale-while-revalidate=86400" always;
+      add_header X-Content-Type-Options "nosniff" always;
+      add_header X-Frame-Options "SAMEORIGIN" always;
+      add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+      add_header Strict-Transport-Security "max-age=63072000; includeSubDomains; preload" always;
+    }
+
+    # Analytics Management API — same origin for the browser; upstream
+    # is env-specific (e.g. api.analytics.dev.services.gov.ie).
+    # Path must stay under /_next/: CloudFront/WAF on *.services.gov.ie
+    # returns 403 for ad-hoc prefixes (e.g. /ogcio-analytics-api/).
+    location /_next/analytics-api/ {
+      add_header X-Trace-ID $otel_trace_id always;
+      proxy_pass ${ANALYTICS_MANAGEMENT_API_ORIGIN}/;
+      proxy_http_version 1.1;
+      proxy_ssl_server_name on;
+      proxy_set_header Host ${ANALYTICS_MANAGEMENT_API_HOST};
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Real-IP $remote_addr;
+      limit_req zone=general burst=60 nodelay;
+    }
+
+    # Unleash frontend API — same origin for the browser (defeats host/DNS/firewall
+    # blocking + removes CORS). Upstream env-specific. Token injected here so it never
+    # ships in the browser bundle. Path under /_next/ per CloudFront/WAF rule.
+    location /_next/ff/ {
+      add_header X-Trace-ID $otel_trace_id always;
+      proxy_pass ${UNLEASH_FRONTEND_ORIGIN}/;
+      proxy_http_version 1.1;
+      proxy_ssl_server_name on;
+      proxy_set_header Host ${UNLEASH_FRONTEND_HOST};
+      proxy_set_header Authorization "${UNLEASH_FRONTEND_TOKEN}";
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Real-IP $remote_addr;
+      limit_req zone=general burst=60 nodelay;
+    }
+
+    # Health check endpoint for container orchestration probes
+    location = /health {
+      otel_trace off;
+      limit_req zone=health burst=5 nodelay;
+      access_log off;
+      default_type application/json;
+      return 200 '{"ping":"pong","zone":"$citizen_portal_zone"}';
+    }
+
+    # Backward-compat alias so monitoring systems hitting /api/health still work
+    location = /api/health {
+      otel_trace off;
+      limit_req zone=health burst=5 nodelay;
+      access_log off;
+      default_type application/json;
+      return 200 '{"ping":"pong","zone":"$citizen_portal_zone"}';
+    }
+
+    # Backward-compat redirect: /en/secure-messages/<messageId> → /en/secure-messages?id=<messageId>
+    # Email links (MESSAGING_SECURE_MESSAGE_URL) still use the path-based format.
+    # Restrict messageId to UUID-like patterns to prevent injection.
+    location ~ "^/([a-z]{2}(?:-[A-Z]{2})?)/secure-messages/([0-9a-fA-F-]+)$" {
+      return 302 /$1/secure-messages?id=$2;
+    }
+
+    # Restrict to safe HTTP methods only (static site + monitoring POST)
+    if ($request_method !~ ^(GET|HEAD|OPTIONS|POST)$) {
+      return 405;
+    }
+
+    # Static export pages — try exact file, then .html variant, then dir index
+    location / {
+      add_header Cache-Control "no-cache" always;
+      add_header X-Trace-ID $otel_trace_id always;
+      try_files $uri $uri.html $uri/ =404;
+      error_page 404 /404.html;
+    }
+  }
 }

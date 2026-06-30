@@ -152,5 +152,9 @@ CONTEXT.md
 apps/messaging-api/src/scripts/send-message-batches/template/digital-wallet*
 apps/messaging-api/src/scripts/send-message-batches/template/digital-wallet-pilot.txt
 apps/messaging-api/src/scripts/send-message-batches/template/recipients*.csv
-docs/superpowers/plans
-docs/superpowers/specs
+docs/superpowers/
+.superpowers/
+
+# Local-only screenshots used for PR documentation (uploaded as PR assets, not committed)
+.local-screenshots/
+.playwright-mcp/

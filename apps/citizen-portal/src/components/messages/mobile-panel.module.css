@@ -1,0 +1,156 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+}
+
+/* The desktop sidebar (>=768px) already provides folder navigation, so the
+   slide-in panel is mobile-only even if its open state lingers across a
+   viewport resize. */
+@media (min-width: 768px) {
+  .overlay {
+    display: none;
+  }
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  background: rgba(11, 12, 12, 0.5);
+  cursor: pointer;
+}
+
+.panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--gieds-color-white, #ffffff);
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+}
+
+.header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gieds-space-2);
+  padding: var(--gieds-space-3) var(--gieds-space-4);
+  border-bottom: 1px solid var(--gieds-color-gray-200, #d3d4d5);
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: var(--gieds-font-weight-700, 700);
+}
+
+.toast {
+  margin: var(--gieds-space-2) var(--gieds-space-4) 0;
+  padding: var(--gieds-space-2) var(--gieds-space-3);
+  border-radius: var(--gieds-border-radius-sm, 4px);
+  background: var(--gieds-color-emerald-700, #004d44);
+  color: var(--gieds-color-white, #ffffff);
+  font-size: 0.875rem;
+}
+
+.folderList {
+  flex: 1;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--gieds-space-2) 0;
+  list-style: none;
+}
+
+.folderItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gieds-space-2);
+  width: 100%;
+  min-height: 3rem;
+  padding: var(--gieds-space-3) var(--gieds-space-4);
+  border: none;
+  border-left: 4px solid transparent;
+  background: transparent;
+  color: var(--gieds-color-gray-950, #0b0c0c);
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.folderItemSelected {
+  border-left-color: var(--gieds-color-emerald-700, #004d44);
+  background-color: var(--gieds-color-gray-50, #f7f7f8);
+  font-weight: var(--gieds-font-weight-700, 700);
+}
+
+.folderLabel {
+  flex: 1;
+  min-width: 0;
+}
+
+.unreadBadge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 var(--gieds-space-2);
+  border-radius: var(--gieds-border-radius-sm, 4px);
+  background: var(--gieds-color-gray-950, #0b0c0c);
+  color: var(--gieds-color-white, #ffffff);
+  font-size: 0.875rem;
+  font-weight: var(--gieds-font-weight-700, 700);
+  line-height: 1;
+}
+
+.footer {
+  flex-shrink: 0;
+  border-top: 1px solid var(--gieds-color-gray-200, #d3d4d5);
+  padding: var(--gieds-space-3) var(--gieds-space-4);
+}
+
+.createButton {
+  width: 100%;
+}
+
+.createForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gieds-space-2);
+}
+
+.formActions {
+  display: flex;
+  gap: var(--gieds-space-2);
+}
+
+.formActions > * {
+  flex: 1;
+}
+
+.errorText {
+  margin: 0;
+  color: var(--gieds-color-red-600, #b80000);
+  font-size: 0.875rem;
+}

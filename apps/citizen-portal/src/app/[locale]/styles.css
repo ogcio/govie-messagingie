@@ -204,6 +204,22 @@
   width: auto;
 }
 
+/*
+ * DS Footer Secondary Slot uses row-reverse on small viewports, which
+ * parks the Gov.ie harp on the right. Product spec wants the logo
+ * leading (left) with utility links in the band below.
+ */
+[data-module="gieds-footer"] [aria-label="Footer Secondary Slot"] {
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+[data-module="gieds-footer"] [aria-label="Footer Secondary Slot"] > div {
+  margin-top: 0;
+  margin-left: 0;
+  margin-right: auto;
+}
+
 .user-drawer-menu-container {
   padding-top: var(--gieds-space-8);
 }

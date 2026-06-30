@@ -27,6 +27,11 @@ function withBundleAnalyzerIfEnabled(config: NextConfig): NextConfig {
 
 const nextConfig: NextConfig = {
   output: "export",
+  allowedDevOrigins: [
+    "messaging.local.test",
+    "profile.local.test",
+    "dashboard.local.test",
+  ],
   images: {
     unoptimized: true,
   },
@@ -83,8 +88,33 @@ function withAnalyticsApiDevProxy(
   }
 }
 
+/**
+ * Legacy email links use `/[locale]/secure-messages/<messageId>`; the app
+ * page reads `?id=`. Production handles this in nginx (see
+ * docker/nginx.conf.template); dev applies the same redirect here because
+ * static export does not emit redirect files.
+ */
+function withSecureMessagesLegacyRedirect(config: NextConfig): NextConfig {
+  return {
+    ...config,
+    async redirects() {
+      return [
+        {
+          source: "/:locale/secure-messages/:messageId",
+          destination: "/:locale/secure-messages?id=:messageId",
+          permanent: false,
+        },
+      ]
+    },
+  }
+}
+
 export default function citizenPortalConfig(phase: string): NextConfig {
   return withBundleAnalyzerIfEnabled(
-    withNextIntl(withAnalyticsApiDevProxy(nextConfig, phase)),
+    withNextIntl(
+      withSecureMessagesLegacyRedirect(
+        withAnalyticsApiDevProxy(nextConfig, phase),
+      ),
+    ),
   )
 }

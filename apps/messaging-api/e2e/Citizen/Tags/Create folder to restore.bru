@@ -1,0 +1,36 @@
+meta {
+  name: Create folder to restore
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tags
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "label": "{{restoreTagName}}"
+  }
+}
+
+vars:post-response {
+  restoreTagId: res.body.data && res.body.data ? res.body.data.id : undefined
+}
+
+assert {
+  res.status: eq 201
+  res.body.data: isDefined
+  res.body.data.id: isDefined
+}
+
+script:pre-request {
+  const suffix = require("uuid").v4().substring(0,5)
+  bru.setVar('restoreTagName', `Restore ${suffix}`);
+}

@@ -1,0 +1,110 @@
+.sidebarNav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gieds-space-6);
+}
+
+.inboxLabel {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gieds-space-2);
+  min-width: 0;
+}
+
+.unreadBadge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 var(--gieds-space-2);
+  border-radius: var(--gieds-border-radius-sm, 4px);
+  background: var(--gieds-color-gray-950, #0b0c0c);
+  color: var(--gieds-color-white, #ffffff);
+  font-size: 0.875rem;
+  font-weight: var(--gieds-font-weight-700, 700);
+  line-height: 1;
+}
+
+.folderMenuButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: var(--gieds-border-radius-sm, 4px);
+  background: transparent;
+  color: var(--gieds-color-gray-950, #0b0c0c);
+  cursor: pointer;
+}
+
+.folderMenuButton:hover:not(:disabled) {
+  background-color: var(--gieds-color-gray-100, #ececed);
+}
+
+.folderMenuButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.createFolderButton {
+  align-self: stretch;
+}
+
+.menuContainer {
+  position: relative;
+  display: inline-flex;
+}
+
+.menuPopover {
+  position: absolute;
+  top: calc(100% + 2px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 11rem;
+  padding: var(--gieds-space-1);
+  border: 1px solid var(--gieds-color-gray-200, #d3d4d5);
+  border-radius: var(--gieds-border-radius-sm, 4px);
+  background: var(--gieds-color-white, #ffffff);
+  box-shadow: 0 4px 12px rgba(11, 12, 12, 0.15);
+}
+
+.menuItem {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gieds-space-2);
+  width: 100%;
+  padding: var(--gieds-space-2) var(--gieds-space-3);
+  border: none;
+  border-radius: var(--gieds-border-radius-sm, 4px);
+  background: transparent;
+  color: var(--gieds-color-gray-950, #0b0c0c);
+  font-size: 0.875rem;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.menuItem:hover,
+.menuItem:focus-visible {
+  background-color: var(--gieds-color-gray-50, #f7f7f8);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

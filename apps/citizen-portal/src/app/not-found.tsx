@@ -23,17 +23,13 @@ function NotFoundBody() {
   const locale = useLocale()
 
   return (
-    <Stack
-      direction='column'
-      gap={10}
-      role='alert'
-      aria-live='polite'
-      aria-atomic='true'
-    >
-      <Heading as='h1'>{t("heading")}</Heading>
-      <Paragraph>{t("message")}</Paragraph>
-      <Link href={`/${locale}/messages`}>{t("back")}</Link>
-    </Stack>
+    <div role='alert' aria-live='polite' aria-atomic='true'>
+      <Stack direction='column' gap={10}>
+        <Heading as='h1'>{t("heading")}</Heading>
+        <Paragraph>{t("message")}</Paragraph>
+        <Link href={`/${locale}/messages`}>{t("back")}</Link>
+      </Stack>
+    </div>
   )
 }
 

@@ -550,24 +550,6 @@ describe("POST /api/v1/messages", {}, () => {
       );
     });
 
-    it("should request platform write permission for create message", async () => {
-      app = await getServer();
-      await app.inject({
-        method: "POST",
-        url: "/api/v1/messages",
-        body: {
-          ...validMessageBody,
-          bypassConsent: null,
-        },
-      });
-
-      expect(requestedPermissions[0]).toEqual([
-        Permissions.Message.Write,
-        Permissions.Scheduler.Write,
-        Permissions.Platform.Write,
-      ]);
-    });
-
     it("with null bypassConsent should fail", async () => {
       app = await getServer();
       const res = await app.inject({
@@ -599,7 +581,7 @@ describe("POST /api/v1/messages", {}, () => {
 
       expect(res.statusCode).toBe(403);
       expect(body.detail).toBe(
-        "Cannot bypass recipient consent without platform write permission",
+        "Cannot bypass recipient consent without messaging consent override scope",
       );
       expect(processMessageMock).not.toHaveBeenCalled();
     });

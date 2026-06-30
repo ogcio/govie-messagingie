@@ -2,19 +2,12 @@
 
 import {
   Button,
-  Card,
-  CardContainer,
-  CardHeader,
-  CardSubtitle,
-  CardTitle,
   Heading,
-  Icon,
-  Link,
   Paragraph,
   Spinner,
   Stack,
 } from "@ogcio/design-system-react"
-import { useGatewayDownload, useGatewayFetch } from "@ogcio/sag-client/react"
+import { useGatewayFetch } from "@ogcio/sag-client/react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
@@ -24,7 +17,8 @@ import {
   getMockMessagesPage,
   getMockMessagesTotalCount,
 } from "@/mock/messages"
-import type { FileMetadata, Message } from "@/types"
+import type { Message } from "@/types"
+import { AttachmentCard } from "./attachment-card"
 import { BulkActionToolbar } from "./bulk-action-toolbar"
 import { DeleteConfirmationModal } from "./delete-confirmation-modal"
 import { DeleteResultToast } from "./delete-result-toast"
@@ -387,56 +381,5 @@ function AttachmentList({ attachmentIds }: { attachmentIds: string[] }) {
         <AttachmentCard key={attachmentId} id={attachmentId} />
       ))}
     </Stack>
-  )
-}
-
-function AttachmentCard({ id }: { id: string }) {
-  const { data } = useGatewayFetch<FileMetadata>(
-    `/upload/api/v1/metadata/${id}`,
-  )
-  const { download, isDownloading } = useGatewayDownload({
-    openInNewTab: true,
-  })
-
-  if (!data) return null
-
-  const sizeKb = Math.round(data.fileSize / 1024)
-
-  const handleOpen = (e: React.MouseEvent) => {
-    e.preventDefault()
-    if (!isDownloading) {
-      download(`/upload/api/v1/files/${id}`, data.fileName).catch(() => {})
-    }
-  }
-
-  return (
-    <Card type='horizontal'>
-      <div className='gi-card-icon'>
-        <Icon
-          icon='download'
-          size='xl'
-          className='gi-text-gray-500'
-          ariaHidden
-        />
-      </div>
-      <CardContainer>
-        <CardHeader>
-          <CardTitle>
-            <Link asChild>
-              <button
-                data-testid='attachment-download-action'
-                type='button'
-                onClick={handleOpen}
-                aria-busy={isDownloading}
-                disabled={isDownloading}
-              >
-                {data.fileName}
-              </button>
-            </Link>
-          </CardTitle>
-          <CardSubtitle>{`${sizeKb} kb`}</CardSubtitle>
-        </CardHeader>
-      </CardContainer>
-    </Card>
   )
 }

@@ -1,0 +1,28 @@
+meta {
+  name: Assign folder to message
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/v1/messages/tags
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "tagId": "{{restoreTagId}}",
+    "messageIds": ["{{messageAId}}"]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data.tagId: eq {{restoreTagId}}
+}

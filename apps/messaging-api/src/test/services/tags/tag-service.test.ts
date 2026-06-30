@@ -363,24 +363,32 @@ describe("deleteTag", () => {
     expect(remaining).toHaveLength(0);
   });
 
-  it("throws 409 when tag has messages attached", async () => {
+  it("reassigns attached messages to the inbox and deletes the tag", async () => {
     const tag = await createTag(pool, userId, { label: "HasMsg" });
 
     // Insert a message and assign the tag
-    await pool.query(
+    const inserted = await pool.query<{ id: string }>(
       `INSERT INTO messages(user_id, subject, excerpt, plain_text, rich_text, security_level, lang, preferred_transports, thread_name, organisation_id, scheduled_at, is_delivered, is_seen, tag_id)
-       VALUES($1, 's', 'e', 'pt', 'rt', 'public', 'en', '{""}', 'tn', 'org1', now(), true, false, $2)`,
+       VALUES($1, 's', 'e', 'pt', 'rt', 'public', 'en', '{""}', 'tn', 'org1', now(), true, false, $2)
+       RETURNING id`,
       [userId, tag.id],
     );
+    const messageId = inserted.rows[0].id;
 
-    await expect(deleteTag(pool, userId, tag.id)).rejects.toThrow(
-      /messages attached/,
+    const result = await deleteTag(pool, userId, tag.id);
+    expect(result.id).toBe(tag.id);
+
+    // Tag is gone
+    await expect(getTagById(pool, userId, tag.id)).rejects.toThrow(
+      /Tag not found/,
     );
 
-    // Cleanup: unlink so afterEach cleanup works
-    await pool.query(`UPDATE messages SET tag_id = NULL WHERE tag_id = $1`, [
-      tag.id,
-    ]);
+    // Message is back in the inbox (untagged)
+    const message = await pool.query<{ tag_id: string | null }>(
+      `SELECT tag_id FROM messages WHERE id = $1`,
+      [messageId],
+    );
+    expect(message.rows[0].tag_id).toBeNull();
   });
 
   it("throws 404 for non-existent tag", async () => {
@@ -389,28 +397,34 @@ describe("deleteTag", () => {
     );
   });
 
-  it("throws 409 when a descendant has messages attached", async () => {
+  it("reassigns a descendant's messages to the inbox and deletes the subtree", async () => {
     const root = await createTag(pool, userId, { label: "Root" });
     const child = await createTag(pool, userId, {
       label: "Child",
       parentTagId: root.id,
     });
 
-    // Attach message to the child, then try to delete the root
-    await pool.query(
+    // Attach message to the child, then delete the root
+    const inserted = await pool.query<{ id: string }>(
       `INSERT INTO messages(user_id, subject, excerpt, plain_text, rich_text, security_level, lang, preferred_transports, thread_name, organisation_id, scheduled_at, is_delivered, is_seen, tag_id)
-       VALUES($1, 's', 'e', 'pt', 'rt', 'public', 'en', '{""}', 'tn', 'org1', now(), true, false, $2)`,
+       VALUES($1, 's', 'e', 'pt', 'rt', 'public', 'en', '{""}', 'tn', 'org1', now(), true, false, $2)
+       RETURNING id`,
       [userId, child.id],
     );
+    const messageId = inserted.rows[0].id;
 
-    await expect(deleteTag(pool, userId, root.id)).rejects.toThrow(
-      /messages attached/,
+    await deleteTag(pool, userId, root.id);
+
+    // Whole subtree removed
+    const remaining = await listTags(pool, userId);
+    expect(remaining).toHaveLength(0);
+
+    // Message restored to the inbox (untagged)
+    const message = await pool.query<{ tag_id: string | null }>(
+      `SELECT tag_id FROM messages WHERE id = $1`,
+      [messageId],
     );
-
-    // Cleanup
-    await pool.query(`UPDATE messages SET tag_id = NULL WHERE tag_id = $1`, [
-      child.id,
-    ]);
+    expect(message.rows[0].tag_id).toBeNull();
   });
 
   it("throws 404 when tag belongs to another user", async () => {

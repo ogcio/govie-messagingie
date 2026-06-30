@@ -4,10 +4,11 @@ import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUi from "@fastify/swagger-ui";
 import type { FastifyInstance, FastifyPluginAsync } from "fastify";
 import fp from "fastify-plugin";
-import getVersion from "../../utils/get-version.js";
+import { getPackageInfo } from "../../utils/get-package-info.js";
 
 export default fp(
   async (fastify: FastifyInstance, _opts: FastifyPluginAsync) => {
+    const packageInfo = await getPackageInfo();
     // Have to register the two plugins in the same file
     // because swaggerUi is dependent on Swagger
     await fastify.register(fastifySwagger, {
@@ -15,7 +16,7 @@ export default fp(
         info: {
           title: "OGCIO MessagingIE API",
           description: "API for OGCIO MessagingIE Service",
-          version: await getVersion(),
+          version: packageInfo.version,
         },
         components: {
           securitySchemes: {

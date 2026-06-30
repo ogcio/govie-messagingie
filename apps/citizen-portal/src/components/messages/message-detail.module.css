@@ -1,0 +1,178 @@
+.detailRoot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gieds-space-6);
+  width: 100%;
+  margin-top: calc(-1 * var(--gieds-space-6));
+  color: var(--gieds-color-gray-950, #0b0c0c);
+  background-color: var(--gieds-color-white, #ffffff);
+}
+
+.detailContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gieds-space-6);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+.subject {
+  font: var(
+    --gieds-typography-default-heading-lg,
+    700 1.75rem/1.25 "Lato", Arial, sans-serif
+  );
+  margin: 0 0 var(--gieds-space-4);
+  color: var(--gieds-color-gray-950, #0b0c0c);
+}
+
+.metadata {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gieds-space-1);
+  margin: 0;
+}
+
+.metadataRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gieds-space-2);
+  font-size: var(--gieds-font-size-300, 1rem);
+  line-height: 1.5;
+}
+
+.metadataLabel {
+  font-weight: var(--gieds-font-weight-700, 700);
+  color: var(--gieds-color-gray-950, #0b0c0c);
+}
+
+.metadataValue {
+  margin: 0;
+  font-weight: var(--gieds-font-weight-400, 400);
+  color: var(--gieds-color-gray-950, #0b0c0c);
+}
+
+.bodyText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gieds-space-2);
+  margin: 0;
+}
+
+.bodyParagraph {
+  margin: 0;
+  font-size: var(--gieds-font-size-300, 1rem);
+  line-height: 1.35;
+  color: var(--gieds-color-gray-950, #0b0c0c);
+  white-space: pre-line;
+}
+
+.fallbackText {
+  color: var(--gieds-color-gray-700, #505050);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--gieds-space-6);
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+  padding-bottom: var(--gieds-space-2);
+  border-bottom: none;
+}
+
+.toolbar::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  border-bottom: 1px solid var(--gieds-color-gray-200, #e5e5e6);
+  pointer-events: none;
+}
+
+.toolbarAction {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--gieds-space-2);
+  width: auto;
+  font-size: 1rem;
+  font-weight: var(--gieds-font-weight-500, 500);
+  color: var(--gieds-color-emerald-700, #004d44);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.toolbarAction:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.toolbarAction:disabled,
+.toolbarAction[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.toolbarIcon {
+  color: var(--gieds-color-emerald-700, #004d44);
+}
+
+@media (min-width: 768px) {
+  :global(.inboxLayoutMain) .detailRoot {
+    margin-top: 0;
+  }
+
+  :global(.inboxLayoutMain) .toolbar {
+    border-top: 1px solid var(--gieds-color-gray-200, #e5e5e6);
+    border-bottom: 1px solid var(--gieds-color-gray-200, #e5e5e6);
+    padding-top: var(--gieds-space-2);
+    padding-bottom: var(--gieds-space-2);
+  }
+
+  :global(.inboxLayoutMain) .toolbar::after {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .subject {
+    font-size: 1.5rem;
+    line-height: 1.25;
+  }
+
+  /*
+   * Full-bleed the detail column on small screens (same as inbox
+   * `.mobileFullBleed`) so the toolbar rule reaches the viewport edges.
+   */
+  .detailRoot {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    box-sizing: border-box;
+  }
+
+  .toolbar::after {
+    display: none;
+  }
+
+  .toolbar {
+    padding-left: var(--gieds-space-4);
+    padding-right: var(--gieds-space-4);
+    border-bottom: 1px solid var(--gieds-color-gray-200, #e5e5e6);
+  }
+
+  .detailContent {
+    padding-left: var(--gieds-space-4);
+    padding-right: var(--gieds-space-4);
+  }
+}

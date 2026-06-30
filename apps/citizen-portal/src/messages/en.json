@@ -100,8 +100,74 @@
         "failure": "{count, plural, one {# message could not be deleted} other {# messages could not be deleted}}"
       }
     },
+    "move": {
+      "toolbar": "Move",
+      "moveTo": "Move to",
+      "modal": {
+        "title": "Move message(s)",
+        "chooseFolder": "Choose a folder to move to",
+        "move": "Move",
+        "cancel": "Cancel",
+        "close": "Close",
+        "inbox": "Inbox",
+        "noFolders": "You have no folders to move this message to."
+      },
+      "alert": {
+        "success": "{count, plural, one {# message has been moved} other {# messages have been moved}}",
+        "failure": "{count, plural, one {# message could not be moved} other {# messages could not be moved}}"
+      }
+    },
+    "folders": {
+      "sidebarAriaLabel": "Message folders",
+      "deleted": "Deleted",
+      "createFolder": "Create new folder",
+      "folderOptions": "Options for {folder}",
+      "unreadBadge": "{count, plural, one {# unread message} other {# unread messages}}",
+      "createTitle": "Create new folder",
+      "renameTitle": "Rename folder",
+      "nameLabel": "Folder name",
+      "placeholder": "Folder name",
+      "save": "Save",
+      "cancel": "Cancel",
+      "close": "Close",
+      "rename": "Rename folder",
+      "deleteFolder": "Delete folder",
+      "error": {
+        "duplicate": "A folder with this name already exists",
+        "generic": "Something went wrong. Please try again."
+      },
+      "toast": {
+        "created": "Folder successfully added",
+        "renamed": "Folder successfully renamed",
+        "deleted": "Folder successfully deleted",
+        "deleteFailed": "Folder could not be deleted"
+      },
+      "deleteConfirm": {
+        "title": "Delete {folder}?",
+        "body": "Messages in this folder will be moved back to your inbox.",
+        "cta": "Delete",
+        "cancel": "Cancel"
+      },
+      "panel": {
+        "open": "Folders",
+        "close": "Close",
+        "title": "Folders"
+      }
+    },
     "detail": {
-      "delete": "Delete"
+      "from": "From:",
+      "to": "To:",
+      "date": "Date:",
+      "delete": "Delete",
+      "noSubject": "(no subject)",
+      "toolbarAriaLabel": "Message actions",
+      "attachmentOnlyFallback": "Please select the attachment(s) to preview your message content",
+      "attachment": {
+        "preview": "Preview",
+        "download": "Download",
+        "previewFile": "Preview {fileName}",
+        "downloadFile": "Download {fileName}"
+      }
     }
   },
   "search": {

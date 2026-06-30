@@ -39,6 +39,10 @@ const PlatformPermissions = {
 
 const OnboardedCitizenPermission = "profile:user:onboarded" as const;
 
+const ConsentPermissions = {
+  Override: "messaging:consent:override",
+};
+
 export const Permissions = {
   Message: MessagePermissions,
   MessageOnboarding: MessageOnboardingPermissions,
@@ -49,4 +53,5 @@ export const Permissions = {
   Scheduler: SchedulerPermissions,
   Platform: PlatformPermissions,
   OnboardedCitizen: OnboardedCitizenPermission,
+  Consent: ConsentPermissions,
 } as const;

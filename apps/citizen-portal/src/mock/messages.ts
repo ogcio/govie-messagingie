@@ -60,3 +60,8 @@ export function findMockMessageById(id: string): Message | null {
   if (!MOCK_MESSAGES_ENABLED) return null
   return ALL_MOCKS.find((m) => m.id === id) ?? null
 }
+
+export function getMockUnreadCount(): number {
+  if (!MOCK_MESSAGES_ENABLED) return 0
+  return ALL_MOCKS.filter((message) => !message.isSeen).length
+}

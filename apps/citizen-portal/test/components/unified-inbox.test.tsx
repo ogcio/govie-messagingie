@@ -176,6 +176,9 @@ function TableWithSelection(
     selectMode?: boolean
     onEnterSelectMode?: () => void
     onExitSelectMode?: () => void
+    onOpenFolders?: () => void
+    onBulkMove?: () => void
+    canMove?: boolean
   } = {},
 ) {
   const selection = useMessageSelection(messages)
@@ -192,6 +195,9 @@ function TableWithSelection(
       selectMode={props.selectMode}
       onEnterSelectMode={props.onEnterSelectMode ?? (() => {})}
       onExitSelectMode={props.onExitSelectMode ?? (() => {})}
+      onOpenFolders={props.onOpenFolders}
+      onBulkMove={props.onBulkMove}
+      canMove={props.canMove}
     />
   )
 }
@@ -454,6 +460,35 @@ describe("UnifiedInboxTable", () => {
 
     fireEvent.click(screen.getByTestId("mobile-select-button"))
     expect(onEnterSelectMode).toHaveBeenCalledTimes(1)
+  })
+
+  it("renders a mobile Folders button that opens the folder panel", () => {
+    const onOpenFolders = vi.fn()
+    render(<TableWithSelection onOpenFolders={onOpenFolders} />)
+
+    fireEvent.click(screen.getByTestId("mobile-folders-button"))
+    expect(onOpenFolders).toHaveBeenCalledTimes(1)
+  })
+
+  it("shows a mobile Move button in select mode only when canMove is set", () => {
+    const onBulkMove = vi.fn()
+    render(<TableWithSelection canMove onBulkMove={onBulkMove} />)
+
+    // Enter select mode by selecting a row.
+    fireEvent.click(screen.getByTestId("select-row-msg-1"))
+
+    fireEvent.click(screen.getByTestId("bulk-move-button-mobile"))
+    expect(onBulkMove).toHaveBeenCalledTimes(1)
+  })
+
+  it("hides the mobile Move button when canMove is false", () => {
+    render(<TableWithSelection onBulkMove={vi.fn()} canMove={false} />)
+
+    fireEvent.click(screen.getByTestId("select-row-msg-1"))
+
+    expect(
+      screen.queryByTestId("bulk-move-button-mobile"),
+    ).not.toBeInTheDocument()
   })
 
   it("mobile Close button exits select mode and clears selection", () => {

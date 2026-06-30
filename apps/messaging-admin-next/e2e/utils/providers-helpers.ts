@@ -32,9 +32,6 @@ export async function deleteProvider(page: Page, providerName: string) {
     .locator("button")
     .last()
     .click()
-  await page.removeLocatorHandler(
-    await page.locator("body > div.gi-modal.gi-modal-open"),
-  )
   await page.getByRole("button", { name: "Delete" }).click()
   await expect(page.getByRole("cell", { name: providerName })).not.toBeVisible()
 }

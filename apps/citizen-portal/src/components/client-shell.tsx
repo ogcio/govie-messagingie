@@ -15,12 +15,12 @@ import {
 import {
   Button,
   Heading,
-  LoadMaterialSymbols,
   Paragraph,
   Spinner,
   Stack,
   ToastProvider,
 } from "@ogcio/design-system-react"
+import { LoadMaterialSymbols } from "@/components/load-material-symbols"
 import { signIn } from "@ogcio/sag-client"
 import {
   CONNECTOR_MYGOVID,
@@ -115,14 +115,11 @@ function AuthTimeoutError() {
     <div
       className='gi-flex gi-items-center gi-justify-center'
       style={{ minHeight: "50vh" }}
+      role='alert'
+      aria-live='assertive'
+      aria-atomic='true'
     >
-      <Stack
-        direction='column'
-        gap={4}
-        role='alert'
-        aria-live='assertive'
-        aria-atomic='true'
-      >
+      <Stack direction='column' gap={4}>
         <Heading as='h2'>{t("title")}</Heading>
         <Paragraph>{t("message")}</Paragraph>
         <div>

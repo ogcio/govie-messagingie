@@ -136,6 +136,15 @@ export async function getMessage(params: {
     throw httpErrors.notFound(errorMessage);
   }
   const message = data.rows[0];
+  // node-pg returns timestamp columns as Date objects, but the response
+  // contract types `createdAt` as an ISO string. The 200 response is an
+  // anyOf union of the full message and the redacted partial shape, and
+  // fast-json-stringify selects the first branch whose data validates. A
+  // Date value fails the full branch's `Type.String()` check, so the
+  // serializer silently falls back to the partial branch and strips
+  // subject/body/date even for the legitimate recipient. Coerce to a string
+  // here so the full branch validates.
+  message.createdAt = new Date(message.createdAt).toISOString();
   params.logger.debug(
     {
       messageId: `${params.messageId.substring(0, 5)}...`,
@@ -145,7 +154,7 @@ export async function getMessage(params: {
     },
     "Retrieved message",
   );
-  return prepareGetMessageResponse({ ...params, message: data.rows[0] });
+  return prepareGetMessageResponse({ ...params, message });
 }
 
 export async function processMessage(params: {

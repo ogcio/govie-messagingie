@@ -1,0 +1,62 @@
+/* Desktop: dropdown inside modal. Mobile: tap-to-move folder list. */
+.desktopSelect {
+  display: block;
+}
+
+/*
+ * DS gap (SelectNative intrinsic width): DS renders the native <select>
+ * inside a `.gi-select-container` that shrink-wraps to the widest option
+ * rather than filling its parent, so the dropdown only spanned part of the
+ * modal width and read as misaligned with the full-width footer buttons.
+ * Stretch both the container and the control to the modal's content width.
+ */
+.desktopSelect :global(.gi-select-container) {
+  display: block;
+  width: 100%;
+}
+
+.desktopSelect :global(.gi-select) {
+  width: 100%;
+}
+
+.mobileList {
+  display: none;
+}
+
+.desktopFooterButton {
+  display: inline-flex;
+}
+
+@media (max-width: 767px) {
+  .desktopSelect {
+    display: none;
+  }
+
+  .mobileList {
+    display: flex;
+  }
+
+  .desktopFooterButton {
+    display: none;
+  }
+
+  .mobileFolderItem {
+    width: 100%;
+    text-align: left;
+    padding: var(--gieds-space-4) var(--gieds-space-2);
+    border: none;
+    border-bottom: 1px solid var(--gieds-color-gray-200, #e5e5e6);
+    background: transparent;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  .mobileFolderItem:hover:not(:disabled) {
+    background-color: var(--gieds-color-gray-50, #f7f7f8);
+  }
+
+  .mobileFolderItem:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+}

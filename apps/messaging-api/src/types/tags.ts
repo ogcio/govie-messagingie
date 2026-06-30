@@ -168,7 +168,7 @@ export type DeleteTagResponse = Static<typeof DeleteTagResponseSchema>;
 
 export const DeleteTagReqSchema = {
   description:
-    "Deletes a tag and its descendants. Blocked if any have messages attached.",
+    "Deletes a tag and its descendants. Any attached messages are returned to the inbox (untagged).",
   tags: TAGS_TAGS,
   operationId: "DeleteTag",
   params: TagIdParamsSchema,

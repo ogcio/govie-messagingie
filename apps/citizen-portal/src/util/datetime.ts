@@ -1,22 +1,31 @@
+import { Temporal } from "@js-temporal/polyfill"
+
 const DUBLIN_TIMEZONE = "Europe/Dublin"
+const LOCALE = "en-IE"
 
-export function formatDate(iso: string, style: "short" | "medium" = "short") {
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return iso
+type DateStyle = "short" | "medium" | "long"
 
-  if (style === "medium") {
-    return date.toLocaleDateString("en-IE", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      timeZone: DUBLIN_TIMEZONE,
-    })
+const LOCALE_OPTIONS: Record<
+  DateStyle,
+  Intl.DateTimeFormatOptions
+> = {
+  short: { day: "2-digit", month: "2-digit", year: "numeric" },
+  medium: { day: "numeric", month: "short", year: "numeric" },
+  long: { day: "numeric", month: "long", year: "numeric" },
+}
+
+function parseInstant(iso: string): Temporal.Instant | null {
+  try {
+    return Temporal.Instant.from(iso)
+  } catch {
+    return null
   }
+}
 
-  return date.toLocaleDateString("en-IE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    timeZone: DUBLIN_TIMEZONE,
-  })
+export function formatDate(iso: string, style: DateStyle = "short"): string {
+  const instant = parseInstant(iso)
+  if (!instant) return iso
+
+  const zoned = instant.toZonedDateTimeISO(DUBLIN_TIMEZONE)
+  return zoned.toLocaleString(LOCALE, LOCALE_OPTIONS[style])
 }

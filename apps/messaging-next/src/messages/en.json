@@ -80,7 +80,13 @@
       }
     },
     "detail": {
-      "delete": "Delete"
+      "delete": "Delete",
+      "attachment": {
+        "preview": "Preview",
+        "download": "Download",
+        "previewFile": "Preview {fileName}",
+        "downloadFile": "Download {fileName}"
+      }
     }
   },
   "search": {

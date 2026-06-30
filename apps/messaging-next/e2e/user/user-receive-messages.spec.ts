@@ -52,11 +52,9 @@ test.describe("Admin Message Sending > Citizen Viewing", () => {
     await authenticatedPage.waitForLoadState("networkidle")
     await loginAsCitizen(authenticatedPage, "peter.parker@mail.ie")
     //open first unread message
-    await authenticatedPage
-      .locator(
-        "body > main > div > div > div > div > div > div > section > div.unified-inbox-table-module__iNj3tG__desktopTable > table > tbody > tr:nth-child(1)",
-      )
-      .click()
+    // First data row (nth(0) is the header). The desktop table's CSS-module
+    // class is hashed at build time, so target by ARIA role instead.
+    await authenticatedPage.getByRole("row").nth(1).click()
 
     await authenticatedPage.waitForLoadState("networkidle")
     await expect(
@@ -101,11 +99,9 @@ test.describe("Admin Message Sending > Citizen Viewing", () => {
     await authenticatedPage.waitForLoadState("networkidle")
     await loginAsCitizen(authenticatedPage, "peter.parker@mail.ie")
     //open first unread message
-    await authenticatedPage
-      .locator(
-        "body > main > div > div > div > div > div > div > section > div.unified-inbox-table-module__iNj3tG__desktopTable > table > tbody > tr:nth-child(1)",
-      )
-      .click()
+    // First data row (nth(0) is the header). The desktop table's CSS-module
+    // class is hashed at build time, so target by ARIA role instead.
+    await authenticatedPage.getByRole("row").nth(1).click()
 
     await authenticatedPage.waitForLoadState("networkidle")
     await authenticatedPage.getByRole("button", { name: "Delete" }).click()

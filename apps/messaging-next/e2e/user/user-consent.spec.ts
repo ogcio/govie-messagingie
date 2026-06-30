@@ -89,7 +89,7 @@ test.describe("User Consent", () => {
         "body > main > div > div > div > article > div > div.gi-flex.gi-w-full.gi-justify-start.gi-items-start.gi-flex-col.gi-gap-4.gi-flex-nowrap > a",
       )
       .click()
-    await expect(page.url()).toContain("messaging.dev.services.gov.ie")
+    await expect(page).toHaveURL(/messaging\.dev\.services\.gov\.ie/)
 
     await expect(
       page.locator("body > div.gi-modal.gi-modal-open"),

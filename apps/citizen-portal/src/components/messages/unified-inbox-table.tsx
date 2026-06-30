@@ -97,6 +97,19 @@ export interface UnifiedInboxTableProps {
    * and the table is purely presentational.
    */
   onBulkDelete?: () => void
+  /**
+   * Opens the mobile folder panel. When provided, a `Folders` button is
+   * rendered in the non-select mobile header (the desktop sidebar that hosts
+   * folder navigation is hidden on mobile).
+   */
+  onOpenFolders?: () => void
+  /**
+   * Opens the move picker from the mobile select-mode header. Rendered only
+   * when `canMove` is also true (i.e. there is at least one valid
+   * destination folder and the current view is not Deleted).
+   */
+  onBulkMove?: () => void
+  canMove?: boolean
 }
 
 export function UnifiedInboxTable({
@@ -112,10 +125,15 @@ export function UnifiedInboxTable({
   onExitSelectMode,
   bulkActionBar,
   onBulkDelete,
+  onOpenFolders,
+  onBulkMove,
+  canMove = false,
 }: UnifiedInboxTableProps) {
   const t = useTranslations("home.table")
   const tSearch = useTranslations("search")
   const tToolbar = useTranslations("home.delete.toolbar")
+  const tMove = useTranslations("home.move")
+  const tFolders = useTranslations("home.folders")
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -440,6 +458,21 @@ export function UnifiedInboxTable({
                 </span>
               </span>
               <span className='gi-inline-flex gi-items-center gi-gap-2'>
+                {canMove && onBulkMove ? (
+                  <Button
+                    data-testid='bulk-move-button-mobile'
+                    variant='secondary'
+                    appearance='light'
+                    size='small'
+                    disabled={selection.selectedCount === 0}
+                    onClick={() => {
+                      if (selection.selectedCount === 0) return
+                      onBulkMove()
+                    }}
+                  >
+                    {tMove("moveTo")}
+                  </Button>
+                ) : null}
                 <Button
                   data-testid='bulk-delete-button-mobile'
                   variant='secondary'
@@ -488,17 +521,30 @@ export function UnifiedInboxTable({
               ) : (
                 <span aria-hidden='true' />
               )}
-              {onEnterSelectMode ? (
-                <Button
-                  data-testid='mobile-select-button'
-                  variant='secondary'
-                  appearance='default'
-                  size='small'
-                  onClick={onEnterSelectMode}
-                >
-                  {t("select")}
-                </Button>
-              ) : null}
+              <span className='gi-inline-flex gi-items-center gi-gap-2'>
+                {onOpenFolders ? (
+                  <Button
+                    data-testid='mobile-folders-button'
+                    variant='secondary'
+                    appearance='default'
+                    size='small'
+                    onClick={onOpenFolders}
+                  >
+                    {tFolders("panel.open")}
+                  </Button>
+                ) : null}
+                {onEnterSelectMode ? (
+                  <Button
+                    data-testid='mobile-select-button'
+                    variant='secondary'
+                    appearance='default'
+                    size='small'
+                    onClick={onEnterSelectMode}
+                  >
+                    {t("select")}
+                  </Button>
+                ) : null}
+              </span>
             </>
           )}
         </div>
@@ -549,7 +595,7 @@ export function UnifiedInboxTable({
                 {table.getRowModel().rows.map((row) => (
                   <TableRow
                     key={row.id}
-                    className={`${styles.clickableRow} ${row.original.isSeen ? "" : styles.unreadRow}`}
+                    className={`${styles.clickableRow} ${row.original.isSeen ? "" : styles.unreadRow} ${selection?.isSelected(row.original.id) ? styles.selectedRow : ""}`}
                     onClick={() => onSelect(row.original.id)}
                   >
                     {row.getVisibleCells().map((cell) => (

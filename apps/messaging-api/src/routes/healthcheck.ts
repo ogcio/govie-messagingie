@@ -1,27 +1,65 @@
 import { httpErrors } from "@fastify/sensible";
+import type { FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import { getErrorMessage } from "@ogcio/shared-errors";
 import type { FastifyInstance } from "fastify";
-import { isHttpError } from "http-errors";
-import getVersion from "../utils/get-version.js";
+import { Type } from "typebox";
+import { getPackageInfo } from "../utils/get-package-info.js";
 
-export default async function healthCheck(app: FastifyInstance) {
+export const HealthCheckSchema = {
+  tags: ["Health"],
+  hide: true,
+  description: "It checks the current liveness status of the API",
+  response: {
+    200: Type.Record(Type.String(), Type.String(), {
+      description: "Indicates the liveness status of the service",
+    }),
+  },
+};
+
+export const HealthCheckReadySchema = {
+  tags: ["Health"],
+  hide: true,
+  description:
+    "It checks the readiness status of the API, pinging external dependencies",
+  response: {
+    200: Type.Object(
+      {
+        db: Type.Boolean(),
+      },
+      {
+        additionalProperties: false,
+        description:
+          "Indicates the readiness status of the service, pinging external dependencies",
+      },
+    ),
+  },
+};
+
+const plugin: FastifyPluginAsyncTypebox = async function healthCheck(
+  app: FastifyInstance,
+) {
   app.get(
     "/health",
     {
-      schema: {
-        tags: ["Health"],
-        hide: true,
-        description:
-          "It checks the current health status of the APIs, pinging all the related items",
-      },
+      schema: HealthCheckSchema,
+    },
+    async () => {
+      const { name, version } = await getPackageInfo();
+      return { [name]: version };
+    },
+  );
+
+  app.get(
+    "/health/ready",
+    {
+      schema: HealthCheckReadySchema,
     },
     async () => {
       await checkDb(app);
-      const version = await getVersion();
-      return { "messaging-api": version };
+      return { db: true };
     },
   );
-}
+};
 
 const checkDb = async (app: FastifyInstance): Promise<void> => {
   const pool = await app.pg.connect();
@@ -33,7 +71,14 @@ const checkDb = async (app: FastifyInstance): Promise<void> => {
       );
     }
   } catch (e) {
-    if (isHttpError(e)) {
+    if (
+      e &&
+      typeof e === "object" &&
+      "status" in e &&
+      typeof e.status === "number" &&
+      "statusCode" in e &&
+      typeof e.statusCode === "number"
+    ) {
       throw e;
     }
 
@@ -42,3 +87,6 @@ const checkDb = async (app: FastifyInstance): Promise<void> => {
     pool.release();
   }
 };
+
+export default plugin;
+export const autoPrefix = "";

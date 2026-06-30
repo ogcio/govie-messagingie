@@ -60,34 +60,34 @@ function postGatewaySignOut(
 function buildIframeUrlList(role: string | null) {
   const urls: string[] = []
 
-  if (role === "citizen" && env.NEXT_PUBLIC_MYGOVID_END_SESSION_URL) {
+  const isCitizen = role === "citizen"
+
+  // Only MyGovID citizens have an upstream Azure B2C session to terminate.
+  if (isCitizen && env.NEXT_PUBLIC_MYGOVID_END_SESSION_URL) {
     urls.push(env.NEXT_PUBLIC_MYGOVID_END_SESSION_URL)
   }
 
-  // Sibling-zone hosts (messages / dashboard) and the gateway URL come
-  // from the shared citizen-portal env. Admin URLs + non-zone services
-  // (payments / journey-builder) stay zone-local — they're not part of
-  // the citizen-portal multi-zone deployment.
-  const { hosts, sagUrl } = getEnv()
+  const { sagUrl } = getEnv()
 
-  const legacyBases = [
-    hosts.dashboard,
-    env.NEXT_PUBLIC_DASHBOARD_ADMIN_URL,
-    env.NEXT_PUBLIC_PAYMENTS_URL,
-    env.NEXT_PUBLIC_JOURNEY_URL,
-  ]
-  for (const base of legacyBases) {
-    urls.push(buildLegacyApplicationSignoutUrl(base))
-  }
+  // The consolidated citizen-portal zones (messages / profile / dashboard)
+  // all ride the single shared SAG session, so the /auth/clear-session call
+  // below logs the user out of every zone at once — no per-zone iframe is
+  // needed. Only apps that keep their OWN session cookies must be cleared
+  // per-origin here. payments and journey-builder still own independent
+  // sessions for every user until they migrate behind the SAG.
+  urls.push(buildLegacyApplicationSignoutUrl(env.NEXT_PUBLIC_PAYMENTS_URL))
+  urls.push(buildLegacyApplicationSignoutUrl(env.NEXT_PUBLIC_JOURNEY_URL))
 
-  const newBases = [
-    env.NEXT_PUBLIC_BASE_URL,
-    env.NEXT_PUBLIC_PROFILE_ADMIN_URL,
-    hosts.messages,
-    env.NEXT_PUBLIC_MESSAGING_ADMIN_URL,
-  ]
-  for (const base of newBases) {
-    urls.push(buildNewApplicationSignoutUrl(base))
+  // Admin apps also keep their own sessions, but only public servants ever
+  // have one — skip them entirely for citizens.
+  if (!isCitizen) {
+    urls.push(
+      buildLegacyApplicationSignoutUrl(env.NEXT_PUBLIC_DASHBOARD_ADMIN_URL),
+    )
+    urls.push(buildNewApplicationSignoutUrl(env.NEXT_PUBLIC_PROFILE_ADMIN_URL))
+    urls.push(
+      buildNewApplicationSignoutUrl(env.NEXT_PUBLIC_MESSAGING_ADMIN_URL),
+    )
   }
 
   urls.push(`${trimTrailingSlash(sagUrl)}/auth/clear-session`)

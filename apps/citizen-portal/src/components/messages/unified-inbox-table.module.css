@@ -146,6 +146,24 @@
   background-color: var(--gieds-color-gray-50, #f7f7f8);
 }
 
+/*
+ * Selected-row highlight (desktop). DS `TableRow` has no `selected`
+ * variant, so a checked row previously signalled its state only through
+ * the checkbox — unlike the mobile list, which tints the whole row. This
+ * mirrors the mobile `.mobileRowSelected` gray-200 tone (and gray-300 on
+ * hover) so selection reads consistently across both viewports. The
+ * doubled `.selectedRow` selector lifts specificity above
+ * `.clickableRow:hover` and `.unreadRow` so the selection tint always
+ * wins while a row is checked.
+ */
+.selectedRow.selectedRow {
+  background-color: var(--gieds-color-gray-200, #d8dadf);
+}
+
+.selectedRow.selectedRow:hover {
+  background-color: var(--gieds-color-gray-300, #c9ccd1);
+}
+
 .clickableRow:focus-visible {
   outline: var(--gieds-border-width-200) solid var(--gieds-color-primary-700);
   outline-offset: -2px;
@@ -268,18 +286,20 @@
  *      flush against the table header below — DS ships `gi-rounded-md`
  *      on all four corners, which otherwise leaves a visible seam.
  *   2) Stretch the `actions` wrapper to fill the remaining width and
- *      distribute its children with `space-between`, and align them
- *      on the cross axis with `center`. DS's root paints
- *      `justify-content: space-between` + `items-center` across
+ *      align its children on the cross axis with `center`. DS's root
+ *      paints `justify-content: space-between` + `items-center` across
  *      `[hidden label] [actions div]`, but the actions div itself is
  *      only `gi-flex gi-gap-4` — no `items-center`. With the DS label
  *      hidden, the actions wrapper would otherwise collapse to the
  *      start edge (breaking left/right placement) and its children
  *      would default to `align-items: stretch`, which leaves the
  *      "(N) selected" text flush-top inside a span stretched to match
- *      the taller Delete button. Pushing `space-between` + centring
- *      one level deeper gives us label-left / button-right + both
- *      vertically centred, within the same DS chrome.
+ *      the taller Delete button. Stretching to full width + centring
+ *      one level deeper, then pushing every action after the count to
+ *      the trailing edge via `margin-inline-end: auto` on the count
+ *      (see `.bulkBannerCount`), gives us count-left / actions grouped
+ *      together on the right + all vertically centred, within the same
+ *      DS chrome.
  */
 .bulkBannerHideDefaultLabel {
   border-bottom-left-radius: 0;
@@ -293,10 +313,15 @@
 .bulkBannerHideDefaultLabel > div:last-child {
   flex: 1;
   align-items: center;
-  justify-content: space-between;
 }
 
 .bulkBannerCount {
+  /*
+   * Keeps the count flush-left while the action cluster (Move to /
+   * Delete, separated by the DS `gi-gap-4`) is pushed together to the
+   * trailing edge of the banner.
+   */
+  margin-inline-end: auto;
   /*
    * Pinned to the same 0.9375rem the `.unreadCount*` rules use so the
    * desktop banner's "(N) selected" visually reads as a 1:1 swap for

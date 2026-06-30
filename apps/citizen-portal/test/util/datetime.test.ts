@@ -6,7 +6,8 @@ import { formatDate } from "@/util/datetime"
  * messages on the dashboard, secure-message metadata). The locale
  * + timezone pair is fixed (`en-IE` / `Europe/Dublin`) because the
  * citizen-portal serves Irish residents and DS contract requires a
- * single canonical date format across the bundle.
+ * single canonical date format across the bundle. Parsing uses the Temporal
+ * API (`@js-temporal/polyfill`) with explicit Dublin zone conversion.
  *
  * The DST boundary is the most likely silent regression: an
  * accidental swap to `toLocaleDateString()` without an explicit
@@ -22,6 +23,10 @@ describe("formatDate", () => {
 
   it("formats a UTC timestamp in en-IE medium format (d MMM yyyy)", () => {
     expect(formatDate("2025-01-15T10:30:00Z", "medium")).toBe("15 Jan 2025")
+  })
+
+  it("formats a UTC timestamp in en-IE long format (d MMMM yyyy)", () => {
+    expect(formatDate("2026-04-17T10:00:00Z", "long")).toBe("17 April 2026")
   })
 
   it("honours Europe/Dublin's DST offset (BST = UTC+1)", () => {

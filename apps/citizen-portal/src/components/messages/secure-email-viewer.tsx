@@ -74,7 +74,21 @@ export function SecureEmailViewer({ content }: { content: string }) {
     });
   </script>
   <style>
-    body { margin: 0; padding: 0; box-sizing: border-box; max-width: 100%; overflow-x: hidden; white-space: pre-wrap; overflow-wrap: break-word; }
+    body {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      max-width: 100%;
+      overflow-x: hidden;
+      font-family: Lato, Arial, sans-serif;
+      font-size: 1rem;
+      line-height: 1.35;
+      color: #0b0c0c;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+    p { margin: 0 0 0.5rem; }
+    p:last-child { margin-bottom: 0; }
     img { max-width: 100%; height: auto; }
   </style>
 </head>

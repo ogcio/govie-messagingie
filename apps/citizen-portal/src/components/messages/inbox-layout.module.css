@@ -1,0 +1,37 @@
+/*
+ * Mobile: block layout so the main column always spans the full container
+ * width. A single-column grid with align-items:start shrinks the main
+ * track to content width, which breaks detail full-bleed and leaves the
+ * attachment button narrow.
+ */
+.inboxLayout {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.sidebar {
+  display: none;
+}
+
+.main {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .inboxLayout {
+    display: grid;
+    grid-template-columns: minmax(12.5rem, 17.5rem) minmax(0, 1fr);
+    gap: var(--gieds-space-8);
+    align-items: start;
+  }
+
+  .sidebar {
+    display: block;
+  }
+
+  .main {
+    justify-self: stretch;
+  }
+}

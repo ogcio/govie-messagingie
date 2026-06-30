@@ -1,7 +1,12 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
+import { httpErrors } from "@fastify/sensible";
+import { getErrorMessage } from "@ogcio/shared-errors";
 
-export default async () => {
+export async function getPackageInfo(): Promise<{
+  version: string;
+  name: string;
+}> {
   try {
     // Resolve the path to package.json
     const packageJsonPath = path.resolve("package.json");
@@ -13,8 +18,8 @@ export default async () => {
     const packageJson = JSON.parse(data);
 
     // Log or return the parsed content
-    return packageJson.version;
+    return { version: packageJson.version, name: packageJson.name };
   } catch (err) {
-    console.error("Error reading package.json:", err);
+    throw httpErrors.internalServerError(getErrorMessage(err));
   }
-};
+}

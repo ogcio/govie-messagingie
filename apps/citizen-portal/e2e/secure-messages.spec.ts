@@ -28,7 +28,7 @@ test.describe("Secure Messages Loader", () => {
   }) => {
     await page.goto(`/ga/secure-messages/${mockMessageId}`)
 
-    // Should redirect to login page
+    // Should redirect to login page (legacy path-based email link is rewritten to ?id= first)
     await expect(page).toHaveURL(/.*\/sign-in.*/)
     // Check return_to is set in cookies
     const cookies = await page.context().cookies()
@@ -36,7 +36,7 @@ test.describe("Secure Messages Loader", () => {
       (cookie) => cookie.name === "logtoPostLoginRedirectUrl",
     )
     await expect(returnToCookie?.value).toBe(
-      encodeURIComponent(`/ga/secure-messages/${mockMessageId}`),
+      encodeURIComponent(`/ga/secure-messages?id=${mockMessageId}`),
     )
   })
 
@@ -101,8 +101,8 @@ test.describe("Secure Messages Loader", () => {
 
     await page.goto(`/secure-messages/${mockMessageId}`)
 
-    // Should stay on the secure messages page
-    await expect(page).toHaveURL(`/secure-messages/${mockMessageId}`)
+    // Should stay on the secure messages page (legacy path rewritten to ?id=)
+    await expect(page).toHaveURL(`/secure-messages?id=${mockMessageId}`)
     // Verify the page shows the partial message content
     // Add specific assertions based on your UI implementation
   })

@@ -70,12 +70,17 @@ test.describe("User Messages page", () => {
     await expect(page.getByRole("row").nth(1)).toContainText(
       "michael.clarkson+4@nearform.com",
     )
-    await page
-      .locator(
-        "body > main > div > div > div > div > div > div > section > div.unified-inbox-table-module__iNj3tG__desktopTable > table > tbody > tr:nth-child(1)",
-      )
-      .click()
+    // First data row (nth(0) is the header). The desktop table's CSS-module
+    // class is hashed at build time, so target by ARIA role instead.
+    await page.getByRole("row").nth(1).click()
 
+    // The message detail view actually rendered (proves we are not on a
+    // blank/error page — without this, a message that rendered nothing at
+    // all would still pass the negative assertion below).
+    await expect(page.getByRole("link", { name: "Go back" })).toBeVisible()
+
+    // The template placeholders were substituted: the raw tokens must not
+    // leak into the rendered message body.
     await expect(
       page.getByText("{{publicName}} {{ppsn}} {{email}}"),
     ).not.toBeVisible()

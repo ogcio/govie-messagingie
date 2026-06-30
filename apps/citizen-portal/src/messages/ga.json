@@ -100,8 +100,74 @@
         "failure": "{count, plural, one {Níorbh fhéidir # teachtaireacht a scriosadh} other {Níorbh fhéidir # teachtaireachtaí a scriosadh}}"
       }
     },
+    "move": {
+      "toolbar": "Bog",
+      "moveTo": "Bog chuig",
+      "modal": {
+        "title": "Bog teachtaireacht(aí)",
+        "chooseFolder": "Roghnaigh fillteán chun bogadh chuige",
+        "move": "Bog",
+        "cancel": "Cealaigh",
+        "close": "Dún",
+        "inbox": "Bosca isteach",
+        "noFolders": "Níl aon fhillteáin agat chun an teachtaireacht seo a bhogadh chucu."
+      },
+      "alert": {
+        "success": "{count, plural, one {Bogadh # teachtaireacht} other {Bogadh # teachtaireachtaí}}",
+        "failure": "{count, plural, one {Níorbh fhéidir # teachtaireacht a bhogadh} other {Níorbh fhéidir # teachtaireachtaí a bhogadh}}"
+      }
+    },
+    "folders": {
+      "sidebarAriaLabel": "Fillteáin teachtaireachtaí",
+      "deleted": "Scriosta",
+      "createFolder": "Cruthaigh fillteán nua",
+      "folderOptions": "Roghanna do {folder}",
+      "unreadBadge": "{count, plural, one {# teachtaireacht neamhlite} other {# teachtaireacht neamhlite}}",
+      "createTitle": "Cruthaigh fillteán nua",
+      "renameTitle": "Athainmnigh fillteán",
+      "nameLabel": "Ainm an fhillteáin",
+      "placeholder": "Ainm an fhillteáin",
+      "save": "Sábháil",
+      "cancel": "Cealaigh",
+      "close": "Dún",
+      "rename": "Athainmnigh fillteán",
+      "deleteFolder": "Scrios fillteán",
+      "error": {
+        "duplicate": "Tá fillteán leis an ainm seo ann cheana",
+        "generic": "Chuaigh rud éigin mícheart. Bain triail eile as."
+      },
+      "toast": {
+        "created": "Cuireadh an fillteán leis go rathúil",
+        "renamed": "Athainmníodh an fillteán go rathúil",
+        "deleted": "Scriosadh an fillteán go rathúil",
+        "deleteFailed": "Níorbh fhéidir an fillteán a scriosadh"
+      },
+      "deleteConfirm": {
+        "title": "Scrios {folder}?",
+        "body": "Bogfar teachtaireachtaí san fhillteán seo ar ais chuig do bhosca isteach.",
+        "cta": "Scrios",
+        "cancel": "Cealaigh"
+      },
+      "panel": {
+        "open": "Fillteáin",
+        "close": "Dún",
+        "title": "Fillteáin"
+      }
+    },
     "detail": {
-      "delete": "Scrios"
+      "from": "Ó:",
+      "to": "Chuig:",
+      "date": "Dáta:",
+      "delete": "Scrios",
+      "noSubject": "(gan ábhar)",
+      "toolbarAriaLabel": "Gníomhartha teachtaireachta",
+      "attachmentOnlyFallback": "Roghnaigh an ceanglán/na ceangláin chun ábhar do theachtaireachta a réamhamharc",
+      "attachment": {
+        "preview": "Réamhamharc",
+        "download": "Íoslódáil",
+        "previewFile": "Réamhamharc {fileName}",
+        "downloadFile": "Íoslódáil {fileName}"
+      }
     }
   },
   "search": {

@@ -59,6 +59,7 @@ export function getZoneFromPath(pathname: string): Zone {
   if (
     routeSegment === "onboarding" ||
     routeSegment === "post-global-signout" ||
+    routeSegment === "global-signout" ||
     routeSegment === "wrong-login-method-error" ||
     routeSegment === "api"
   ) {

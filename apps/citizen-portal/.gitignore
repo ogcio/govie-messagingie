@@ -10,6 +10,7 @@ docker/nginx.conf
 results.xml
 test-results/
 playwright-report/
+demo-videos/
 *.log
 
 # Local env files (sample stays tracked)

@@ -1,4 +1,4 @@
-import { type Static, type TSchema, Type } from "typebox";
+import { type Static, type TSchema, type TUnsafe, Type } from "typebox";
 import Value from "typebox/value";
 
 export const PAGINATION_OFFSET_DEFAULT = 0;
@@ -16,12 +16,15 @@ export const TypeboxStringEnum = <T extends string[]>(
   defaultValue?: string,
   description?: string,
 ) =>
-  Type.Unsafe<T[number]>({
-    type: "string",
+  // NOTE: build a normal TypeBox string schema (no `~unsafe` runtime keyword)
+  // and only cast at the TypeScript level to preserve the literal union type.
+  // `Type.Unsafe(...)` would attach an own `~unsafe` property that Fastify
+  // forwards to Ajv, which rejects it in strict mode as an unknown keyword.
+  Type.String({
     enum: items,
     default: defaultValue,
     description,
-  });
+  }) as unknown as TUnsafe<T[number]>;
 
 export type AcceptedQueryBooleanValues = "true" | "false" | "0" | "1";
 

@@ -1,0 +1,31 @@
+meta {
+  name: Message returned to inbox
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/messages?untagged=true&limit=100
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data: isArray
+}
+
+tests {
+  const body = res.getBody().data;
+  const ids = body.map((message) => message.id);
+  const messageAId = bru.getVar("messageAId");
+
+  test("message is back in the untagged inbox", function () {
+    expect(ids).to.contain(messageAId);
+  });
+}

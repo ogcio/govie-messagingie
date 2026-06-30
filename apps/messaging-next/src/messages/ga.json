@@ -80,7 +80,13 @@
       }
     },
     "detail": {
-      "delete": "Scrios"
+      "delete": "Scrios",
+      "attachment": {
+        "preview": "Réamhamharc",
+        "download": "Íoslódáil",
+        "previewFile": "Réamhamharc {fileName}",
+        "downloadFile": "Íoslódáil {fileName}"
+      }
     }
   },
   "search": {

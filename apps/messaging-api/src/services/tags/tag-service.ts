@@ -256,36 +256,47 @@ function buildTree(rows: (Tag & { unreadMessages: number })[]): TagTreeNode[] {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function deleteTag(
-  pool: QueryRunner,
+  pool: Pool,
   userId: string,
   tagId: string,
 ): Promise<{ id: string }> {
-  // Fetch the tag to get its path
+  // Fetch the tag to get its path (also validates ownership / existence).
   const tagResult = await getTagById(pool, userId, tagId);
-
   const tagPath = tagResult.path;
 
-  // Check if this tag or any descendant has messages attached
-  const hasMessages = await pool.query<{ exists: boolean }>(
-    `SELECT EXISTS(
-       SELECT 1 FROM messages m
-       JOIN tags t ON m.tag_id = t.id
-       WHERE t.path <@ $1::ltree AND t.user_id = $2
-     ) AS exists`,
-    [tagPath, userId],
-  );
+  const client = await pool.connect();
+  try {
+    await client.query("BEGIN");
 
-  if (hasMessages.rows[0].exists) {
-    throw httpErrors.conflict(
-      "Cannot delete tag: tag or its descendants have messages attached",
+    // Reassign any messages on this tag or its descendants back to the inbox
+    // (untagged) so deleting a non-empty folder restores its messages to the
+    // inbox rather than blocking the deletion.
+    await client.query(
+      `UPDATE messages m
+       SET tag_id = NULL
+       FROM tags t
+       WHERE m.tag_id = t.id
+         AND t.path <@ $1::ltree
+         AND t.user_id = $2`,
+      [tagPath, userId],
     );
+
+    // Delete the tag and all of its descendants.
+    await client.query(
+      `DELETE FROM tags WHERE path <@ $1::ltree AND user_id = $2`,
+      [tagPath, userId],
+    );
+
+    await client.query("COMMIT");
+    return { id: tagId };
+  } catch (error) {
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      // Swallow rollback failures; the original error is more useful.
+    }
+    throw error;
+  } finally {
+    client.release();
   }
-
-  // Delete tag and all descendants
-  await pool.query(
-    `DELETE FROM tags WHERE path <@ $1::ltree AND user_id = $2`,
-    [tagPath, userId],
-  );
-
-  return { id: tagId };
 }

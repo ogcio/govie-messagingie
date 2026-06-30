@@ -41,7 +41,7 @@
     "test:admin-next": "pnpm --filter messaging-admin-next test",
     "prepare": "husky || true",
     "preinstall": "npx only-allow pnpm",
-    "db:up": "docker compose -f docker-compose.yaml up --detach",
+    "db:up": "docker compose --env-file .env -f docker-compose.yaml up --detach",
     "db:migrate": "pnpm --filter messaging-api db:migrate",
     "db:prepare": "pnpm db:up && pnpm --filter messaging-api db:create && pnpm --filter messaging-api db:migrate && pnpm --filter messaging-api sync-event-summary",
     "db:reset": "node scripts/db/reset.mjs",
@@ -73,11 +73,11 @@
   "license": "ISC",
   "devDependencies": {
     "@axe-core/playwright": "4.11.3",
-    "@biomejs/biome": "2.4.16",
+    "@biomejs/biome": "2.5.0",
     "@commitlint/cli": "21.0.2",
     "@commitlint/config-conventional": "21.0.2",
-    "@types/node": "25.9.1",
-    "@vitest/coverage-v8": "4.1.8",
+    "@types/node": "26.0.0",
+    "@vitest/coverage-v8": "4.1.9",
     "concurrently": "10.0.3",
     "husky": "9.1.7",
     "nodemon": "3.1.14",
@@ -85,7 +85,7 @@
     "tsx": "4.22.4",
     "typescript": "6.0.3",
     "vite": "8.0.16",
-    "vitest": "4.1.8",
+    "vitest": "4.1.9",
     "yaml": "2.9.0"
   },
   "resolutions": {
@@ -93,12 +93,12 @@
   },
   "pnpm": {
     "overrides": {
-      "protobufjs": "8.4.1",
-      "@grpc/grpc-js": ">=1.14.4",
-      "esbuild": ">=0.28.1"
+      "protobufjs": "8.6.3",
+      "@grafana/faro-react": "2.7.1"
     },
     "patchedDependencies": {
-      "@ogcio/design-system-react@1.34.0": "patches/@ogcio__design-system-react@1.34.0.patch"
+      "@ogcio/design-system-react@1.34.0": "patches/@ogcio__design-system-react@1.34.0.patch",
+      "@ogcio/design-system-react@1.40.0": "patches/@ogcio__design-system-react@1.40.0.patch"
     }
   }
 }

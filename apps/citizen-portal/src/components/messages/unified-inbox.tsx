@@ -1,56 +1,44 @@
 "use client"
 
-import {
-  Button,
-  Card,
-  CardContainer,
-  CardHeader,
-  CardSubtitle,
-  CardTitle,
-  Heading,
-  Icon,
-  Link,
-  Paragraph,
-  Spinner,
-  Stack,
-} from "@ogcio/design-system-react"
-import { useGatewayDownload, useGatewayFetch } from "@ogcio/sag-client/react"
+import { Button, Stack } from "@ogcio/design-system-react"
+import { useGatewayFetch } from "@ogcio/sag-client/react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { BackButton } from "@/components/button/back-button"
-import {
-  findMockMessageById,
-  getMockMessagesPage,
-  getMockMessagesTotalCount,
-} from "@/mock/messages"
-import type { FileMetadata, Message } from "@/types"
+import { getMockMessagesPage, getMockMessagesTotalCount } from "@/mock/messages"
+import type { Message } from "@/types"
 import { BulkActionToolbar } from "./bulk-action-toolbar"
 import { DeleteConfirmationModal } from "./delete-confirmation-modal"
 import { DeleteResultToast } from "./delete-result-toast"
-import { SecureEmailViewer } from "./secure-email-viewer"
+import { InboxLayout } from "./inbox-layout"
+import { DELETE_FLASH_KEY, MOVE_FLASH_KEY } from "./message-action-flash-keys"
+import { MessageDetailView } from "./message-detail-view"
+import {
+  DELETED_FOLDER_ID,
+  INBOX_FOLDER_ID,
+  MessageFoldersSidebar,
+} from "./message-folders-sidebar"
+import { MobileFolderPanel } from "./mobile-folder-panel"
+import { MoveMessageModal } from "./move-message-modal"
+import { MoveResultToast } from "./move-result-toast"
+import { DEFAULT_PAGE_SIZE, parsePageSize } from "./page-size"
 import styles from "./unified-inbox.module.css"
 import { UnifiedInboxTable } from "./unified-inbox-table"
 import {
   type DeleteMessagesResult,
   useDeleteMessages,
 } from "./use-delete-messages"
-import { useMarkMessageAsRead } from "./use-mark-message-as-read"
-import { DEFAULT_PAGE_SIZE, parsePageSize } from "./page-size"
+import { useMessageFolders } from "./use-message-folders"
 import { useMessageSelection } from "./use-message-selection"
-
-/**
- * Keys the list view reads on mount so the detail-view can surface a success
- * banner after redirecting on delete. Stored in sessionStorage so the flash is
- * scoped to the browser session and never leaks across tabs.
- */
-const DELETE_FLASH_KEY = "messaging-next.delete-flash"
+import { type MoveMessagesResult, useMoveMessages } from "./use-move-messages"
 
 function buildMessagesUrl(params: {
   search: string | null
   page: number
   pageSize: number
   status?: string
+  /** Active folder: `null`/`inbox` = untagged, `deleted` = trash, else a tag id. */
+  folderId?: string | null
 }) {
   const url = new URLSearchParams()
   url.set("limit", String(params.pageSize))
@@ -65,6 +53,16 @@ function buildMessagesUrl(params: {
   if (params.search) {
     url.set("search", params.search)
   }
+
+  // Folder scoping: Inbox shows only untagged messages, a user folder filters
+  // by its tag id, and Deleted is handled by its own soft-delete view (not a
+  // tag) so it is intentionally left untouched here.
+  if (!params.folderId || params.folderId === INBOX_FOLDER_ID) {
+    url.set("untagged", "true")
+  } else if (params.folderId !== DELETED_FOLDER_ID) {
+    url.set("tagId", params.folderId)
+  }
+
   return `/messaging/api/v1/messages?${url.toString()}`
 }
 
@@ -82,10 +80,18 @@ export function UnifiedInboxPage() {
   )
 
   if (selectedId) {
-    return <MessageDetailView id={selectedId} />
+    return (
+      <InboxLayout sidebar={<MessageFoldersSidebar />}>
+        <MessageDetailView id={selectedId} />
+      </InboxLayout>
+    )
   }
 
-  return <UnifiedInboxListView onSelect={selectMessage} />
+  return (
+    <InboxLayout sidebar={<MessageFoldersSidebar />}>
+      <UnifiedInboxListView onSelect={selectMessage} />
+    </InboxLayout>
+  )
 }
 
 function UnifiedInboxListView({
@@ -96,10 +102,14 @@ function UnifiedInboxListView({
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const tMove = useTranslations("home.move")
   const search = searchParams.get("search")
   const status = searchParams.get("status") || "all"
   const page = Number(searchParams.get("page")) || 1
   const pageSize = parsePageSize(searchParams.get("limit"))
+  const folderId = searchParams.get("folder")
+  const isInboxView = !folderId || folderId === INBOX_FOLDER_ID
+  const isDeletedView = folderId === DELETED_FOLDER_ID
 
   const handlePageSizeChange = useCallback(
     (size: number) => {
@@ -117,8 +127,8 @@ function UnifiedInboxListView({
   )
 
   const apiUrl = useMemo(
-    () => buildMessagesUrl({ search, page, pageSize, status }),
-    [search, page, pageSize, status],
+    () => buildMessagesUrl({ search, page, pageSize, status, folderId }),
+    [search, page, pageSize, status, folderId],
   )
 
   const {
@@ -128,58 +138,92 @@ function UnifiedInboxListView({
     refresh,
   } = useGatewayFetch<Message[], { totalCount?: number }>(apiUrl)
 
-  /*
-   * API is the source of truth. When it returns an empty list or omits
-   * `metadata.totalCount`, fall back to bundled fixtures only when
-   * `NEXT_PUBLIC_ENABLE_MOCK_MESSAGES=true` (dev-only flag, off by default).
-   * In every deployed environment the fallback collapses to an empty list.
-   */
   const messages = useMemo(() => {
     if (isLoading && apiMessages.length === 0) return []
     if (apiMessages.length > 0) return apiMessages
+    // Mock fixtures back the Inbox view only; folder/Deleted views always
+    // reflect real API data so an empty folder reads as empty, not as the
+    // inbox fixtures.
+    if (!isInboxView) return []
     return getMockMessagesPage({ search, page, pageSize })
-  }, [apiMessages, isLoading, search, page, pageSize])
+  }, [apiMessages, isLoading, search, page, pageSize, isInboxView])
 
   const totalCount = useMemo(() => {
     if (metadata?.totalCount) return metadata.totalCount
+    if (!isInboxView) return 0
     return getMockMessagesTotalCount(search)
-  }, [metadata?.totalCount, search])
+  }, [metadata?.totalCount, search, isInboxView])
 
   const selection = useMessageSelection(messages)
   const {
     deleteIds,
     isLoading: isDeleting,
-    lastResult,
-    dismissResult,
+    lastResult: deleteLastResult,
+    dismissResult: dismissDeleteResult,
   } = useDeleteMessages({ onSettled: () => refresh() })
+  const {
+    moveIds,
+    isLoading: isMoving,
+    lastResult: moveLastResult,
+    dismissResult: dismissMoveResult,
+  } = useMoveMessages({ onSettled: () => refresh() })
 
-  const [flashResult, setFlashResult] = useState<DeleteMessagesResult | null>(
-    null,
-  )
+  // Destinations exclude the current folder; the Deleted view is never a move
+  // source, so Move is hidden there regardless of available folders.
+  const currentFolderId = isInboxView ? null : folderId
+  const destinations = useMessageFolders({
+    currentFolderId,
+    inboxLabel: tMove("modal.inbox"),
+  })
+  const canMove = !isDeletedView && destinations.length > 0
+
+  const [deleteFlashResult, setDeleteFlashResult] =
+    useState<DeleteMessagesResult | null>(null)
+  const [moveFlashResult, setMoveFlashResult] =
+    useState<MoveMessagesResult | null>(null)
   const [pendingIds, setPendingIds] = useState<string[] | null>(null)
+  const [isMoveModalOpen, setMoveModalOpen] = useState(false)
+  const [isFolderPanelOpen, setFolderPanelOpen] = useState(false)
   const [selectMode, setSelectMode] = useState(false)
 
-  // Read and clear the flash result written by the detail view after a delete.
   useEffect(() => {
     if (typeof window === "undefined") return
-    const raw = window.sessionStorage.getItem(DELETE_FLASH_KEY)
-    if (!raw) return
-    try {
-      const parsed = JSON.parse(raw) as DeleteMessagesResult
-      setFlashResult(parsed)
-    } catch {
-      // Ignore malformed values silently.
-    } finally {
-      window.sessionStorage.removeItem(DELETE_FLASH_KEY)
+
+    const deleteRaw = window.sessionStorage.getItem(DELETE_FLASH_KEY)
+    if (deleteRaw) {
+      try {
+        setDeleteFlashResult(JSON.parse(deleteRaw) as DeleteMessagesResult)
+      } catch {
+        // Ignore malformed values silently.
+      } finally {
+        window.sessionStorage.removeItem(DELETE_FLASH_KEY)
+      }
+    }
+
+    const moveRaw = window.sessionStorage.getItem(MOVE_FLASH_KEY)
+    if (moveRaw) {
+      try {
+        setMoveFlashResult(JSON.parse(moveRaw) as MoveMessagesResult)
+      } catch {
+        // Ignore malformed values silently.
+      } finally {
+        window.sessionStorage.removeItem(MOVE_FLASH_KEY)
+      }
     }
   }, [])
 
-  const activeResult = lastResult ?? flashResult
+  const activeDeleteResult = deleteLastResult ?? deleteFlashResult
+  const activeMoveResult = moveLastResult ?? moveFlashResult
 
-  const handleDismissResult = useCallback(() => {
-    setFlashResult(null)
-    dismissResult()
-  }, [dismissResult])
+  const handleDismissDeleteResult = useCallback(() => {
+    setDeleteFlashResult(null)
+    dismissDeleteResult()
+  }, [dismissDeleteResult])
+
+  const handleDismissMoveResult = useCallback(() => {
+    setMoveFlashResult(null)
+    dismissMoveResult()
+  }, [dismissMoveResult])
 
   const openDeleteConfirmation = useCallback((ids: string[]) => {
     if (ids.length === 0) return
@@ -197,14 +241,20 @@ function UnifiedInboxListView({
     }
   }, [pendingIds, deleteIds, selection])
 
-  /*
-   * Bulk-action banner is rendered inline by the table (not a standalone
-   * full-bleed block above it anymore): on mobile it replaces the search
-   * row, on desktop it replaces the unread-count row below the search. See
-   * UnifiedInboxTable's `bulkActionBar` slot + its CSS for the per-viewport
-   * wiring. Kept as a local memo so the same node identity is threaded on
-   * every render while selection count is unchanged.
-   */
+  const handleMove = useCallback(
+    async (destFolderId: string | null) => {
+      setMoveModalOpen(false)
+      const ids = Array.from(selection.selectedIds)
+      if (ids.length === 0) return
+      const result = await moveIds(ids, destFolderId)
+      if (result.ok) {
+        selection.clear()
+        setSelectMode(false)
+      }
+    },
+    [moveIds, selection],
+  )
+
   const bulkActionBar = useMemo(
     () =>
       selection.selectedCount > 0 ? (
@@ -213,50 +263,41 @@ function UnifiedInboxListView({
           onDelete={() =>
             openDeleteConfirmation(Array.from(selection.selectedIds))
           }
+          extraActions={
+            canMove ? (
+              <Button
+                data-testid='bulk-move-button'
+                variant='secondary'
+                appearance='light'
+                size='small'
+                onClick={() => setMoveModalOpen(true)}
+              >
+                {tMove("moveTo")}
+              </Button>
+            ) : null
+          }
         />
       ) : null,
-    [selection.selectedCount, selection.selectedIds, openDeleteConfirmation],
+    [
+      selection.selectedCount,
+      selection.selectedIds,
+      openDeleteConfirmation,
+      canMove,
+      tMove,
+    ],
   )
 
   return (
-    /*
-     * Thin wrapper so the mobile-only `.mobileFullBleed` child has a stable
-     * positioning context. The list deliberately inherits its parent DS
-     * `<Container>` width on desktop so it stays aligned with the
-     * `PageHeader` (same Container, same max-width, same gutters). See
-     * unified-inbox.module.css for the reasoning.
-     */
     <div className={styles.listRoot}>
-      {/*
-       * `itemsAlignment='stretch'` is load-bearing: DS `Stack` defaults to
-       * `items-start`, which on a column flex lays children out left-aligned
-       * at their intrinsic content width instead of stretching them across
-       * the cross-axis. That went unnoticed while the parent `<Container>`
-       * still capped the list at 768/1024px, but once the container moved to
-       * `fullWidth` the Stack's children stayed pinned at the table's
-       * column-sum width (~720px) and the search bar / selected-count banner
-       * stopped lining up with the PageHeader above. `stretch` makes the
-       * wrapping divs fill the list row so the whole column matches the
-       * header crest on desktop and tablet.
-       */}
       <Stack direction='column' gap={6} itemsAlignment='stretch'>
-        {/*
-         * Result feedback is delivered through the DS Toast portal
-         * (mounted once in ClientShell) rather than an inline banner.
-         * This component renders nothing; it just dispatches a toast on
-         * each new `activeResult` and clears the ambient state.
-         */}
         <DeleteResultToast
-          result={activeResult}
-          onDismiss={handleDismissResult}
+          result={activeDeleteResult}
+          onDismiss={handleDismissDeleteResult}
         />
-        {/*
-         * Mobile-only full-bleed so the list (including the inline
-         * bulk-action banner it owns) spans edge-to-edge on small screens.
-         * Desktop inherits the listRoot width, so the table already scales
-         * with the viewport and the banner sits inside the container column
-         * — directly below the search bar.
-         */}
+        <MoveResultToast
+          result={activeMoveResult}
+          onDismiss={handleDismissMoveResult}
+        />
         <div className={styles.mobileFullBleed}>
           <UnifiedInboxTable
             messages={messages}
@@ -273,6 +314,9 @@ function UnifiedInboxListView({
             onBulkDelete={() =>
               openDeleteConfirmation(Array.from(selection.selectedIds))
             }
+            onOpenFolders={() => setFolderPanelOpen(true)}
+            onBulkMove={() => setMoveModalOpen(true)}
+            canMove={canMove}
           />
         </div>
         <DeleteConfirmationModal
@@ -282,161 +326,18 @@ function UnifiedInboxListView({
           onConfirm={confirmDelete}
           isDeleting={isDeleting}
         />
+        <MoveMessageModal
+          isOpen={isMoveModalOpen}
+          onClose={() => setMoveModalOpen(false)}
+          onConfirm={handleMove}
+          destinations={destinations}
+          isMoving={isMoving}
+        />
+        <MobileFolderPanel
+          isOpen={isFolderPanelOpen}
+          onClose={() => setFolderPanelOpen(false)}
+        />
       </Stack>
     </div>
-  )
-}
-
-function MessageDetailView({ id }: { id: string }) {
-  const router = useRouter()
-  const pathname = usePathname()
-  const t = useTranslations("home.detail")
-
-  const {
-    data: apiData,
-    error,
-    isLoading,
-  } = useGatewayFetch<Message>(`/messaging/api/v1/messages/${id}`)
-
-  const data = useMemo(() => {
-    if (apiData) return apiData
-    return findMockMessageById(id)
-  }, [apiData, id])
-
-  useMarkMessageAsRead(id, Boolean(data))
-
-  const { deleteIds, isLoading: isDeleting } = useDeleteMessages()
-  const [isConfirmOpen, setConfirmOpen] = useState(false)
-
-  const handleDelete = useCallback(async () => {
-    setConfirmOpen(false)
-    const result = await deleteIds([id])
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(DELETE_FLASH_KEY, JSON.stringify(result))
-    }
-    const listPath = pathname.split("?")[0]
-    router.push(listPath)
-  }, [deleteIds, id, pathname, router])
-
-  if (isLoading) {
-    return (
-      <output
-        aria-label='Loading'
-        className='gi-flex gi-items-center gi-justify-center'
-        style={{ minHeight: "30vh" }}
-      >
-        <Spinner size='xl' />
-      </output>
-    )
-  }
-
-  if (error || !data) {
-    return (
-      <Stack direction='column' gap={10}>
-        <Paragraph>{error?.message ?? "Message not found"}</Paragraph>
-        <BackButton />
-      </Stack>
-    )
-  }
-
-  const richText = data.richText || undefined
-  const plainText = data.plainText || undefined
-  const attachments = data.attachments ?? []
-
-  return (
-    <Stack direction='column' gap={10}>
-      <Heading>{data.subject}</Heading>
-      {richText ? (
-        <SecureEmailViewer content={richText} />
-      ) : (
-        <Paragraph whitespace='pre-wrap' size='md'>
-          {plainText}
-        </Paragraph>
-      )}
-
-      {attachments.length > 0 && <AttachmentList attachmentIds={attachments} />}
-
-      <Stack direction='row' gap={4}>
-        <BackButton />
-        <Button
-          data-testid='detail-delete-button'
-          variant='secondary'
-          appearance='default'
-          onClick={() => setConfirmOpen(true)}
-          disabled={isDeleting}
-        >
-          {t("delete")}
-        </Button>
-      </Stack>
-
-      <DeleteConfirmationModal
-        isOpen={isConfirmOpen}
-        count={1}
-        onClose={() => setConfirmOpen(false)}
-        onConfirm={handleDelete}
-        isDeleting={isDeleting}
-      />
-    </Stack>
-  )
-}
-
-function AttachmentList({ attachmentIds }: { attachmentIds: string[] }) {
-  return (
-    <Stack direction='column' gap={2}>
-      {attachmentIds.map((attachmentId) => (
-        <AttachmentCard key={attachmentId} id={attachmentId} />
-      ))}
-    </Stack>
-  )
-}
-
-function AttachmentCard({ id }: { id: string }) {
-  const { data } = useGatewayFetch<FileMetadata>(
-    `/upload/api/v1/metadata/${id}`,
-  )
-  const { download, isDownloading } = useGatewayDownload({
-    openInNewTab: true,
-  })
-
-  if (!data) return null
-
-  const sizeKb = Math.round(data.fileSize / 1024)
-
-  const handleOpen = (e: React.MouseEvent) => {
-    e.preventDefault()
-    if (!isDownloading) {
-      download(`/upload/api/v1/files/${id}`, data.fileName).catch(() => {})
-    }
-  }
-
-  return (
-    <Card type='horizontal'>
-      <div className='gi-card-icon'>
-        <Icon
-          icon='download'
-          size='xl'
-          className='gi-text-gray-500'
-          ariaHidden
-        />
-      </div>
-      <CardContainer>
-        <CardHeader>
-          <CardTitle>
-            <Link asChild>
-              <button
-                data-testid='attachment-download-action'
-                type='button'
-                onClick={handleOpen}
-                aria-busy={isDownloading}
-                disabled={isDownloading}
-              >
-                {data.fileName}
-              </button>
-            </Link>
-          </CardTitle>
-          <CardSubtitle>{`${sizeKb} kb`}</CardSubtitle>
-        </CardHeader>
-      </CardContainer>
-    </Card>
   )
 }

@@ -51,6 +51,7 @@ describe("getZoneFromPath", () => {
     it.each([
       "/onboarding",
       "/post-global-signout",
+      "/global-signout",
       "/wrong-login-method-error",
       "/api/clear-session",
       "/api/application-signout",

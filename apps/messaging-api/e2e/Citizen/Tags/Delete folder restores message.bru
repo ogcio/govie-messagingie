@@ -1,0 +1,21 @@
+meta {
+  name: Delete folder restores message
+  type: http
+  seq: 12
+}
+
+delete {
+  url: {{baseUrl}}/api/v1/tags/{{restoreTagId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data.id: eq {{restoreTagId}}
+}

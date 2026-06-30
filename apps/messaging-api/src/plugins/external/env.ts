@@ -1,4 +1,5 @@
 import env from "@fastify/env";
+import fp from "fastify-plugin";
 
 export interface AnalyticsConfig {
   LOGTO_M2M_ANALYTICS_ORGANIZATION_ID: string | undefined;
@@ -45,13 +46,22 @@ interface SupportConfig {
   SUPPORT_ORGANISATION_ID: string;
 }
 
+export interface AwsConfig {
+  AWS_ACCESS_KEY_ID?: string | undefined;
+  AWS_SECRET_ACCESS_KEY?: string | undefined;
+  AWS_SECRETS_MANAGER_ENDPOINT?: string | undefined;
+  AWS_SECRETS_MANAGER_REGION?: string | undefined;
+  PII_HASHER_SECRET_NAME?: string | undefined;
+}
+
 export interface EnvConfig
   extends EnvDbConfig,
     EnvEmailConfig,
     EnvSnsConfig,
     FeatureFlagsConfig,
     SupportConfig,
-    AnalyticsConfig {
+    AnalyticsConfig,
+    AwsConfig {
   HOST_URL: string;
   PROFILE_BACKEND_URL: string;
   LOGTO_JWK_ENDPOINT: string;
@@ -77,14 +87,24 @@ declare module "fastify" {
   }
 }
 
-export const EnvKeys: Record<
-  string,
-  {
-    type: "number" | "string" | "boolean";
-    default?: number | string | boolean;
-    required: boolean;
-  }
-> = {
+type EnvKey =
+  | {
+      type: "number";
+      default?: number;
+      required: boolean;
+    }
+  | {
+      type: "string";
+      default?: string;
+      required: boolean;
+    }
+  | {
+      type: "boolean";
+      default?: boolean;
+      required: boolean;
+    };
+
+export const EnvKeys: Record<string, EnvKey> = {
   HOST_URL: {
     type: "string",
     required: true,
@@ -263,6 +283,11 @@ export const EnvKeys: Record<
     type: "boolean",
     required: false,
   },
+  AWS_ACCESS_KEY_ID: { type: "string", required: false },
+  AWS_SECRET_ACCESS_KEY: { type: "string", required: false },
+  AWS_SECRETS_MANAGER_ENDPOINT: { type: "string", required: false },
+  AWS_SECRETS_MANAGER_REGION: { type: "string", required: false },
+  PII_HASHER_SECRET_NAME: { type: "string", required: false },
 };
 
 const allKeys = Object.keys(EnvKeys);
@@ -296,4 +321,4 @@ export const autoConfig = {
   dotenv: { quiet: true },
 };
 
-export default env;
+export default fp(env, { name: "env" });

@@ -1,6 +1,10 @@
 import { expect, type Page, test } from "@playwright/test"
-import { createAuthenticatedPage } from "../helpers/user-auth.helper"
-import { confirmSignout, logout } from "../utils/functions"
+import {
+  createAuthenticatedPage,
+  loginAsCitizen,
+} from "../helpers/user-auth.helper"
+import { buildGlobalSignoutUrl } from "../utils/consts"
+import { confirmGlobalSignout, confirmSignout, logout } from "../utils/functions"
 import { navigateAndVerifySearch } from "../utils/navigation-helpers"
 
 let page: Page
@@ -38,8 +42,16 @@ test.describe("User Features", () => {
 
   test("a user can use global signout @smoke @regression", async () => {
     // Logout method used by Payments and Journey Builder, which logs the user out of all sessions
+    // Re-establish a session — the menu-logout test above already signed out.
+    await page.context().clearCookies()
+    await loginAsCitizen(page, "e2e_citizen_1@user.com")
+
     await navigateAndVerifySearch(page, "/en/messages", "Search")
-    await page.goto("https://profile.dev.services.gov.ie/global-signout")
-    await confirmSignout(page)
+
+    const baseURL = process.env.BASE_URL ?? "http://localhost:4001"
+    const postRedirectUri = new URL("/en/messages", baseURL).toString()
+
+    await page.goto(buildGlobalSignoutUrl(postRedirectUri))
+    await confirmGlobalSignout(page)
   })
 })

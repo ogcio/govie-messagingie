@@ -113,7 +113,7 @@ test.describe("Admin Message Sending", () => {
     await authenticatedPage
       .getByRole("button", { name: "Send another message" })
       .click()
-    await expect(authenticatedPage.url()).toContain("/en/send-a-message")
+    await expect(authenticatedPage).toHaveURL(/\/en\/send-a-message/)
     await expect(
       authenticatedPage.getByRole("heading", { name: "Send a message" }),
     ).toBeVisible()

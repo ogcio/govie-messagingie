@@ -5839,7 +5839,8 @@ paths:
     delete:
       operationId: DeleteTag
       tags: *a5
-      description: Deletes a tag and its descendants. Blocked if any have messages attached.
+      description: Deletes a tag and its descendants. Any attached messages are
+        returned to the inbox (untagged).
       parameters:
         - schema:
             type: string

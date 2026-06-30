@@ -240,11 +240,7 @@ export default async function messages(app: FastifyInstance) {
     "/",
     {
       preValidation: (req, res) =>
-        app.checkPermissions(req, res, [
-          Permissions.Message.Write,
-          Permissions.Scheduler.Write,
-          Permissions.Platform.Write,
-        ]),
+        app.checkPermissions(req, res, [Permissions.Message.Write]),
       schema: CreateMessageReqSchema,
     },
     async function createMessageHandler(request, reply) {
@@ -252,10 +248,10 @@ export default async function messages(app: FastifyInstance) {
       const userData = request.ensureUserIsSet();
       if (
         request.body.bypassConsent === true &&
-        !userData.scopes.includes(Permissions.Platform.Write)
+        !userData.scopes.includes(Permissions.Consent.Override)
       ) {
         throw httpErrors.forbidden(
-          "Cannot bypass recipient consent without platform write permission",
+          "Cannot bypass recipient consent without messaging consent override scope",
         );
       }
       const organizationId = request.ensureIsPublicServant().organisationId;

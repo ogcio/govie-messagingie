@@ -1,5 +1,5 @@
 import { expect, type Page } from "@playwright/test"
-import { WAIT_TIME } from "./consts"
+import { AUTH_SIGN_IN_URL, WAIT_TIME } from "./consts"
 import { sendMessageAndVerify } from "./message-helpers"
 import { navigateAndVerifyHeading } from "./navigation-helpers"
 import { addNewRecipient } from "./recipient-helpers"
@@ -52,15 +52,35 @@ export async function logout(page: Page) {
 }
 
 export async function confirmSignout(page: Page) {
-  if (
-    page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
-  ) {
+  if (page.url().includes(AUTH_SIGN_IN_URL)) {
     // Click the MyGovID login button
     await page.getByRole("button", { name: "Continue with MyGovId" }).click()
   }
   await expect(page.getByText("Summary")).toBeVisible({
     timeout: 15000,
   })
+}
+
+/**
+ * Waits for the JB/Payments-style global signout redirect chain to finish.
+ * The flow fans out via iframes, posts to SAG, and can take ~30s+.
+ */
+export async function confirmGlobalSignout(page: Page) {
+  await page.waitForURL(
+    /sign-in|oidc\/session\/end|global-signout|post-global-signout/,
+    { timeout: 90_000 },
+  )
+
+  if (
+    page.url().includes("global-signout") ||
+    page.url().includes("post-global-signout")
+  ) {
+    await page.waitForURL(/sign-in|oidc\/session\/end/, { timeout: 90_000 })
+  }
+
+  await expect(
+    page.getByRole("button", { name: "Continue with MyGovId" }),
+  ).toBeVisible({ timeout: 15_000 })
 }
 
 export async function sendMessageToDevCitizen(page: Page, nonSecure = false) {

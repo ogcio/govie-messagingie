@@ -29,11 +29,9 @@ test.describe("User Messages page", () => {
     await page.getByRole("textbox", { name: "Search" }).fill("test")
     await page.getByRole("textbox", { name: "Search" }).press("Enter")
     await page.waitForLoadState("networkidle")
-    await page
-      .locator(
-        "body > main > div > div > div > div > div > div > section > div.unified-inbox-table-module__iNj3tG__desktopTable > table > tbody > tr:nth-child(1)",
-      )
-      .click()
+    // First data row (nth(0) is the header). The desktop table's CSS-module
+    // class is hashed at build time, so target by ARIA role instead.
+    await page.getByRole("row").nth(1).click()
     await expect(
       page.getByRole("heading", { name: "Test Subject" }),
     ).toBeVisible()
@@ -72,7 +70,7 @@ test.describe("User Messages page", () => {
         "body > main > div > div > div > article > div:nth-child(1) > div > div > div:nth-child(1) > a",
       )
       .click()
-    await expect(page.url()).toContain("messaging.dev.services.gov.ie/")
+    await expect(page).toHaveURL(/messaging\.dev\.services\.gov\.ie\//)
     await expect(page.getByRole("link", { name: "Back" })).toBeVisible()
   })
 })

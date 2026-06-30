@@ -30,7 +30,7 @@
     "test:regression:e2e": "BASE_URL=https://messaging.dev.services.gov.ie ADMIN_URL=https://messaging-admin.dev.services.gov.ie AUTH_URL=https://authorization.dev.services.gov.ie/sign-in playwright test --grep '@regression|@smoke|@visual' --workers 1"
   },
   "dependencies": {
-    "@formatjs/intl-localematcher": "0.8.9",
+    "@formatjs/intl-localematcher": "0.8.10",
     "@grafana/faro-core": "2.7.1",
     "@grafana/faro-web-sdk": "2.7.1",
     "@ogcio/announcements": "0.3.0",
@@ -39,28 +39,28 @@
     "@ogcio/nextjs-analytics": "1.0.1",
     "@ogcio/o11y-sdk-react": "0.11.3",
     "@ogcio/sag-client": "0.7.4",
-    "@ogcio/theme-govie": "1.21.6",
+    "@ogcio/theme-govie": "1.21.7",
     "@t3-oss/env-nextjs": "0.13.11",
     "@tanstack/react-table": "8.21.3",
     "@unleash/proxy-client-react": "6.0.0",
-    "next": "16.2.6",
-    "next-intl": "4.11.1",
-    "react": "19.2.6",
-    "react-dom": "19.2.6",
+    "next": "16.2.8",
+    "next-intl": "4.13.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "swr": "2.4.1",
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@next/bundle-analyzer": "16.2.7",
-    "@playwright/test": "1.60.0",
+    "@next/bundle-analyzer": "16.2.9",
+    "@playwright/test": "1.61.0",
     "@testing-library/jest-dom": "6.9.1",
     "@testing-library/react": "16.3.2",
     "@testing-library/user-event": "14.6.1",
     "@types/k6": "2.0.0",
-    "@types/react": "19.2.14",
+    "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
-    "@vitest/browser-playwright": "4.1.8",
+    "@vitest/browser-playwright": "4.1.9",
     "gmail-getter": "2.4.0"
   }
 }

@@ -75,7 +75,18 @@ const OFF_ZONE_REDIRECTS = [
     from: `${MESSAGING_HOST}/api/clear-session`,
     to: `${PROFILE_HOST}/api/clear-session`,
   },
+  {
+    from: `${MESSAGING_HOST}/global-signout?postRedirectUri=foo`,
+    to: `${PROFILE_HOST}/global-signout?postRedirectUri=foo`,
+  },
 ] as const
+
+test.describe("@smoke locale-less global-signout entry is profile-owned", () => {
+  test("profile.local.test /global-signout -> 200", async ({ request }) => {
+    const response = await request.get(`${PROFILE_HOST}/global-signout`)
+    expect(response.status()).toBe(200)
+  })
+})
 
 test.describe("@smoke nginx canonicalisation 301s preserve port + query", () => {
   for (const { from, to } of OFF_ZONE_REDIRECTS) {
@@ -94,6 +105,20 @@ test.describe("@smoke nginx canonicalisation 301s preserve port + query", () => 
     expect(response.status()).toBe(301)
     expect(response.headers().location).toBe(
       `${PROFILE_HOST}/en/my-profile?force-consent=1&foo=bar`,
+    )
+  })
+
+  test("legacy secure-message email link 302s to query-param format", async ({
+    request,
+  }) => {
+    const messageId = "0494ff56-58b0-47c7-9868-8446b242863f"
+    const response = await request.get(
+      `${MESSAGING_HOST}/en/secure-messages/${messageId}`,
+      { maxRedirects: 0 },
+    )
+    expect(response.status()).toBe(302)
+    expect(response.headers().location).toBe(
+      `/en/secure-messages?id=${messageId}`,
     )
   })
 
