@@ -19,13 +19,13 @@ vi.mock("@ogcio/design-system-react", () => ({
     totalPages: number
     onPageChange: (page: number) => void
   }) => (
-    <nav data-testid="pagination">
-      <span data-testid="current-page">{currentPage}</span>
-      <span data-testid="total-pages">{totalPages}</span>
+    <nav data-testid='pagination'>
+      <span data-testid='current-page'>{currentPage}</span>
+      <span data-testid='total-pages'>{totalPages}</span>
       {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
         <button
           key={page}
-          type="button"
+          type='button'
           data-testid={`page-${page}`}
           onClick={() => onPageChange(page)}
           aria-current={page === currentPage ? "page" : undefined}

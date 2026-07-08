@@ -1,17 +1,19 @@
 import { expect, test } from "@playwright/test"
 import { giveConsent } from "../utils/consent-helper"
 
+const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
+const PROFILE_URL = process.env.PROFILE_URL || "http://localhost:3003"
+
 test.describe("User Consent", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    if (
-      page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
-    ) {
+    if (page.url().includes(`${AUTH_URL}`)) {
       // Click the MyGovID login button
       await page.getByRole("button", { name: "Continue with MyGovId" }).click()
     }
     await page.getByRole("button", { name: "LOGIN" }).click()
-    await page.waitForLoadState("networkidle")
+    //await page.waitForLoadState("networkidle")
+    await expect(page).toHaveURL(/messaging\.dev\.services\.gov\.ie/)
   })
 
   test("a user can accept consent @smoke @regression", async ({ page }) => {
@@ -76,7 +78,7 @@ test.describe("User Consent", () => {
       ),
     ).toHaveCount(0)
     //Goto profile page
-    await page.goto("https://profile.dev.services.gov.ie")
+    await page.goto(`${PROFILE_URL}`)
     await expect(
       page.getByRole("heading", { name: "My Profile" }),
     ).toBeVisible()

@@ -2,8 +2,8 @@
 
 import { Paragraph } from "@ogcio/design-system-react"
 import { useTranslations } from "next-intl"
-import { SecureEmailViewer } from "./secure-email-viewer"
 import styles from "./message-detail.module.css"
+import { SecureEmailViewer } from "./secure-email-viewer"
 
 export interface MessageDetailBodyProps {
   richText?: string

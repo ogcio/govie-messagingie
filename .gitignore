@@ -158,3 +158,6 @@ docs/superpowers/
 # Local-only screenshots used for PR documentation (uploaded as PR assets, not committed)
 .local-screenshots/
 .playwright-mcp/
+
+# Local PII hash debug config — holds pepper material, never commit
+apps/messaging-api/src/scripts/pii-hash/pii-hash.config.json

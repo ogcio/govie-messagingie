@@ -1,5 +1,22 @@
-import { describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
+
+// `getZoneFromPath` now resolves its unmatched-path fallback through
+// `getEnabledLandingZone` (AB#39580). Mock it so the existing fallback
+// assertions stay deterministic (default `dashboard`) and a dedicated
+// block can simulate a deployment where dashboard is dropped.
+const landingZone = vi.hoisted(() => ({
+  value: "dashboard" as "messages" | "profile" | "dashboard",
+}))
+vi.mock("@/lib/feature-config", () => ({
+  getEnabledLandingZone: () => landingZone.value,
+  isZoneEnabled: () => true,
+}))
+
 import { getZoneFromPath } from "@/util/get-zone-from-path"
+
+beforeEach(() => {
+  landingZone.value = "dashboard"
+})
 
 /**
  * Zone routing is the keystone of the consolidation: every shared
@@ -52,6 +69,7 @@ describe("getZoneFromPath", () => {
       "/onboarding",
       "/post-global-signout",
       "/global-signout",
+      "/wrong-account-error",
       "/wrong-login-method-error",
       "/api/clear-session",
       "/api/application-signout",
@@ -101,6 +119,39 @@ describe("getZoneFromPath", () => {
       // `path.split('/').filter(Boolean)` reduces `''` and `'/'` to
       // `[]` — the explicit branch keeps the helper total.
       expect(getZoneFromPath("")).toBe("dashboard")
+    })
+  })
+
+  describe("topology-aware fallback (AB#39580)", () => {
+    // When dashboard is dropped from the deployment, the unmatched-path
+    // and locale-root fallback must steer to the first enabled landing
+    // zone instead of the (absent) dashboard. Explicit segment matches
+    // are unaffected — only the fallback changes.
+    beforeEach(() => {
+      landingZone.value = "messages"
+    })
+
+    it.each([
+      "/en",
+      "/ga",
+      "/",
+      "",
+    ])("resolves locale root %s to the enabled landing zone, not dashboard", (path) => {
+      expect(getZoneFromPath(path)).toBe("messages")
+    })
+
+    it.each([
+      "/en/this-route-does-not-exist",
+      "/ga/random",
+    ])("resolves unknown %s to the enabled landing zone", (path) => {
+      expect(getZoneFromPath(path)).toBe("messages")
+    })
+
+    it("still resolves explicit dashboard paths to 'dashboard'", () => {
+      // The route segment match is independent of the fallback target —
+      // a deep link is honoured even if the my-dashboard route itself
+      // later redirects away when the zone is disabled.
+      expect(getZoneFromPath("/en/my-dashboard")).toBe("dashboard")
     })
   })
 

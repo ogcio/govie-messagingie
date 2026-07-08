@@ -31,6 +31,28 @@ const optionalUrl = z.preprocess(
   z.url().optional(),
 )
 
+/**
+ * Boolean build-time flag parser. Build pipelines may pass "true"/"false"
+ * (any case), "1"/"0", "yes"/"no", "on"/"off", an empty string, or a
+ * stringified YAML boolean — normalize all of them to a real boolean,
+ * falling back to `defaultValue` for anything unrecognised. Mirrors the
+ * inline pattern already used by `NEXT_PUBLIC_ENABLE_MOCK_MESSAGES` and
+ * `NEXT_PUBLIC_ANALYTICS_DRY_RUN`.
+ */
+const booleanFlag = (defaultValue: "true" | "false") =>
+  z
+    .preprocess(
+      (v) => {
+        if (v === undefined || v === null || v === "") return defaultValue
+        const s = String(v).trim().toLowerCase()
+        if (["true", "1", "yes", "on"].includes(s)) return "true"
+        if (["false", "0", "no", "off"].includes(s)) return "false"
+        return defaultValue
+      },
+      z.enum(["true", "false"]),
+    )
+    .transform((v) => v === "true")
+
 export const env = defineZoneEnv({
   client: {
     NEXT_PUBLIC_BASE_URL: requiredUrl.default(
@@ -68,6 +90,31 @@ export const env = defineZoneEnv({
     NEXT_PUBLIC_UNLEASH_URL: optionalUrl,
     NEXT_PUBLIC_UNLEASH_CLIENT_KEY: z.string().optional(),
     NEXT_PUBLIC_UNLEASH_APP_NAME: z.string().default("messaging"),
+
+    /**
+     * Deployment-topology flags (AB#39580). Build-time only — baked into
+     * the static export. All default `true` so every current deployment
+     * ships every zone/integration. Set to `false` to drop a building
+     * block from a standalone deployment without exposing UI, links, or
+     * landing redirects that imply its presence. See
+     * `@/lib/feature-config` and the "Feature flags & standalone
+     * deployments" section of the app README.
+     */
+    NEXT_PUBLIC_ENABLE_DASHBOARD: booleanFlag("true"),
+    NEXT_PUBLIC_ENABLE_MESSAGING: booleanFlag("true"),
+    NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION: booleanFlag("true"),
+    NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION: booleanFlag("true"),
+
+    /**
+     * Life Events Accelerator (LEA) flag (AB#40267). Build-time only —
+     * baked into the static export. Activates the LEA experience (new
+     * dashboard and the link to an application submission from the message
+     * view). Unlike the topology flags above it defaults to `false`, so an
+     * unconfigured build (and prod, which keeps the default version) ships
+     * LEA off; dev and uat set it `true` via the pipeline. See
+     * `@/lib/feature-config` and the app README.
+     */
+    NEXT_PUBLIC_ENABLE_LEA: booleanFlag("false"),
 
     /**
      * Dev-only fallback: when the messages API returns an empty list,
@@ -144,6 +191,13 @@ export const env = defineZoneEnv({
     NEXT_PUBLIC_UNLEASH_URL: process.env.NEXT_PUBLIC_UNLEASH_URL,
     NEXT_PUBLIC_UNLEASH_CLIENT_KEY: process.env.NEXT_PUBLIC_UNLEASH_CLIENT_KEY,
     NEXT_PUBLIC_UNLEASH_APP_NAME: process.env.NEXT_PUBLIC_UNLEASH_APP_NAME,
+    NEXT_PUBLIC_ENABLE_DASHBOARD: process.env.NEXT_PUBLIC_ENABLE_DASHBOARD,
+    NEXT_PUBLIC_ENABLE_MESSAGING: process.env.NEXT_PUBLIC_ENABLE_MESSAGING,
+    NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION:
+      process.env.NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION,
+    NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION:
+      process.env.NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION,
+    NEXT_PUBLIC_ENABLE_LEA: process.env.NEXT_PUBLIC_ENABLE_LEA,
     NEXT_PUBLIC_ENABLE_MOCK_MESSAGES:
       process.env.NEXT_PUBLIC_ENABLE_MOCK_MESSAGES,
     NEXT_PUBLIC_ANALYTICS_URL: process.env.NEXT_PUBLIC_ANALYTICS_URL,

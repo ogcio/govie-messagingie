@@ -3,6 +3,7 @@ import { expect, type Page } from "@playwright/test"
 export async function sendMessageAndVerify(page: Page, sendLater = false) {
   const buttonName = sendLater ? "Send message" : "Send Message"
   await page.getByRole("button", { name: buttonName }).click()
+  await page.waitForLoadState("networkidle")
   await expect(
     page.getByRole("heading", { name: "Your message was scheduled" }),
   ).toBeVisible()

@@ -40,7 +40,11 @@ describe("hasMessageBody", () => {
 describe("MessageDetailBody", () => {
   it("shows attachment-only fallback when there is no body but attachments exist", () => {
     render(
-      <MessageDetailBody richText={undefined} plainText='' attachmentCount={1} />,
+      <MessageDetailBody
+        richText={undefined}
+        plainText=''
+        attachmentCount={1}
+      />,
     )
     expect(
       screen.getByText(
@@ -50,19 +54,12 @@ describe("MessageDetailBody", () => {
   })
 
   it("renders plain text when present", () => {
-    render(
-      <MessageDetailBody
-        plainText='Hello citizen'
-        attachmentCount={0}
-      />,
-    )
+    render(<MessageDetailBody plainText='Hello citizen' attachmentCount={0} />)
     expect(screen.getByText("Hello citizen")).toBeInTheDocument()
   })
 
   it("renders rich text via SecureEmailViewer when present", () => {
-    render(
-      <MessageDetailBody richText='<p>Rich</p>' attachmentCount={0} />,
-    )
+    render(<MessageDetailBody richText='<p>Rich</p>' attachmentCount={0} />)
     expect(screen.getByTestId("secure-email-viewer")).toHaveTextContent(
       "<p>Rich</p>",
     )

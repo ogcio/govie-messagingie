@@ -1,6 +1,8 @@
 import { expect, type Page, test } from "@playwright/test"
 import { createAuthenticatedPage } from "../helpers/user-auth.helper"
 
+const DASHBOARD_URL = process.env.DASHBOARD_URL || "http://localhost:3004"
+
 let page: Page
 
 test.describe("User Dashboard Features", () => {
@@ -14,7 +16,7 @@ test.describe("User Dashboard Features", () => {
 
   test("a user can view the dashboard @regression", async () => {
     await page.waitForLoadState("networkidle")
-    await page.goto("https://dashboard.dev.services.gov.ie/en/my-dashboard")
+    await page.goto(`${DASHBOARD_URL}`)
     await expect(
       page.getByRole("heading", { name: "Welcome back, E2E Citizen User" }),
     ).toBeVisible()
@@ -24,7 +26,7 @@ test.describe("User Dashboard Features", () => {
 
   test("clicking view all messages will take the user to the messaging page @regression", async () => {
     await page.waitForLoadState("networkidle")
-    await page.goto("https://dashboard.dev.services.gov.ie/en/my-dashboard")
+    await page.goto(`${DASHBOARD_URL}`)
     await expect(
       page.getByRole("heading", { name: "Welcome back, E2E Citizen User" }),
     ).toBeVisible()

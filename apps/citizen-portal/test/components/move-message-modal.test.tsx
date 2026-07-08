@@ -52,9 +52,7 @@ vi.mock("@ogcio/design-system-react", () => ({
     isOpen: boolean
     dataTestId?: string
   }) => (isOpen ? <div data-testid={dataTestId}>{children}</div> : null),
-  Paragraph: ({ children }: { children: React.ReactNode }) => (
-    <p>{children}</p>
-  ),
+  Paragraph: ({ children }: { children: React.ReactNode }) => <p>{children}</p>,
   SelectItem: ({
     children,
     value,

@@ -11,7 +11,6 @@ import {
   Button,
   Container,
   Heading,
-  LoadMaterialSymbols,
   Paragraph,
   Spinner,
   Stack,
@@ -40,6 +39,7 @@ import { AnnouncementsFlow } from "@/components/announcements-flow"
 import { ConsentBanner } from "@/components/consent-banner"
 import { FeatureFlagsProvider } from "@/components/feature-flags-provider"
 import { MainContainer } from "@/components/layout/containers"
+import { LoadMaterialSymbols } from "@/components/load-material-symbols"
 import { MessagingAnalyticsProvider } from "@/components/messaging-analytics-provider"
 import { PageHeader } from "@/components/navigation/page-header"
 import { TRACE_MESSAGES } from "@/const/traces"
@@ -83,14 +83,11 @@ function AuthTimeoutError() {
     <div
       className='gi-flex gi-items-center gi-justify-center'
       style={{ minHeight: "50vh" }}
+      role='alert'
+      aria-live='assertive'
+      aria-atomic='true'
     >
-      <Stack
-        direction='column'
-        gap={4}
-        role='alert'
-        aria-live='assertive'
-        aria-atomic='true'
-      >
+      <Stack direction='column' gap={4}>
         <Heading as='h2'>{t("title")}</Heading>
         <Paragraph>{t("message")}</Paragraph>
         <div>

@@ -14,4 +14,7 @@ export const TRACE_MESSAGES = {
     INVALIDATE_FAILED: "Stale claims session invalidate call failed",
     RECOVERED: "Stale claims recovered, fresh onboarded session in use",
   },
+  ATTACHMENT_METADATA: {
+    MISSING: "Attachment metadata unavailable",
+  },
 }

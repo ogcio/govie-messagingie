@@ -14,3 +14,23 @@ injectWorkspacePackages: true
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - "@ogcio/*"
+overrides:
+  protobufjs: 8.6.3
+  '@grafana/faro-react': 2.7.1
+patchedDependencies:
+  '@ogcio/design-system-react@1.34.0': patches/@ogcio__design-system-react@1.34.0.patch
+  '@ogcio/design-system-react@1.41.0': patches/@ogcio__design-system-react@1.41.0.patch
+allowBuilds:
+  '@ogcio/announcements': true
+  '@ogcio/building-blocks-sdk': true
+  '@ogcio/consent': true
+  '@ogcio/sag-client': true
+  '@parcel/watcher': false
+  '@sentry/cli': false
+  '@sentry/node-cpu-profiler': false
+  '@sentry/node-native-stacktrace': false
+  '@swc/core': false
+  cpu-features: false
+  esbuild: false
+  sharp: false
+  ssh2: false

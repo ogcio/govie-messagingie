@@ -2,26 +2,30 @@ import closeWithGrace from "close-with-grace";
 import pino from "pino";
 import type { EnvDbConfig } from "../../plugins/external/env.js";
 import {
+  CLUSTER,
   DRY_RUN,
+  K8S_NAMESPACE,
   LOWER_DATE,
   ORGANIZATION_ID,
   PER_REQUEST_DELAY_MS,
+  REMOTE_WRITE_HEADERS,
   UPPER_DATE,
 } from "./constants.js";
+import { buildRemoteWriteBody } from "./remote-write.js";
 import {
-  buildOtlpPayload,
   connectToDatabase,
+  createCollectorTokenProvider,
   fetchDailyCounts,
   groupByDay,
   nextDayKey,
   parseUtcDate,
-  postOtlpWithRetry,
+  postWithRetry,
   sleep,
 } from "./utils.js";
 
 export async function runBackfill(params: {
   envDbConfig: EnvDbConfig;
-  otelEndpoint: string;
+  remoteWriteEndpoint: string;
 }): Promise<void> {
   const logger = pino.pino();
   const upperDate = parseUtcDate(UPPER_DATE, "UPPER_DATE");
@@ -31,14 +35,23 @@ export async function runBackfill(params: {
   if (lowerDate && lowerDate >= upperDate) {
     throw new Error("LOWER_DATE must be strictly before UPPER_DATE");
   }
+  if (!K8S_NAMESPACE) {
+    throw new Error("METRICS_BACKFILL_NAMESPACE missing");
+  }
+  if (!CLUSTER) {
+    throw new Error("METRICS_BACKFILL_CLUSTER missing");
+  }
 
   const pool = await connectToDatabase(params.envDbConfig, logger);
 
-  const otelMetricsEndpoint = `${params.otelEndpoint}/v1/metrics`;
+  const endpoint = params.remoteWriteEndpoint;
+  const getCollectorToken = createCollectorTokenProvider(logger);
 
   logger.info(
     {
-      endpoint: otelMetricsEndpoint,
+      endpoint,
+      namespace: K8S_NAMESPACE,
+      cluster: CLUSTER,
       upperDate: upperDate.toISOString(),
       lowerDate: lowerDate?.toISOString(),
       organizationId: ORGANIZATION_ID,
@@ -100,7 +113,7 @@ export async function runBackfill(params: {
       if (!dayRows) continue;
       const dayMessages = dayRows.reduce((sum, r) => sum + r.counter, 0);
 
-      const payload = buildOtlpPayload(dayRows);
+      const body = buildRemoteWriteBody(dayRows, K8S_NAMESPACE, CLUSTER);
 
       if (DRY_RUN) {
         logger.info(
@@ -109,11 +122,23 @@ export async function runBackfill(params: {
             dataPoints: dayRows.length,
             messages: dayMessages,
             dryRun: true,
+            bodyBytes: body.byteLength,
+            series: dayRows.map((r) => ({
+              organizationId: r.organizationId,
+              daily: r.counter,
+              cumulative: r.cumulative,
+            })),
           },
-          "Would POST daily payload",
+          "Would remote-write daily payload",
         );
       } else {
-        await postOtlpWithRetry(payload, logger, otelMetricsEndpoint);
+        await postWithRetry(
+          body,
+          REMOTE_WRITE_HEADERS,
+          logger,
+          endpoint,
+          getCollectorToken,
+        );
         logger.info(
           {
             day: dayKey,
@@ -135,6 +160,12 @@ export async function runBackfill(params: {
       totalMessages += dayMessages;
     }
 
+    const completionStatus = DRY_RUN ? "dry run complete" : "complete";
+    const stoppedStatus = DRY_RUN ? "dry run stopped early" : "stopped early";
+    const summaryMessage = running
+      ? `Backfill ${completionStatus}`
+      : `Backfill ${stoppedStatus}`;
+
     logger.info(
       {
         days: days.length,
@@ -143,7 +174,7 @@ export async function runBackfill(params: {
         lastCompletedDay,
         dryRun: DRY_RUN,
       },
-      running ? "Backfill complete" : "Backfill stopped early",
+      summaryMessage,
     );
   } catch (error) {
     logger.error(

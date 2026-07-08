@@ -4,7 +4,7 @@ import {
   loginAsCitizen,
 } from "../helpers/user-auth.helper"
 import { buildGlobalSignoutUrl } from "../utils/consts"
-import { confirmGlobalSignout, confirmSignout, logout } from "../utils/functions"
+import { confirmGlobalSignout, logout } from "../utils/functions"
 import { navigateAndVerifySearch } from "../utils/navigation-helpers"
 
 let page: Page

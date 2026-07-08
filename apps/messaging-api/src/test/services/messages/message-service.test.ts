@@ -10,6 +10,7 @@ import {
   vi,
 } from "vitest";
 import {
+  assignMessageTag,
   deleteMessages,
   getMessage,
   listMessages,
@@ -1151,6 +1152,121 @@ describe("Message Service", () => {
       for (const row of result.rows) {
         expect(row.deleted_at).toBeNull();
       }
+    });
+  });
+
+  describe("assignMessageTag", () => {
+    const childProfileOne = "child-1";
+
+    async function insertTag(ownerId: string): Promise<string> {
+      const res = await pool.query<{ id: string }>(
+        `INSERT INTO tags(user_id, label, path) VALUES($1, $2, replace(gen_random_uuid()::text, '-', '')::ltree) RETURNING id`,
+        [ownerId, `tag-${randomUUID().substring(0, 8)}`],
+      );
+      return res.rows[0].id;
+    }
+
+    it("assigns a tag to the logged-in user's own message", async () => {
+      const messageId = await insertMessage(linkedProfileId, "org-A", pool);
+      const tagId = await insertTag(linkedProfileId);
+
+      const result = await assignMessageTag({
+        pool,
+        userId: linkedProfileId,
+        accessToken: "123",
+        messageIds: [messageId],
+        tagId,
+        logger: getMockBaseLogger(),
+      });
+
+      expect(result).toStrictEqual({ tagId, messageIds: [messageId] });
+      const dbRes = await pool.query(
+        "SELECT tag_id FROM messages WHERE id = $1",
+        [messageId],
+      );
+      expect(dbRes.rows[0].tag_id).toBe(tagId);
+    });
+
+    it("assigns a tag to a linked profile's message (AB#40427)", async () => {
+      const messageId = await insertMessage(childProfileOne, "org-A", pool);
+      const tagId = await insertTag(linkedProfileId);
+
+      await assignMessageTag({
+        pool,
+        userId: linkedProfileId,
+        accessToken: "123",
+        messageIds: [messageId],
+        tagId,
+        logger: getMockBaseLogger(),
+      });
+
+      const dbRes = await pool.query(
+        "SELECT tag_id FROM messages WHERE id = $1",
+        [messageId],
+      );
+      expect(dbRes.rows[0].tag_id).toBe(tagId);
+    });
+
+    it("removes a tag (null) from a linked profile's message", async () => {
+      const messageId = await insertMessage(childProfileOne, "org-A", pool);
+      const tagId = await insertTag(linkedProfileId);
+      await pool.query("UPDATE messages SET tag_id = $1 WHERE id = $2", [
+        tagId,
+        messageId,
+      ]);
+
+      await assignMessageTag({
+        pool,
+        userId: linkedProfileId,
+        accessToken: "123",
+        messageIds: [messageId],
+        tagId: null,
+        logger: getMockBaseLogger(),
+      });
+
+      const dbRes = await pool.query(
+        "SELECT tag_id FROM messages WHERE id = $1",
+        [messageId],
+      );
+      expect(dbRes.rows[0].tag_id).toBeNull();
+    });
+
+    it("throws 'Message not found' for an unlinked user's message", async () => {
+      const unlinkedUserId = randomUUID().substring(0, 12);
+      const messageId = await insertMessage(unlinkedUserId, "org-A", pool);
+      const tagId = await insertTag(linkedProfileId);
+
+      await expect(
+        assignMessageTag({
+          pool,
+          userId: linkedProfileId,
+          accessToken: "123",
+          messageIds: [messageId],
+          tagId,
+          logger: getMockBaseLogger(),
+        }),
+      ).rejects.toThrow("Message not found");
+
+      const dbRes = await pool.query(
+        "SELECT tag_id FROM messages WHERE id = $1",
+        [messageId],
+      );
+      expect(dbRes.rows[0].tag_id).toBeNull();
+    });
+
+    it("throws 'Message not found' for a non-existent message", async () => {
+      const tagId = await insertTag(linkedProfileId);
+
+      await expect(
+        assignMessageTag({
+          pool,
+          userId: linkedProfileId,
+          accessToken: "123",
+          messageIds: [randomUUID()],
+          tagId,
+          logger: getMockBaseLogger(),
+        }),
+      ).rejects.toThrow("Message not found");
     });
   });
 });

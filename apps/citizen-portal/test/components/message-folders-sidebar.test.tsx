@@ -100,8 +100,13 @@ vi.mock("@ogcio/design-system-react", async () => {
     SideNav: ({
       children,
       onChange,
-    }: React.PropsWithChildren<{ value?: string; onChange?: (value: string) => void }>) => (
-      <SideNavContext.Provider value={onChange ?? (() => {})}>{children}</SideNavContext.Provider>
+    }: React.PropsWithChildren<{
+      value?: string
+      onChange?: (value: string) => void
+    }>) => (
+      <SideNavContext.Provider value={onChange ?? (() => {})}>
+        {children}
+      </SideNavContext.Provider>
     ),
     SideNavItem: ({
       value,

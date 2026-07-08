@@ -83,6 +83,15 @@ ENV NEXT_PUBLIC_UNLEASH_URL=${NEXT_PUBLIC_UNLEASH_URL:-http://localhost:4242/api
 ENV NEXT_PUBLIC_UNLEASH_CLIENT_KEY=${NEXT_PUBLIC_UNLEASH_CLIENT_KEY:-default:development.unleash-insecure-frontend-api-token}
 ENV NEXT_PUBLIC_UNLEASH_APP_NAME=${NEXT_PUBLIC_UNLEASH_APP_NAME:-citizen-portal}
 
+# Deployment-topology flags (AB#39580) — default "true" (ship everything).
+ENV NEXT_PUBLIC_ENABLE_DASHBOARD=${NEXT_PUBLIC_ENABLE_DASHBOARD:-true}
+ENV NEXT_PUBLIC_ENABLE_MESSAGING=${NEXT_PUBLIC_ENABLE_MESSAGING:-true}
+ENV NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION=${NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION:-true}
+ENV NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION=${NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION:-true}
+# LEA (AB#40267) — default "true" for the local image so LEA surfaces are
+# visible during development (dev/uat behaviour); prod ships it off.
+ENV NEXT_PUBLIC_ENABLE_LEA=${NEXT_PUBLIC_ENABLE_LEA:-true}
+
 ENV NEXT_PUBLIC_MATOMO_URL=${NEXT_PUBLIC_MATOMO_URL}
 ENV NEXT_PUBLIC_MATOMO_PROTOCOL=${NEXT_PUBLIC_MATOMO_PROTOCOL}
 ENV NEXT_PUBLIC_ANALYTICS_URL=${NEXT_PUBLIC_CITIZEN_PORTAL_BASE_URL:-http://localhost:8080}/_next/analytics-api
@@ -124,7 +133,7 @@ ENV ANALYTICS_TRACKER_ORIGIN=${ANALYTICS_TRACKER_ORIGIN}
 ENV CSP_CONNECT_SRC="${NEXT_PUBLIC_SAG_URL} ${NEXT_PUBLIC_FARO_URL} ${NEXT_PUBLIC_UNLEASH_URL} ${NEXT_PUBLIC_ANALYTICS_URL}"
 
 # Build the unified citizen-portal app (single out/).
-RUN pnpm --filter @citizen-portal/app build
+RUN pnpm --filter citizen-portal build
 
 # Prune dev dependencies for production
 RUN pnpm prune --prod
@@ -140,7 +149,7 @@ RUN envsubst '${OTEL_ENABLE} ${OTEL_SERVICE_NAME} ${OTEL_COLLECTOR_URL} ${PORT} 
 # Production stage — nginx serves the single static export under the
 # three configured server_names. The canonicalisation map inside
 # nginx.conf handles URL-content parity (off-zone paths 301 to owner).
-FROM nginxinc/nginx-unprivileged:1.29-alpine-otel AS runner
+FROM nginxinc/nginx-unprivileged:1.30-alpine-otel AS runner
 
 USER root
 

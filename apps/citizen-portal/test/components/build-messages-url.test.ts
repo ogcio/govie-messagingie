@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
-  PAGE_SIZE,
   buildMessagesUrl,
+  PAGE_SIZE,
 } from "@/components/messages/pagination-utils"
 
 describe("buildMessagesUrl", () => {

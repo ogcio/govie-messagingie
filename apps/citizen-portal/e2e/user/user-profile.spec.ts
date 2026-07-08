@@ -1,6 +1,8 @@
 import { expect, type Page, test } from "@playwright/test"
 import { createAuthenticatedPage } from "../helpers/user-auth.helper"
 
+const PROFILE_URL = process.env.PROFILE_URL || "http://localhost:3003"
+
 let page: Page
 
 test.describe("User Profile Features", () => {
@@ -15,7 +17,7 @@ test.describe("User Profile Features", () => {
   test("a user can view their profile @regression", async () => {
     await page.waitForLoadState("networkidle")
 
-    await page.goto("https://profile.dev.services.gov.ie")
+    await page.goto(`${PROFILE_URL}`)
     await expect(
       page.getByRole("heading", { name: "My Profile" }),
     ).toBeVisible()
@@ -45,7 +47,7 @@ test.describe("User Profile Features", () => {
   test("a user can update their public name @regression", async () => {
     await page.waitForLoadState("networkidle")
 
-    await page.goto("https://profile.dev.services.gov.ie")
+    await page.goto(`${PROFILE_URL}`)
     await expect(
       page.getByRole("heading", { name: "My Profile" }),
     ).toBeVisible()

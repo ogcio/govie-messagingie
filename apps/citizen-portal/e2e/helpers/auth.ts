@@ -1,7 +1,8 @@
 import { expect, type Page } from "@playwright/test"
 
-const AUTH_URL = process.env.AUTH_URL || "http://localhost:3001"
+const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
 const ADMIN_URL = process.env.ADMIN_URL || "http://localhost:3001"
+const MOCK_URL = process.env.MOCK_URL || "http://localhost:3005"
 
 export async function authenticateUser(page: Page) {
   // Go to the main messaging page which will redirect to auth with mygovid for mock login
@@ -18,7 +19,7 @@ export async function authenticateUser(page: Page) {
   await page.getByRole("button", { name: "Continue with MyGovId" }).click()
 
   // Wait for the MyGovID mock login page
-  await page.waitForURL("https://mock-login-service.dev.services.gov.ie/**")
+  await page.waitForURL(`${MOCK_URL}/**`)
 
   // Fill in the login form
   await page

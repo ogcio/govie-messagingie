@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test"
 
+const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
+const PROFILE_URL = process.env.PROFILE_URL || "http://localhost:3003"
+
 test.describe("User Profile page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    if (
-      page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
-    ) {
+    if (page.url().includes(`${AUTH_URL}`)) {
       // Click the MyGovID login button
       await page.getByRole("button", { name: "Continue with MyGovId" }).click()
     }
@@ -18,7 +19,7 @@ test.describe("User Profile page", () => {
   }) => {
     await page.waitForLoadState("networkidle")
 
-    await page.goto("https://profile.dev.services.gov.ie")
+    await page.goto(`${PROFILE_URL}`)
     await expect(
       page.getByRole("heading", { name: "My Profile" }),
     ).toBeVisible()

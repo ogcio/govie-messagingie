@@ -21,7 +21,10 @@
 .subject {
   font: var(
     --gieds-typography-default-heading-lg,
-    700 1.75rem/1.25 "Lato", Arial, sans-serif
+    700 1.75rem /
+    1.25 "Lato",
+    Arial,
+    sans-serif
   );
   margin: 0 0 var(--gieds-space-4);
   color: var(--gieds-color-gray-950, #0b0c0c);

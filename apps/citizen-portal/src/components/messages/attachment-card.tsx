@@ -1,92 +1,135 @@
 "use client"
 
+import { faro, LogLevel } from "@grafana/faro-web-sdk"
 import {
-  Button,
   Card,
   CardContainer,
   CardHeader,
   CardSubtitle,
   CardTitle,
   Icon,
-  Spinner,
-  Stack,
+  type IconProps,
+  Link,
 } from "@ogcio/design-system-react"
-import { useGatewayDownload, useGatewayFetch } from "@ogcio/sag-client/react"
+import { useGatewayFetch } from "@ogcio/sag-client/react"
 import { useTranslations } from "next-intl"
+import { useEffect } from "react"
+import { TRACE_MESSAGES } from "@/const/traces"
 import type { FileMetadata } from "@/types"
+import styles from "./attachment-card.module.css"
+
+/**
+ * Maps a file's MIME type (with a filename-extension fallback) to a Material
+ * Symbol name. Interim coverage (PDF, Word, image, spreadsheet, generic) until
+ * the DS ships dedicated file-type icons, at which point this can be removed.
+ */
+function getFileTypeIcon(
+  mimeType: string | undefined,
+  fileName: string,
+): IconProps["icon"] {
+  const mime = (mimeType ?? "").toLowerCase()
+  const extension = getExtension(fileName)
+
+  if (mime === "application/pdf" || extension === "pdf") {
+    return "picture_as_pdf" as IconProps["icon"]
+  }
+  if (
+    mime.startsWith("image/") ||
+    ["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(extension)
+  ) {
+    return "image" as IconProps["icon"]
+  }
+  if (
+    mime.includes("word") ||
+    mime.includes("opendocument.text") ||
+    ["doc", "docx", "odt", "rtf"].includes(extension)
+  ) {
+    return "description" as IconProps["icon"]
+  }
+  if (
+    mime.includes("spreadsheet") ||
+    mime.includes("excel") ||
+    ["xls", "xlsx", "csv", "ods"].includes(extension)
+  ) {
+    return "table_chart" as IconProps["icon"]
+  }
+  return "draft" as IconProps["icon"]
+}
+
+function getExtension(fileName: string): string {
+  return fileName.includes(".")
+    ? (fileName.split(".").pop()?.toLowerCase() ?? "")
+    : ""
+}
+
+function getFileTypeLabel(fileName: string): string {
+  return getExtension(fileName).toUpperCase() || "FILE"
+}
 
 export function AttachmentCard({ id }: { id: string }) {
   const t = useTranslations("home.detail.attachment")
-  const { data } = useGatewayFetch<FileMetadata>(
+
+  const { data, error, isLoading } = useGatewayFetch<FileMetadata>(
     `/upload/api/v1/metadata/${id}`,
   )
-  const { download: openPreview, isDownloading: isOpening } = useGatewayDownload(
-    {
-      openInNewTab: true,
-    },
-  )
-  const { download: saveFile, isDownloading: isSaving } = useGatewayDownload({
-    openInNewTab: false,
-  })
+
+  useEffect(() => {
+    if (isLoading || data) return
+    faro.api.pushLog([TRACE_MESSAGES.ATTACHMENT_METADATA.MISSING], {
+      context: {
+        attachmentId: id,
+        error: error instanceof Error ? error.message : String(error ?? "none"),
+      },
+      level: LogLevel.WARN,
+    })
+  }, [data, error, id, isLoading])
 
   if (!data) return null
 
   const sizeKb = Math.round(data.fileSize / 1024)
-  const filePath = `/upload/api/v1/files/${id}`
-  const isBusy = isOpening || isSaving
-
-  const handlePreview = () => {
-    if (!isBusy) {
-      openPreview(filePath, data.fileName).catch(() => {})
-    }
-  }
-
-  const handleDownload = () => {
-    if (!isBusy) {
-      saveFile(filePath, data.fileName).catch(() => {})
-    }
-  }
+  // Same-origin nginx proxy that injects the X-Application header a bare link
+  // can't send. Both actions point here: Download forces a save (download attr),
+  // Open previews inline in a new tab (the gateway serves files inline).
+  const fileUrl = `/_next/files/upload/api/v1/files/${id}`
+  const fileTypeIcon = getFileTypeIcon(data.mimeType, data.fileName)
 
   return (
     <Card type='vertical'>
       <CardContainer>
         <CardHeader>
           <CardTitle>
-            <Stack direction='row' gap={2} itemsAlignment='center'>
+            <span className={styles.titleRow}>
               <Icon
-                icon='download'
+                icon={fileTypeIcon}
                 size='lg'
-                className='gi-text-gray-500'
+                className={styles.fileTypeIcon}
                 ariaHidden
               />
-              <span>{data.fileName}</span>
-            </Stack>
+              <span className={styles.fileName}>{data.fileName}</span>
+            </span>
           </CardTitle>
-          <CardSubtitle>{`${sizeKb} kb`}</CardSubtitle>
-          <Stack direction='row' gap={3} itemsAlignment='center' wrap>
-            <Button
-              data-testid='attachment-preview-action'
-              type='button'
-              variant='secondary'
-              onClick={handlePreview}
-              aria-busy={isOpening}
-              disabled={isBusy}
-              aria-label={t("previewFile", { fileName: data.fileName })}
-            >
-              {isOpening ? <Spinner size='sm' /> : t("preview")}
-            </Button>
-            <Button
-              data-testid='attachment-download-action'
-              type='button'
-              variant='secondary'
-              onClick={handleDownload}
-              aria-busy={isSaving}
-              disabled={isBusy}
+          <CardSubtitle>{`${getFileTypeLabel(data.fileName)} - ${sizeKb} KB`}</CardSubtitle>
+          <span className={styles.actions}>
+            <Link
+              dataTestid='attachment-download-action'
+              href={fileUrl}
+              download={data.fileName}
+              iconStart='download'
               aria-label={t("downloadFile", { fileName: data.fileName })}
             >
-              {isSaving ? <Spinner size='sm' /> : t("download")}
-            </Button>
-          </Stack>
+              {t("download")}
+            </Link>
+            <Link
+              dataTestid='attachment-preview-action'
+              href={fileUrl}
+              target='_blank'
+              rel='noopener noreferrer'
+              iconStart='open_in_new'
+              aria-label={t("openFile", { fileName: data.fileName })}
+            >
+              {t("open")}
+            </Link>
+          </span>
         </CardHeader>
       </CardContainer>
     </Card>

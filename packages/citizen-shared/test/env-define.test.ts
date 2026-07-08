@@ -35,7 +35,6 @@ describe("defineZoneEnv", () => {
       }),
     ).toThrow(/Invalid environment variables/i)
   })
-
 })
 
 describe("requiredInProduction", () => {

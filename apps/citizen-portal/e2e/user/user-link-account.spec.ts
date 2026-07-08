@@ -9,9 +9,11 @@ import {
 } from "../utils/functions"
 import { previewRecentMessageEmail } from "../utils/gmail-reader"
 
+const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
+
 let authenticatedPage: Page
 
-test.describe("Uset can link a new email address to an account", () => {
+test.describe("User can link a new email address to an account", () => {
   test.beforeEach(async ({ browser }) => {
     authenticatedPage = await createPageWithVideo(browser)
     //clear the cache
@@ -31,11 +33,7 @@ test.describe("Uset can link a new email address to an account", () => {
     await previewRecentMessageEmail(authenticatedPage, email)
     // Login as a new user
     //await authenticatedPage.goto("/")
-    if (
-      authenticatedPage
-        .url()
-        .includes("https://authorization.dev.services.gov.ie/sign-in")
-    ) {
+    if (authenticatedPage.url().includes(`${AUTH_URL}`)) {
       // Click the MyGovID login button
       await authenticatedPage
         .getByRole("button", { name: "Continue with MyGovId" })
@@ -60,11 +58,7 @@ test.describe("Uset can link a new email address to an account", () => {
     await previewRecentMessageEmail(authenticatedPage, email)
     // Login as a new user
     //await authenticatedPage.goto("/")
-    if (
-      authenticatedPage
-        .url()
-        .includes("https://authorization.dev.services.gov.ie/sign-in")
-    ) {
+    if (authenticatedPage.url().includes(`${AUTH_URL}`)) {
       // Click the MyGovID login button
       await authenticatedPage
         .getByRole("button", { name: "Continue with MyGovId" })

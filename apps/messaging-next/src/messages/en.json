@@ -82,10 +82,18 @@
     "detail": {
       "delete": "Delete",
       "attachment": {
-        "preview": "Preview",
+        "open": "Open",
         "download": "Download",
-        "previewFile": "Preview {fileName}",
-        "downloadFile": "Download {fileName}"
+        "openFile": "Open {fileName}",
+        "downloadFile": "Download {fileName}",
+        "downloading": "Downloading",
+        "savedToDevice": "Saved to device",
+        "previewUnavailable": "Preview unavailable",
+        "downloadFailed": "Download failed",
+        "error": {
+          "title": "Download failed",
+          "description": "Something went wrong. Please try again."
+        }
       }
     }
   },

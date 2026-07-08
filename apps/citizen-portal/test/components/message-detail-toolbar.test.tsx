@@ -67,11 +67,7 @@ describe("MessageDetailToolbar", () => {
 
   it("disables move and delete while an action is in progress", () => {
     render(
-      <MessageDetailToolbar
-        onMove={onMove}
-        onDelete={onDelete}
-        isDeleting
-      />,
+      <MessageDetailToolbar onMove={onMove} onDelete={onDelete} isDeleting />,
     )
 
     expect(screen.getByTestId("detail-move-button")).toHaveAttribute(

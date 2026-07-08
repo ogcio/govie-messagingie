@@ -12,9 +12,9 @@ import {
 
 describe("mock attachments", () => {
   it("derives a UUID attachment id from a message id", () => {
-    expect(
-      toMockAttachmentId("00000001-0000-4000-8000-000000000001"),
-    ).toBe("10000001-0000-4000-8000-000000000001")
+    expect(toMockAttachmentId("00000001-0000-4000-8000-000000000001")).toBe(
+      "10000001-0000-4000-8000-000000000001",
+    )
   })
 
   it("returns attachment ids from message fixtures", () => {

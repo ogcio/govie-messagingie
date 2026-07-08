@@ -50,6 +50,10 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      // Mirror tsconfig `paths`: the more specific `@/public/*` -> ./public/*
+      // must precede the catch-all `@/*` -> ./src/* so static assets
+      // imported as `@/public/...` resolve (vite matches aliases in order).
+      "@/public/": new URL("./public/", import.meta.url).pathname,
       "@/": new URL("./src/", import.meta.url).pathname,
     },
   },

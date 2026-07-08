@@ -11,6 +11,7 @@ results.xml
 test-results/
 playwright-report/
 demo-videos/
+downloads/
 *.log
 
 # Local env files (sample stays tracked)

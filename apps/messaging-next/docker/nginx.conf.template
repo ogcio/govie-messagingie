@@ -11,6 +11,13 @@ events {
 http {
   server_tokens off;
 
+  # Runtime DNS resolver — generated at container start by /docker-entrypoint.d/15-resolver.sh
+  # from the pod's /etc/resolv.conf. Enables re-resolution of the CloudFront-fronted analytics
+  # & feature-flag upstreams on DNS TTL (they rotate IPs on short TTLs) instead of nginx pinning
+  # whatever it resolved at worker start. Wildcard include = optional, so builds/images that
+  # don't ship the generator still start (those just fall back to no runtime re-resolution).
+  include /tmp/resolver.conf*;
+
   otel_trace ${OTEL_ENABLE};
   otel_service_name ${OTEL_SERVICE_NAME};
   otel_trace_context propagate;
@@ -77,11 +84,6 @@ http {
     ~*idSite=([0-9]+) $1;
   }
 
-  map $upstream_response_time $safe_upstream_response_time {
-    ""      null;
-    default $upstream_response_time;
-  }
-
   # Skip logging for health check endpoints
   map $uri $loggable {
     /health 0;
@@ -104,7 +106,10 @@ http {
   '"status":$status,'
   '"body_bytes_sent":$body_bytes_sent,'
   '"request_time":$request_time,'
-  '"upstream_response_time":$safe_upstream_response_time,'
+  '"upstream_response_time":"$upstream_response_time",'
+  '"upstream_connect_time":"$upstream_connect_time",'
+  '"upstream_status":"$upstream_status",'
+  '"upstream_addr":"$upstream_addr",'
   '"http_user_agent":"$http_user_agent",'
   '"http_host":"$http_host",'
   '"http_referer":"$http_referer",'
@@ -195,13 +200,27 @@ http {
     # Path must stay under /_next/: CloudFront/WAF on *.services.gov.ie returns 403 for ad-hoc prefixes (e.g. /ogcio-analytics-api/).
     location /_next/analytics-api/ {
       add_header X-Trace-ID $otel_trace_id always;
-      proxy_pass ${ANALYTICS_MANAGEMENT_API_ORIGIN}/;
+      # Variable upstream + rewrite so nginx re-resolves the CloudFront host at runtime
+      # (via the http-level resolver) instead of pinning the resolved IPs at worker start —
+      # this avoids getting stuck on a dead pinned edge set ("no live upstreams").
+      set $analytics_upstream "${ANALYTICS_MANAGEMENT_API_ORIGIN}";
+      rewrite ^/_next/analytics-api/(.*)$ /$1 break;
+      proxy_pass $analytics_upstream;
       proxy_http_version 1.1;
       proxy_ssl_server_name on;
       proxy_set_header Host ${ANALYTICS_MANAGEMENT_API_HOST};
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
       proxy_set_header X-Forwarded-Proto $scheme;
       proxy_set_header X-Real-IP $remote_addr;
+      # Fail fast and cap retries: normal response is ~15ms, so a slow/unhealthy edge should
+      # error out in single-digit seconds rather than stacking into 20-30s hangs and amplifying
+      # load on a struggling upstream (previously up to 3-4 retries x 10s each).
+      proxy_connect_timeout 3s;
+      proxy_read_timeout 5s;
+      proxy_send_timeout 5s;
+      proxy_next_upstream error timeout;
+      proxy_next_upstream_tries 2;
+      proxy_next_upstream_timeout 8s;
       limit_req zone=general burst=60 nodelay;
     }
 
@@ -210,7 +229,10 @@ http {
     # ships in the browser bundle. Path under /_next/ per CloudFront/WAF rule.
     location /_next/ff/ {
       add_header X-Trace-ID $otel_trace_id always;
-      proxy_pass ${UNLEASH_FRONTEND_ORIGIN}/;
+      # Same runtime re-resolution + fail-fast treatment as the analytics upstream.
+      set $ff_upstream "${UNLEASH_FRONTEND_ORIGIN}";
+      rewrite ^/_next/ff/(.*)$ /$1 break;
+      proxy_pass $ff_upstream;
       proxy_http_version 1.1;
       proxy_ssl_server_name on;
       proxy_set_header Host ${UNLEASH_FRONTEND_HOST};
@@ -218,6 +240,35 @@ http {
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
       proxy_set_header X-Forwarded-Proto $scheme;
       proxy_set_header X-Real-IP $remote_addr;
+      proxy_connect_timeout 3s;
+      proxy_read_timeout 5s;
+      proxy_send_timeout 5s;
+      proxy_next_upstream error timeout;
+      proxy_next_upstream_tries 2;
+      proxy_next_upstream_timeout 8s;
+      limit_req zone=general burst=60 nodelay;
+    }
+
+    # Same-origin proxy for SAG file downloads. A plain <a> link can't send the
+    # X-Application header the gateway requires, so nginx injects it here. Cookie
+    # is forwarded by default → gateway session auth works (shared parent domain).
+    # Path under /_next/ per CloudFront/WAF rule.
+    location /_next/files/ {
+      add_header X-Trace-ID $otel_trace_id always;
+      set $sag_upstream "${NEXT_PUBLIC_SAG_URL}";
+      rewrite ^/_next/files/(.*)$ /$1 break;
+      proxy_pass $sag_upstream;
+      proxy_http_version 1.1;
+      proxy_ssl_server_name on;
+      proxy_set_header Host ${SAG_HOST};
+      proxy_set_header X-Application "messaging";
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_buffering off;
+      proxy_connect_timeout 3s;
+      proxy_read_timeout 30s;
+      proxy_send_timeout 30s;
       limit_req zone=general burst=60 nodelay;
     }
 

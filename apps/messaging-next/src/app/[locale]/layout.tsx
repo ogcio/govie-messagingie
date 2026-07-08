@@ -4,6 +4,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server"
 import { ClientShell } from "@/components/client-shell"
 import { HtmlLangScript } from "@/components/html-lang-script"
 import { ApplicationFooter } from "@/components/layout/application-footer"
+import { type Locale, messagesMap } from "@/i18n/locale"
 import { routing } from "@/i18n/routing"
 import favicon from "@/public/favicon.ico"
 import "./styles.css"
@@ -59,7 +60,10 @@ export default async function Layout({
   setRequestLocale(locale)
 
   return (
-    <NextIntlClientProvider>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={messagesMap[locale as Locale]}
+    >
       <HtmlLangScript locale={locale} />
       <ClientShell>{children}</ClientShell>
       <ApplicationFooter />

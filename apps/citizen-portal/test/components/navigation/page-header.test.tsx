@@ -57,6 +57,20 @@ vi.mock("@/hooks/use-show-application-links", () => ({
   useShowApplicationLinks: () => true,
 }))
 
+// Drive the deployment-topology flags directly so the suite can assert
+// the cross-zone drawer links are gated per zone (AB#39580) without
+// loading the real env schema. `getEnabledLandingZone` is stubbed to the
+// identity fallback used by `getZoneFromPath` for unmatched paths.
+const flagState = vi.hoisted(() => ({ dashboard: true, messages: true }))
+vi.mock("@/lib/feature-config", () => ({
+  isZoneEnabled: (zone: "messages" | "profile" | "dashboard") => {
+    if (zone === "profile") return true
+    if (zone === "dashboard") return flagState.dashboard
+    return flagState.messages
+  },
+  getEnabledLandingZone: (zone: "messages" | "profile" | "dashboard") => zone,
+}))
+
 // `useCrossZoneLink` and the `ZONE_CONFIG` table are exercised by their
 // own dedicated suites; here we only need the (zone,path) -> absolute-
 // URL contract so we can assert the rendered hrefs. Returning the
@@ -148,6 +162,8 @@ describe("PageHeader", () => {
   beforeEach(() => {
     mockPathname = "/en/messages"
     mockLocale = "en"
+    flagState.dashboard = true
+    flagState.messages = true
   })
 
   afterEach(() => {
@@ -251,6 +267,35 @@ describe("PageHeader", () => {
     )
   })
 
+  it("uses the URL locale for cross-zone drawer hrefs when the path is /ga/", () => {
+    mockPathname = "/ga/messages"
+    mockLocale = "en"
+    render(<PageHeader publicName='Jane' onSignOut={() => {}} />)
+
+    expect(screen.getByTestId("profile-href")).toHaveAttribute(
+      "href",
+      "http://profile.local.test:8080/ga/my-profile",
+    )
+    const dashboardCrossZone = screen
+      .getAllByRole("link", { name: "Dashboard" })
+      .find((a) =>
+        a.getAttribute("href")?.startsWith("http://dashboard.local.test:8080/"),
+      )
+    expect(dashboardCrossZone).toHaveAttribute(
+      "href",
+      "http://dashboard.local.test:8080/ga/my-dashboard",
+    )
+    const messagingCrossZone = screen
+      .getAllByRole("link", { name: "MessagingIE" })
+      .find((a) =>
+        a.getAttribute("href")?.startsWith("http://messaging.local.test:8080/"),
+      )
+    expect(messagingCrossZone).toHaveAttribute(
+      "href",
+      "http://messaging.local.test:8080/ga/messages",
+    )
+  })
+
   it("builds the language-switch href by swapping the locale segment on a localed path", () => {
     mockPathname = "/en/my-profile"
     mockLocale = "en"
@@ -284,5 +329,61 @@ describe("PageHeader", () => {
     )
     const gaeilge = screen.getAllByRole("link", { name: "Gaeilge" })[0]
     expect(gaeilge).toHaveAttribute("href", "/onboarding?ga")
+  })
+
+  describe("deployment-topology gating (AB#39580)", () => {
+    // The cross-zone drawer items must disappear when their zone is not
+    // part of the deployment, so a standalone build never surfaces a link
+    // to a building block it doesn't ship.
+    const dashboardCrossZoneLink = () =>
+      screen
+        .queryAllByRole("link", { name: "Dashboard" })
+        .find((a) =>
+          a
+            .getAttribute("href")
+            ?.startsWith("http://dashboard.local.test:8080/"),
+        )
+
+    const messagingCrossZoneLink = () =>
+      screen
+        .queryAllByRole("link", { name: "MessagingIE" })
+        .find((a) =>
+          a
+            .getAttribute("href")
+            ?.startsWith("http://messaging.local.test:8080/"),
+        )
+
+    it("shows both cross-zone links when every zone is enabled", () => {
+      mockPathname = "/en/my-profile"
+      render(<PageHeader publicName='Jane' onSignOut={() => {}} />)
+      expect(dashboardCrossZoneLink()).toBeDefined()
+      expect(messagingCrossZoneLink()).toBeDefined()
+    })
+
+    it("hides the Dashboard link when the dashboard zone is disabled", () => {
+      flagState.dashboard = false
+      mockPathname = "/en/my-profile"
+      render(<PageHeader publicName='Jane' onSignOut={() => {}} />)
+      expect(dashboardCrossZoneLink()).toBeUndefined()
+      // Messaging stays — disabling one zone must not affect the other.
+      expect(messagingCrossZoneLink()).toBeDefined()
+    })
+
+    it("hides the MessagingIE link when the messages zone is disabled", () => {
+      flagState.messages = false
+      mockPathname = "/en/my-profile"
+      render(<PageHeader publicName='Jane' onSignOut={() => {}} />)
+      expect(messagingCrossZoneLink()).toBeUndefined()
+      expect(dashboardCrossZoneLink()).toBeDefined()
+    })
+
+    it("hides both cross-zone links in a profile-only deployment", () => {
+      flagState.dashboard = false
+      flagState.messages = false
+      mockPathname = "/en/my-profile"
+      render(<PageHeader publicName='Jane' onSignOut={() => {}} />)
+      expect(dashboardCrossZoneLink()).toBeUndefined()
+      expect(messagingCrossZoneLink()).toBeUndefined()
+    })
   })
 })

@@ -35,7 +35,7 @@ const PUBLIC_PAGES = [
   { path: "/ga/contact-support", title: /Cuir glaoch ar an tacaíocht/ },
 ] as const
 
-test.describe("@smoke canonical hostnames serve in-zone public pages", () => {
+test.describe("@local canonical hostnames serve in-zone public pages", () => {
   for (const page of PUBLIC_PAGES) {
     test(`profile.local.test ${page.path} -> 200`, async ({ page: pw }) => {
       const response = await pw.goto(`${PROFILE_HOST}${page.path}`)
@@ -79,16 +79,36 @@ const OFF_ZONE_REDIRECTS = [
     from: `${MESSAGING_HOST}/global-signout?postRedirectUri=foo`,
     to: `${PROFILE_HOST}/global-signout?postRedirectUri=foo`,
   },
+  {
+    from: `${MESSAGING_HOST}/wrong-account-error?returnUrl=foo`,
+    to: `${PROFILE_HOST}/wrong-account-error?returnUrl=foo`,
+  },
 ] as const
 
-test.describe("@smoke locale-less global-signout entry is profile-owned", () => {
+test.describe("@local locale-less global-signout entry is profile-owned", () => {
   test("profile.local.test /global-signout -> 200", async ({ request }) => {
     const response = await request.get(`${PROFILE_HOST}/global-signout`)
     expect(response.status()).toBe(200)
   })
+
+  test("profile.local.test /wrong-account-error -> 200", async ({
+    request,
+  }) => {
+    const response = await request.get(`${PROFILE_HOST}/wrong-account-error`)
+    expect(response.status()).toBe(200)
+  })
+
+  test("profile.local.test /wrong-login-method-error -> 200", async ({
+    request,
+  }) => {
+    const response = await request.get(
+      `${PROFILE_HOST}/wrong-login-method-error`,
+    )
+    expect(response.status()).toBe(200)
+  })
 })
 
-test.describe("@smoke nginx canonicalisation 301s preserve port + query", () => {
+test.describe("@local nginx canonicalisation 301s preserve port + query", () => {
   for (const { from, to } of OFF_ZONE_REDIRECTS) {
     test(`${from} -> 301 ${to}`, async ({ request }) => {
       const response = await request.get(from, { maxRedirects: 0 })
@@ -121,6 +141,37 @@ test.describe("@smoke nginx canonicalisation 301s preserve port + query", () => 
       `/en/secure-messages?id=${messageId}`,
     )
   })
+
+  for (const { path, location } of [
+    {
+      path: "/en/privacy-policy",
+      location:
+        "https://www.gov.ie/en/messaging-ie/publications/privacy-statement/",
+    },
+    {
+      path: "/en/terms-of-use",
+      location:
+        "https://www.gov.ie/en/messaging-ie/publications/terms-and-conditions/",
+    },
+    {
+      path: "/ga/privacy-policy",
+      location:
+        "https://www.gov.ie/ga/messaging-ie-ga/foilseachain/r%C3%A1iteas-pr%C3%ADobh%C3%A1ideachais/",
+    },
+    {
+      path: "/ga/terms-of-use",
+      location:
+        "https://www.gov.ie/ga/messaging-ie-ga/foilseachain/terms-and-conditions/",
+    },
+  ] as const) {
+    test(`profile.local.test ${path} -> 302 gov.ie`, async ({ request }) => {
+      const response = await request.get(`${PROFILE_HOST}${path}`, {
+        maxRedirects: 0,
+      })
+      expect(response.status()).toBe(302)
+      expect(response.headers().location).toBe(location)
+    })
+  }
 
   test("unknown Host header is refused (444 -> no response)", async ({
     request,

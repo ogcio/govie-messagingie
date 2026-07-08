@@ -3,6 +3,7 @@
 import { match } from "@formatjs/intl-localematcher"
 import { useCallback, useEffect, useState } from "react"
 import { AVAILABLE_LOCALES, DEFAULT_LOCALE } from "@/const"
+import { readLocaleCookie } from "@/util/locale-cookie"
 
 type Locale = (typeof AVAILABLE_LOCALES)[number]
 
@@ -19,19 +20,27 @@ export function matchLocale(browserLanguages: readonly string[]): Locale {
 }
 
 /**
- * Hook that detects the user's preferred locale from browser settings.
+ * Hook that detects the user's preferred locale.
  *
- * Uses `navigator.languages` (ordered preference list) with fallback to
- * `navigator.language`, and listens for runtime language changes.
+ * Prefers the persisted `NEXT_LOCALE` cookie (the user's explicit choice,
+ * shared across citizen-portal subdomains) and only falls back to
+ * `navigator.languages` (ordered preference list, then `navigator.language`)
+ * when no valid cookie is present. Listens for runtime language changes.
  *
  * Returns `{ locale, isReady }` where `isReady` becomes true once the
- * browser preference has been read (avoids acting on the server-side default).
+ * preference has been read (avoids acting on the server-side default).
  */
 export function useLocalePreference() {
   const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE)
   const [isReady, setIsReady] = useState(false)
 
   const detect = useCallback(() => {
+    const cookieLocale = readLocaleCookie()
+    if (cookieLocale) {
+      setLocale(cookieLocale)
+      setIsReady(true)
+      return
+    }
     const languages = navigator.languages?.length
       ? navigator.languages
       : [navigator.language]

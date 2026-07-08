@@ -2,6 +2,7 @@
 
 import {
   Container,
+  Header,
   LoadMaterialSymbols,
   Spinner,
   Stack,
@@ -14,6 +15,7 @@ import {
   useAuth,
   usePublicServantGuard,
 } from "@ogcio/sag-client/react"
+import { useTranslations } from "next-intl"
 import { type ReactNode, Suspense, useEffect, useRef, useState } from "react"
 import { ApplicationFooter } from "@/components/ApplicationFooter"
 import { AnalyticsProviderWrapper } from "@/components/analytics-provider-wrapper"
@@ -100,6 +102,32 @@ function setConnectorsToShowCookie(connectorId: string): void {
 
   // biome-ignore lint/suspicious/noDocumentCookie: cookie must be readable by Logto on a sibling subdomain
   document.cookie = attrs
+}
+
+// Unauthorized users never mount `UserProvider`/org context, so the full
+// `PageHeader` (which depends on `useOrganizationContext`) can't be reused. We
+// render a minimal branded header whose only action is sign-out, mirroring the
+// legacy `messaging-admin` error page that always kept layout + a logout link.
+function ForbiddenHeader() {
+  const { signOut } = useAuth()
+  const t = useTranslations("navigation.header")
+
+  return (
+    <Header
+      logo={{ href: "/" }}
+      items={[
+        {
+          itemType: "link",
+          label: t("drawer.link.logout"),
+          href: "#",
+          onClick: (e) => {
+            e.preventDefault()
+            signOut()
+          },
+        },
+      ]}
+    />
+  )
 }
 
 function LayoutLoading() {
@@ -227,9 +255,11 @@ function AuthenticatedShell({
           </UserProvider>
         ) : (
           <Suspense fallback={<LayoutLoading />}>
+            <ForbiddenHeader />
             <MainContainer>
               <Container>{children}</Container>
             </MainContainer>
+            <ApplicationFooter profileUrl={env.NEXT_PUBLIC_PROFILE_URL} />
           </Suspense>
         )}
       </FeatureFlagsProvider>

@@ -1,4 +1,5 @@
 import { AVAILABLE_LOCALES } from "@/const"
+import { getEnabledLandingZone } from "@/lib/feature-config"
 
 /**
  * Citizen-portal zones.
@@ -39,12 +40,14 @@ const ZONE_BY_FIRST_SEGMENT: Record<string, Zone> = {
  *   /en                       -> "dashboard" (locale root → dashboard home)
  *   /onboarding               -> "profile"  (no-locale profile page)
  *
- * Pathnames that don't match a known zone segment fall back to
- * "dashboard" because the dashboard is the canonical landing surface.
+ * Pathnames that don't match a known zone segment fall back to the
+ * enabled landing zone (dashboard when shipped, otherwise the first
+ * enabled fallback) — the dashboard is the canonical landing surface
+ * but may be absent in a reduced standalone deployment (AB#39580).
  */
 export function getZoneFromPath(pathname: string): Zone {
   const segments = pathname.split("/").filter(Boolean)
-  if (segments.length === 0) return "dashboard"
+  if (segments.length === 0) return getEnabledLandingZone("dashboard")
 
   // First segment is the locale on /{locale}/{route}/... paths; the
   // route segment we care about is at index 1. For paths that skip the
@@ -60,11 +63,14 @@ export function getZoneFromPath(pathname: string): Zone {
     routeSegment === "onboarding" ||
     routeSegment === "post-global-signout" ||
     routeSegment === "global-signout" ||
+    routeSegment === "wrong-account-error" ||
     routeSegment === "wrong-login-method-error" ||
     routeSegment === "api"
   ) {
     return "profile"
   }
 
-  return ZONE_BY_FIRST_SEGMENT[routeSegment] ?? "dashboard"
+  return (
+    ZONE_BY_FIRST_SEGMENT[routeSegment] ?? getEnabledLandingZone("dashboard")
+  )
 }

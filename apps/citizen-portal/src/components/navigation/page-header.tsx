@@ -14,10 +14,12 @@ import {
 } from "@ogcio/design-system-react"
 import { LogoHarpWhite, LogoWhite } from "@ogcio/design-system-react/logos"
 import { usePathname } from "next/navigation"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { LANG_EN, LANG_GA } from "@/const"
+import { useActiveLocale } from "@/hooks/use-active-locale"
 import { useShowApplicationLinks } from "@/hooks/use-show-application-links"
+import { isZoneEnabled } from "@/lib/feature-config"
 import { ZONE_CONFIG } from "@/lib/zone-config"
 import { getZoneFromPath } from "@/util/get-zone-from-path"
 import { DrawerLink } from "./drawer-link"
@@ -61,7 +63,7 @@ export function PageHeader({
   logoHref?: string
   languageHref?: string
 }) {
-  const locale = useLocale()
+  const locale = useActiveLocale()
   const path = usePathname()
   const t = useTranslations("navigation.header")
   const titleT = useTranslations("navigation.title")
@@ -130,12 +132,12 @@ export function PageHeader({
             onSignOut={onSignOut}
             showProfileLink={showApplicationLinks}
           >
-            {showApplicationLinks ? (
+            {showApplicationLinks && isZoneEnabled("dashboard") ? (
               <DrawerLink bold href={dashboardHref}>
                 {t("drawer.dashboard")}
               </DrawerLink>
             ) : null}
-            {showApplicationLinks ? (
+            {showApplicationLinks && isZoneEnabled("messages") ? (
               <DrawerLink bold href={messagingHref}>
                 {t("drawer.messaging")}
               </DrawerLink>

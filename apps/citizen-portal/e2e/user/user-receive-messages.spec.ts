@@ -5,6 +5,8 @@ import { loginAsCitizen } from "../helpers/user-auth.helper"
 import { logout, sendMessageToDevCitizen } from "../utils/functions"
 import { previewRecentMessageEmail } from "../utils/gmail-reader"
 
+const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
+
 let authenticatedPage: Page
 
 test.describe("Admin Message Sending > Citizen Viewing", () => {
@@ -104,12 +106,11 @@ test.describe("Admin Message Sending > Citizen Viewing", () => {
     await authenticatedPage.getByRole("row").nth(1).click()
 
     await authenticatedPage.waitForLoadState("networkidle")
-    await authenticatedPage.getByRole("button", { name: "Delete" }).click()
-    await authenticatedPage.getByRole("button", { name: "Delete" }).click()
+    await authenticatedPage.getByTestId("delete").click()
+    await authenticatedPage.waitForLoadState("networkidle")
+    await authenticatedPage.getByTestId("delete-confirmation-confirm").click()
     await expect(
-      authenticatedPage.getByRole("alert", {
-        name: "1 message has been deleted",
-      }),
+      authenticatedPage.getByTestId("delete-success-toast"),
     ).toBeVisible()
   })
 
@@ -119,15 +120,37 @@ test.describe("Admin Message Sending > Citizen Viewing", () => {
     //logout as admin
     await logout(authenticatedPage)
     await authenticatedPage.waitForLoadState("networkidle")
-    // Wait for the messages table to load
-    await loginAsCitizen(authenticatedPage, "peter.parker@mail.ie")
-    await authenticatedPage.waitForLoadState("networkidle")
     await previewRecentMessageEmail(authenticatedPage, "me")
+    await authenticatedPage.waitForLoadState("networkidle")
+    // Wait for the messages table to load
+    if (authenticatedPage.url().includes(`${AUTH_URL}`)) {
+      // Click the MyGovID login button
+      await authenticatedPage
+        .getByRole("button", { name: "Continue with MyGovId" })
+        .click()
+    }
+    await authenticatedPage
+      .locator(
+        "#login-form > div > div.gi-w-full > div:nth-child(1) > div.gi-accordion > div",
+      )
+      .click()
+    await authenticatedPage.locator("#sub").fill("932d94fc69be147f6fcb")
+    await authenticatedPage
+      .locator(
+        "#login-form > div > div.gi-w-full > div:nth-child(2) > div.gi-accordion > div",
+      )
+      .click()
+    await authenticatedPage.locator("#firstName").fill("Andrew")
+    await authenticatedPage.locator("#lastName").fill("Parker")
+    await authenticatedPage.locator("#email").fill("peter.parker@mail.ie")
+    await authenticatedPage.getByRole("button", { name: "LOGIN" }).click()
     await authenticatedPage.waitForLoadState("networkidle")
 
     await expect(
       authenticatedPage
-        .locator("body > main > div > div > div > div > h1")
+        .locator(
+          "body > main > div > div > div > div > div > div > div > header > h1",
+        )
         .first(),
     ).toHaveText("Test Subject")
   })

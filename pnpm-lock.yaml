@@ -6,17 +6,12 @@ settings:
   injectWorkspacePackages: true
 
 overrides:
-  mdast-util-gfm-autolink-literal: 2.0.1
   protobufjs: 8.6.3
   '@grafana/faro-react': 2.7.1
 
 patchedDependencies:
-  '@ogcio/design-system-react@1.34.0':
-    hash: 498c60de4a3d6cc4f745270cb7d4cfb064798e4a1840b1d1783d45c42383b5b9
-    path: patches/@ogcio__design-system-react@1.34.0.patch
-  '@ogcio/design-system-react@1.40.0':
-    hash: aaebda5130d0ed562f5e6de904741ebc45c2cb3bc7a2e3c32f268e8736c54dbc
-    path: patches/@ogcio__design-system-react@1.40.0.patch
+  '@ogcio/design-system-react@1.34.0': 498c60de4a3d6cc4f745270cb7d4cfb064798e4a1840b1d1783d45c42383b5b9
+  '@ogcio/design-system-react@1.41.0': dc5776bd451f790f512bddbe92326483835233afd95e5b77de3b29bbdb46b3ec
 
 importers:
 
@@ -90,13 +85,13 @@ importers:
         version: 0.2.14(@logto/node@3.1.10)
       '@ogcio/announcements':
         specifier: 0.3.0
-        version: 0.3.0(@ogcio/design-system-react@1.40.0(patch_hash=aaebda5130d0ed562f5e6de904741ebc45c2cb3bc7a2e3c32f268e8736c54dbc)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3))(@ogcio/sag-client@0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))
+        version: 0.3.0(@ogcio/design-system-react@1.41.0(patch_hash=dc5776bd451f790f512bddbe92326483835233afd95e5b77de3b29bbdb46b3ec)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3))(@ogcio/sag-client@0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))
       '@ogcio/consent':
         specifier: 1.5.0
-        version: 1.5.0(@ogcio/design-system-react@1.40.0(patch_hash=aaebda5130d0ed562f5e6de904741ebc45c2cb3bc7a2e3c32f268e8736c54dbc)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3))(@ogcio/sag-client@0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))
+        version: 1.5.0(@ogcio/design-system-react@1.41.0(patch_hash=dc5776bd451f790f512bddbe92326483835233afd95e5b77de3b29bbdb46b3ec)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3))(@ogcio/sag-client@0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))
       '@ogcio/design-system-react':
-        specifier: 1.40.0
-        version: 1.40.0(patch_hash=aaebda5130d0ed562f5e6de904741ebc45c2cb3bc7a2e3c32f268e8736c54dbc)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3)
+        specifier: 1.41.0
+        version: 1.41.0(patch_hash=dc5776bd451f790f512bddbe92326483835233afd95e5b77de3b29bbdb46b3ec)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3)
       '@ogcio/nextjs-analytics':
         specifier: 1.0.1
         version: 1.0.1(@logto/node@3.1.10)
@@ -104,8 +99,8 @@ importers:
         specifier: 0.11.3
         version: 0.11.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(zone.js@0.16.1)
       '@ogcio/sag-client':
-        specifier: 0.7.4
-        version: 0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7))
+        specifier: 0.7.5
+        version: 0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7))
       '@ogcio/theme-govie':
         specifier: 1.21.7
         version: 1.21.7
@@ -166,7 +161,7 @@ importers:
         version: 4.1.9(@vitest/browser@4.1.9)(vitest@4.1.9)
       gmail-getter:
         specifier: 2.4.0
-        version: 2.4.0
+        version: 2.4.0(supports-color@10.2.2)
       jsdom:
         specifier: 29.1.1
         version: 29.1.1
@@ -187,10 +182,10 @@ importers:
         version: file:packages/authorisation(next@14.2.35(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@ogcio/building-blocks-sdk':
         specifier: 0.2.98
-        version: 0.2.98(@logto/node@2.5.5)(typescript@6.0.3)(unleash-client@6.11.0)
+        version: 0.2.98(@logto/node@2.5.5)(typescript@6.0.3)(unleash-client@6.11.0(supports-color@10.2.2))
       '@ogcio/consent':
         specifier: 0.1.7
-        version: 0.1.7(@logto/node@2.5.5)(@types/react@18.3.28)(i18next@26.0.3(typescript@6.0.3))(next@14.2.35(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.62.2)(typescript@6.0.3)(unleash-client@6.11.0)
+        version: 0.1.7(@logto/node@2.5.5)(@types/react@18.3.28)(i18next@26.0.3(typescript@6.0.3))(next@14.2.35(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.62.2)(typescript@6.0.3)(unleash-client@6.11.0(supports-color@10.2.2))
       '@ogcio/design-system-react':
         specifier: 1.29.0
         version: 1.29.0(@types/react@18.3.28)(i18next@26.0.3(typescript@6.0.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.62.2)(typescript@6.0.3)
@@ -202,7 +197,7 @@ importers:
         version: 14.2.35(next@14.2.35(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))
       '@ogcio/o11y-sdk-node':
         specifier: 0.12.1
-        version: 0.12.1(@sentry/nextjs@10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1)))(@sentry/node@10.59.0(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0)))(@sentry/opentelemetry@10.59.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))
+        version: 0.12.1(@sentry/nextjs@10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1)))(@sentry/node@10.59.0(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0)))(@sentry/opentelemetry@10.59.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))
       '@ogcio/o11y-sdk-react':
         specifier: 0.11.3
         version: 0.11.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zone.js@0.16.1)
@@ -226,7 +221,7 @@ importers:
         version: 1.2.17(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@sentry/nextjs':
         specifier: 10.59.0
-        version: 10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1))
+        version: 10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1))
       '@sentry/node-native':
         specifier: 10.59.0
         version: 10.59.0(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
@@ -265,7 +260,7 @@ importers:
         version: 0.35.2
       unleash-client:
         specifier: 6.11.0
-        version: 6.11.0
+        version: 6.11.0(supports-color@10.2.2)
       use-intl:
         specifier: 3.26.5
         version: 3.26.5(react@18.3.1)
@@ -281,7 +276,7 @@ importers:
         version: 1.61.0
       '@testcontainers/redis':
         specifier: 12.0.3
-        version: 12.0.3
+        version: 12.0.3(supports-color@10.2.2)
       '@testing-library/jest-dom':
         specifier: 6.9.1
         version: 6.9.1
@@ -350,7 +345,7 @@ importers:
         version: 0.0.1(@opentelemetry/api@1.9.1)
       '@ogcio/o11y-sdk-node':
         specifier: 0.12.1
-        version: 0.12.1(@sentry/nextjs@10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1)))(@sentry/node@10.59.0(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0)))(@sentry/opentelemetry@10.59.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))
+        version: 0.12.1(@sentry/nextjs@10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1)))(@sentry/node@10.59.0(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0)))(@sentry/opentelemetry@10.59.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))
       '@ogcio/o11y-sdk-react':
         specifier: 0.11.3
         version: 0.11.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(zone.js@0.16.1)
@@ -374,7 +369,7 @@ importers:
         version: 1.2.17(@types/react-dom@18.3.7(@types/react@18.3.28))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@sentry/nextjs':
         specifier: 10.59.0
-        version: 10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1))
+        version: 10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1))
       '@sentry/node-native':
         specifier: 10.59.0
         version: 10.59.0(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
@@ -485,8 +480,8 @@ importers:
         specifier: 0.11.3
         version: 0.11.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(zone.js@0.16.1)
       '@ogcio/sag-client':
-        specifier: 0.7.4
-        version: 0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7))
+        specifier: 0.7.5
+        version: 0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7))
       '@ogcio/theme-govie':
         specifier: 1.21.7
         version: 1.21.7
@@ -592,7 +587,7 @@ importers:
         version: 9.1.3
       '@fastify/swagger':
         specifier: 9.7.0
-        version: 9.7.0
+        version: 9.7.0(supports-color@10.2.2)
       '@fastify/swagger-ui':
         specifier: 6.0.0
         version: 6.0.0
@@ -662,6 +657,12 @@ importers:
       postgrator:
         specifier: 8.0.0
         version: 8.0.0
+      protobufjs:
+        specifier: 8.6.3
+        version: 8.6.3
+      snappyjs:
+        specifier: 0.7.0
+        version: 0.7.0
       typebox:
         specifier: 1.3.0
         version: 1.3.0
@@ -689,7 +690,7 @@ importers:
         version: 8.20.0
       '@usebruno/cli':
         specifier: 3.4.2
-        version: 3.4.2
+        version: 3.4.2(supports-color@10.2.2)
       '@vitest/coverage-v8':
         specifier: 4.1.9
         version: 4.1.9(@vitest/browser@4.1.9)(vitest@4.1.9)
@@ -713,13 +714,13 @@ importers:
         version: 2.7.1
       '@ogcio/announcements':
         specifier: 0.3.0
-        version: 0.3.0(@ogcio/design-system-react@1.34.0(patch_hash=498c60de4a3d6cc4f745270cb7d4cfb064798e4a1840b1d1783d45c42383b5b9)(@types/react@19.2.17)(i18next@26.0.3(typescript@6.0.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@4.62.2)(typescript@6.0.3))(@ogcio/sag-client@0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))
+        version: 0.3.0(@ogcio/design-system-react@1.41.0(patch_hash=dc5776bd451f790f512bddbe92326483835233afd95e5b77de3b29bbdb46b3ec)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3))(@ogcio/sag-client@0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))
       '@ogcio/consent':
         specifier: 1.5.0
-        version: 1.5.0(@ogcio/design-system-react@1.34.0(patch_hash=498c60de4a3d6cc4f745270cb7d4cfb064798e4a1840b1d1783d45c42383b5b9)(@types/react@19.2.17)(i18next@26.0.3(typescript@6.0.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@4.62.2)(typescript@6.0.3))(@ogcio/sag-client@0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))
+        version: 1.5.0(@ogcio/design-system-react@1.41.0(patch_hash=dc5776bd451f790f512bddbe92326483835233afd95e5b77de3b29bbdb46b3ec)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3))(@ogcio/sag-client@0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))
       '@ogcio/design-system-react':
-        specifier: 1.34.0
-        version: 1.34.0(patch_hash=498c60de4a3d6cc4f745270cb7d4cfb064798e4a1840b1d1783d45c42383b5b9)(@types/react@19.2.17)(i18next@26.0.3(typescript@6.0.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@4.62.2)(typescript@6.0.3)
+        specifier: 1.41.0
+        version: 1.41.0(patch_hash=dc5776bd451f790f512bddbe92326483835233afd95e5b77de3b29bbdb46b3ec)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3)
       '@ogcio/nextjs-analytics':
         specifier: 1.0.1
         version: 1.0.1(@logto/node@3.1.10)
@@ -727,8 +728,8 @@ importers:
         specifier: 0.11.3
         version: 0.11.3(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(zone.js@0.16.1)
       '@ogcio/sag-client':
-        specifier: 0.7.4
-        version: 0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7))
+        specifier: 0.7.5
+        version: 0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7))
       '@ogcio/theme-govie':
         specifier: 1.21.7
         version: 1.21.7
@@ -810,7 +811,7 @@ importers:
         version: 1.34.0(patch_hash=498c60de4a3d6cc4f745270cb7d4cfb064798e4a1840b1d1783d45c42383b5b9)(@types/react@19.2.17)(i18next@26.0.3(typescript@6.0.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@4.62.2)(typescript@6.0.3)
       '@ogcio/nextjs-analytics':
         specifier: 1.0.1
-        version: 1.0.1(@logto/node@2.5.5)
+        version: 1.0.1(@logto/node@3.1.10)
       '@ogcio/nextjs-o11y':
         specifier: 0.0.1
         version: 0.0.1(@opentelemetry/api@1.9.1)
@@ -906,8 +907,8 @@ importers:
   packages/citizen-shared:
     dependencies:
       '@ogcio/sag-client':
-        specifier: 0.7.4
-        version: 0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7))
+        specifier: 0.7.5
+        version: 0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7))
       '@t3-oss/env-nextjs':
         specifier: 0.13.11
         version: 0.13.11(typescript@6.0.3)(zod@4.4.3)
@@ -2480,8 +2481,8 @@ packages:
       react: '*'
       react-dom: '*'
 
-  '@ogcio/design-system-react@1.40.0':
-    resolution: {integrity: sha512-oeF1hExmr+nwsKnxQma5RDwQsSO4/xtOYt8FhrBD72JuM9aRuJdfvS4KT2iwfTAfBsvJjz0sGfLVgTO3HVzBvQ==}
+  '@ogcio/design-system-react@1.41.0':
+    resolution: {integrity: sha512-W5B0JJMBHdgJpHXyy3bRCyP7L6H8BjUyS8v5R1KkzpeHCTVEjSJCBuSomr6Xf2eaFseNZ4vkdXPRvc4pkmG5oQ==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
@@ -2556,8 +2557,8 @@ packages:
       '@aws-sdk/client-secrets-manager':
         optional: true
 
-  '@ogcio/sag-client@0.7.4':
-    resolution: {integrity: sha512-VVs+Te5QtSmkKUhpQs1IC+NOGDq8pYulhA1+BlOD9SvwFgx7g/goCFUxjgRr5/v2ciuCyK2HaeyZng3J7d0aEw==}
+  '@ogcio/sag-client@0.7.5':
+    resolution: {integrity: sha512-3N3OI1nzuVdab6CJzcDwm4ZveHCYAepyAnRVEUJKrGx1i2HYoVktuG4WmtJWaaHxEK/eHBACIRjj0CPKDR59Ng==}
     engines: {node: '>=22.0.0'}
     peerDependencies:
       react: '>=19'
@@ -5636,6 +5637,7 @@ packages:
   git-raw-commits@5.0.1:
     resolution: {integrity: sha512-Y+csSm2GD/PCSh6Isd/WiMjNAydu0VBiG9J7EdQsNA5P9uXvLayqjmTsNlK5Gs9IhblFZqOU0yid5Il5JPoLiQ==}
     engines: {node: '>=18'}
+    deprecated: Deprecated and no longer maintained. Use @conventional-changelog/git-client instead.
     hasBin: true
 
   glob-parent@5.1.2:
@@ -7480,6 +7482,9 @@ packages:
     resolution: {integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==}
     engines: {node: '>= 6.0.0', npm: '>= 3.0.0'}
 
+  snappyjs@0.7.0:
+    resolution: {integrity: sha512-u5iEEXkMe2EInQio6Wv9LWHOQYRDbD2O9hzS27GpT/lwfIQhTCnHCTqedqHIHe9ZcvQo+9au6vngQayipz1NYw==}
+
   socks-proxy-agent@8.0.5:
     resolution: {integrity: sha512-HehCEsotFqbPW9sJ8WVYB6UbmIMv7kUUORIF2Nncq4VQvBfNBLibW9YZR5dlYCSUhwcD628pRllm7n+E+YTzJw==}
     engines: {node: '>= 14'}
@@ -8359,7 +8364,7 @@ snapshots:
   '@apm-js-collab/tracing-hooks@0.10.0':
     dependencies:
       '@apm-js-collab/code-transformer': 0.15.0
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3(supports-color@5.5.0)
       module-details-from-path: 1.0.4
     transitivePeerDependencies:
       - supports-color
@@ -8684,7 +8689,7 @@ snapshots:
       '@babel/types': 7.29.7
       '@jridgewell/remapping': 2.3.5
       convert-source-map: 2.0.0
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3(supports-color@5.5.0)
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -8898,7 +8903,7 @@ snapshots:
       '@babel/parser': 7.29.7
       '@babel/template': 7.29.7
       '@babel/types': 7.29.7
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -9299,10 +9304,10 @@ snapshots:
       rfdc: 1.4.1
       yaml: 2.9.0
 
-  '@fastify/swagger@9.7.0':
+  '@fastify/swagger@9.7.0(supports-color@10.2.2)':
     dependencies:
       fastify-plugin: 5.1.0
-      json-schema-resolver: 3.0.0
+      json-schema-resolver: 3.0.0(supports-color@10.2.2)
       openapi-types: 12.1.3
       rfdc: 1.4.1
       yaml: 2.9.0
@@ -9750,6 +9755,12 @@ snapshots:
 
   '@kwsites/file-exists@1.1.1':
     dependencies:
+      debug: 4.4.3(supports-color@5.5.0)
+    transitivePeerDependencies:
+      - supports-color
+
+  '@kwsites/file-exists@1.1.1(supports-color@10.2.2)':
+    dependencies:
       debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
@@ -9892,7 +9903,7 @@ snapshots:
     dependencies:
       agent-base: 7.1.4
       http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6(supports-color@10.2.2)
+      https-proxy-agent: 7.0.6
       lru-cache: 11.5.1
       socks-proxy-agent: 8.0.5
     transitivePeerDependencies:
@@ -9918,7 +9929,7 @@ snapshots:
     optionalDependencies:
       '@logto/node': 3.1.10
 
-  '@ogcio/announcements@0.3.0(@ogcio/design-system-react@1.34.0(patch_hash=498c60de4a3d6cc4f745270cb7d4cfb064798e4a1840b1d1783d45c42383b5b9)(@types/react@19.2.17)(i18next@26.0.3(typescript@6.0.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@4.62.2)(typescript@6.0.3))(@ogcio/sag-client@0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))':
+  '@ogcio/announcements@0.3.0(@ogcio/design-system-react@1.41.0(patch_hash=dc5776bd451f790f512bddbe92326483835233afd95e5b77de3b29bbdb46b3ec)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3))(@ogcio/sag-client@0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))':
     dependencies:
       react-dom: 19.2.7(react@19.2.7)
       react-markdown: 10.1.0(@types/react@19.2.17)(react@19.2.7)
@@ -9926,25 +9937,8 @@ snapshots:
       rehype-sanitize: 6.0.0
       remark-gfm: 4.0.1
     optionalDependencies:
-      '@ogcio/design-system-react': 1.34.0(patch_hash=498c60de4a3d6cc4f745270cb7d4cfb064798e4a1840b1d1783d45c42383b5b9)(@types/react@19.2.17)(i18next@26.0.3(typescript@6.0.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@4.62.2)(typescript@6.0.3)
-      '@ogcio/sag-client': 0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7))
-      '@ogcio/theme-govie': 1.21.7
-      react: 19.2.7
-      swr: 2.4.1(react@19.2.7)
-    transitivePeerDependencies:
-      - '@types/react'
-      - supports-color
-
-  '@ogcio/announcements@0.3.0(@ogcio/design-system-react@1.40.0(patch_hash=aaebda5130d0ed562f5e6de904741ebc45c2cb3bc7a2e3c32f268e8736c54dbc)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3))(@ogcio/sag-client@0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))':
-    dependencies:
-      react-dom: 19.2.7(react@19.2.7)
-      react-markdown: 10.1.0(@types/react@19.2.17)(react@19.2.7)
-      rehype-raw: 7.0.0
-      rehype-sanitize: 6.0.0
-      remark-gfm: 4.0.1
-    optionalDependencies:
-      '@ogcio/design-system-react': 1.40.0(patch_hash=aaebda5130d0ed562f5e6de904741ebc45c2cb3bc7a2e3c32f268e8736c54dbc)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3)
-      '@ogcio/sag-client': 0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7))
+      '@ogcio/design-system-react': 1.41.0(patch_hash=dc5776bd451f790f512bddbe92326483835233afd95e5b77de3b29bbdb46b3ec)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3)
+      '@ogcio/sag-client': 0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7))
       '@ogcio/theme-govie': 1.21.7
       react: 19.2.7
       swr: 2.4.1(react@19.2.7)
@@ -9973,6 +9967,23 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
+  '@ogcio/building-blocks-sdk@0.2.98(@logto/node@2.5.5)(typescript@6.0.3)(unleash-client@6.11.0(supports-color@10.2.2))':
+    dependencies:
+      '@ogcio/analytics-sdk': 0.2.14(@logto/node@2.5.5)
+      commander: 15.0.0
+      http-errors: 2.0.1
+      openapi-fetch: 0.17.0
+      openapi-typescript: 7.13.0(typescript@6.0.3)
+      openapi-typescript-helpers: 0.1.0
+      safe-stable-stringify: 2.5.0
+      typebox: 1.2.11
+      yaml: 2.9.0
+    optionalDependencies:
+      '@logto/node': 2.5.5
+      unleash-client: 6.11.0(supports-color@10.2.2)
+    transitivePeerDependencies:
+      - typescript
+
   '@ogcio/building-blocks-sdk@0.2.98(@logto/node@2.5.5)(typescript@6.0.3)(unleash-client@6.11.0)':
     dependencies:
       '@ogcio/analytics-sdk': 0.2.14(@logto/node@2.5.5)
@@ -9990,9 +10001,9 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@ogcio/consent@0.1.7(@logto/node@2.5.5)(@types/react@18.3.28)(i18next@26.0.3(typescript@6.0.3))(next@14.2.35(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.62.2)(typescript@6.0.3)(unleash-client@6.11.0)':
+  '@ogcio/consent@0.1.7(@logto/node@2.5.5)(@types/react@18.3.28)(i18next@26.0.3(typescript@6.0.3))(next@14.2.35(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.62.2)(typescript@6.0.3)(unleash-client@6.11.0(supports-color@10.2.2))':
     dependencies:
-      '@ogcio/building-blocks-sdk': 0.2.98(@logto/node@2.5.5)(typescript@6.0.3)(unleash-client@6.11.0)
+      '@ogcio/building-blocks-sdk': 0.2.98(@logto/node@2.5.5)(typescript@6.0.3)(unleash-client@6.11.0(supports-color@10.2.2))
       '@ogcio/design-system-react': 1.29.0(@types/react@18.3.28)(i18next@26.0.3(typescript@6.0.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(rollup@4.62.2)(typescript@6.0.3)
       '@ogcio/theme-govie': 1.21.2
       next: 14.2.35(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -10012,7 +10023,7 @@ snapshots:
       - typescript
       - unleash-client
 
-  '@ogcio/consent@1.5.0(@ogcio/design-system-react@1.34.0(patch_hash=498c60de4a3d6cc4f745270cb7d4cfb064798e4a1840b1d1783d45c42383b5b9)(@types/react@19.2.17)(i18next@26.0.3(typescript@6.0.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@4.62.2)(typescript@6.0.3))(@ogcio/sag-client@0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))':
+  '@ogcio/consent@1.5.0(@ogcio/design-system-react@1.41.0(patch_hash=dc5776bd451f790f512bddbe92326483835233afd95e5b77de3b29bbdb46b3ec)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3))(@ogcio/sag-client@0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))':
     dependencies:
       react-dom: 19.2.7(react@19.2.7)
       react-markdown: 10.1.0(@types/react@19.2.17)(react@19.2.7)
@@ -10020,25 +10031,8 @@ snapshots:
       rehype-sanitize: 6.0.0
       remark-gfm: 4.0.1
     optionalDependencies:
-      '@ogcio/design-system-react': 1.34.0(patch_hash=498c60de4a3d6cc4f745270cb7d4cfb064798e4a1840b1d1783d45c42383b5b9)(@types/react@19.2.17)(i18next@26.0.3(typescript@6.0.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rollup@4.62.2)(typescript@6.0.3)
-      '@ogcio/sag-client': 0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7))
-      '@ogcio/theme-govie': 1.21.7
-      react: 19.2.7
-      swr: 2.4.1(react@19.2.7)
-    transitivePeerDependencies:
-      - '@types/react'
-      - supports-color
-
-  '@ogcio/consent@1.5.0(@ogcio/design-system-react@1.40.0(patch_hash=aaebda5130d0ed562f5e6de904741ebc45c2cb3bc7a2e3c32f268e8736c54dbc)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3))(@ogcio/sag-client@0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7)))(@ogcio/theme-govie@1.21.7)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(swr@2.4.1(react@19.2.7))':
-    dependencies:
-      react-dom: 19.2.7(react@19.2.7)
-      react-markdown: 10.1.0(@types/react@19.2.17)(react@19.2.7)
-      rehype-raw: 7.0.0
-      rehype-sanitize: 6.0.0
-      remark-gfm: 4.0.1
-    optionalDependencies:
-      '@ogcio/design-system-react': 1.40.0(patch_hash=aaebda5130d0ed562f5e6de904741ebc45c2cb3bc7a2e3c32f268e8736c54dbc)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3)
-      '@ogcio/sag-client': 0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7))
+      '@ogcio/design-system-react': 1.41.0(patch_hash=dc5776bd451f790f512bddbe92326483835233afd95e5b77de3b29bbdb46b3ec)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3)
+      '@ogcio/sag-client': 0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7))
       '@ogcio/theme-govie': 1.21.7
       react: 19.2.7
       swr: 2.4.1(react@19.2.7)
@@ -10081,7 +10075,7 @@ snapshots:
       - rollup
       - typescript
 
-  '@ogcio/design-system-react@1.40.0(patch_hash=aaebda5130d0ed562f5e6de904741ebc45c2cb3bc7a2e3c32f268e8736c54dbc)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3)':
+  '@ogcio/design-system-react@1.41.0(patch_hash=dc5776bd451f790f512bddbe92326483835233afd95e5b77de3b29bbdb46b3ec)(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(tailwindcss@4.3.1)(typescript@6.0.3)':
     dependencies:
       '@fontsource/lato': 5.2.7
       '@popperjs/core': 2.11.8
@@ -10160,7 +10154,7 @@ snapshots:
     dependencies:
       '@opentelemetry/api': 1.9.1
 
-  '@ogcio/o11y-sdk-node@0.12.1(@sentry/nextjs@10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1)))(@sentry/node@10.59.0(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0)))(@sentry/opentelemetry@10.59.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))':
+  '@ogcio/o11y-sdk-node@0.12.1(@sentry/nextjs@10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1)))(@sentry/node@10.59.0(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0)))(@sentry/opentelemetry@10.59.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1)))':
     dependencies:
       '@grpc/grpc-js': 1.14.4
       '@opentelemetry/api': 1.9.1
@@ -10182,7 +10176,7 @@ snapshots:
       '@opentelemetry/sdk-node': 0.219.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-base': 2.8.0(@opentelemetry/api@1.9.1)
     optionalDependencies:
-      '@sentry/nextjs': 10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1))
+      '@sentry/nextjs': 10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1))
       '@sentry/node': 10.59.0(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))
       '@sentry/opentelemetry': 10.59.0(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))
     transitivePeerDependencies:
@@ -10256,7 +10250,7 @@ snapshots:
     optionalDependencies:
       '@aws-sdk/client-secrets-manager': 3.1073.0
 
-  '@ogcio/sag-client@0.7.4(react@19.2.7)(swr@2.4.1(react@19.2.7))':
+  '@ogcio/sag-client@0.7.5(react@19.2.7)(swr@2.4.1(react@19.2.7))':
     optionalDependencies:
       react: 19.2.7
       swr: 2.4.1(react@19.2.7)
@@ -11659,7 +11653,7 @@ snapshots:
     dependencies:
       '@sentry/core': 10.59.0
 
-  '@sentry/nextjs@10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1))':
+  '@sentry/nextjs@10.59.0(@opentelemetry/core@2.8.0(@opentelemetry/api@1.9.1))(@opentelemetry/exporter-trace-otlp-http@0.219.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.8.0(@opentelemetry/api@1.9.1))(next@14.2.35(@opentelemetry/api@1.9.1)(@playwright/test@1.61.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)(vite@8.0.16(@types/node@26.0.0)(esbuild@0.28.1)(jiti@2.6.1)(terser@5.48.0)(tsx@4.22.4)(yaml@2.9.0))(webpack@5.105.4(esbuild@0.28.1))':
     dependencies:
       '@opentelemetry/api': 1.9.1
       '@rollup/plugin-commonjs': 28.0.1(rollup@4.62.2)
@@ -11986,9 +11980,9 @@ snapshots:
       - react-native-b4a
       - supports-color
 
-  '@testcontainers/redis@12.0.3':
+  '@testcontainers/redis@12.0.3(supports-color@10.2.2)':
     dependencies:
-      testcontainers: 12.0.3
+      testcontainers: 12.0.3(supports-color@10.2.2)
     transitivePeerDependencies:
       - bare-abort-controller
       - bare-buffer
@@ -12211,18 +12205,18 @@ snapshots:
       react: 19.2.7
       unleash-proxy-client: 3.7.8
 
-  '@usebruno/cli@3.4.2':
+  '@usebruno/cli@3.4.2(supports-color@10.2.2)':
     dependencies:
       '@aws-sdk/credential-providers': 3.1073.0
       '@usebruno/common': 0.22.0
       '@usebruno/converters': 0.20.0
       '@usebruno/filestore': 0.9.0
-      '@usebruno/js': 0.48.0(debug@4.4.3)
+      '@usebruno/js': 0.48.0(debug@4.4.3(supports-color@10.2.2))
       '@usebruno/lang': 0.36.0
-      '@usebruno/requests': 0.17.0
+      '@usebruno/requests': 0.17.0(supports-color@10.2.2)
       aws4-axios: 3.4.0(axios@1.13.6)
-      axios: 1.13.6(debug@4.4.3)
-      axios-ntlm: 1.4.6(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3(supports-color@10.2.2))
+      axios-ntlm: 1.4.6(debug@4.4.3(supports-color@10.2.2))
       chai: 4.5.0
       chalk: 3.0.0
       cli-table3: 0.6.5
@@ -12232,7 +12226,7 @@ snapshots:
       form-data: 4.0.4
       fs-extra: 10.1.0
       http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6(supports-color@10.2.2)
+      https-proxy-agent: 7.0.6
       iconv-lite: 0.6.3
       js-yaml: 4.2.0
       lodash: 4.18.1
@@ -12269,14 +12263,14 @@ snapshots:
       lodash: 4.18.1
       yaml: 2.9.0
 
-  '@usebruno/js@0.48.0(debug@4.4.3)':
+  '@usebruno/js@0.48.0(debug@4.4.3(supports-color@10.2.2))':
     dependencies:
       '@usebruno/common': 0.22.0
       '@usebruno/query': 0.2.2
       ajv: 8.20.0
       ajv-formats: 2.1.1(ajv@8.20.0)
       atob: 2.1.2
-      axios: 1.13.6(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3(supports-color@10.2.2))
       btoa: 1.2.1
       chai: 4.5.0
       chai-string: 1.6.0(chai@4.5.0)
@@ -12309,18 +12303,18 @@ snapshots:
 
   '@usebruno/query@0.2.2': {}
 
-  '@usebruno/requests@0.17.0':
+  '@usebruno/requests@0.17.0(supports-color@10.2.2)':
     dependencies:
       '@faker-js/faker': 9.9.0
       '@grpc/grpc-js': 1.14.4
       '@grpc/proto-loader': 0.7.15
       '@types/qs': 6.15.1
-      axios: 1.13.6(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3(supports-color@10.2.2))
       debug: 4.4.3(supports-color@10.2.2)
       google-protobuf: 4.0.2
       grpc-js-reflection-client: 1.4.0(@grpc/grpc-js@1.14.4)
       http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6(supports-color@10.2.2)
+      https-proxy-agent: 7.0.6
       is-ip: 5.0.1
       pac-resolver: 7.0.1
       quickjs-emscripten: 0.32.0
@@ -12532,6 +12526,12 @@ snapshots:
 
   agent-base@6.0.2:
     dependencies:
+      debug: 4.4.3(supports-color@5.5.0)
+    transitivePeerDependencies:
+      - supports-color
+
+  agent-base@6.0.2(supports-color@10.2.2):
+    dependencies:
       debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
@@ -12684,7 +12684,7 @@ snapshots:
     dependencies:
       '@aws-sdk/client-sts': 3.1073.0
       aws4: 1.13.2
-      axios: 1.13.6(debug@4.4.3)
+      axios: 1.13.6(debug@4.4.3(supports-color@10.2.2))
 
   aws4@1.13.2: {}
 
@@ -12695,9 +12695,9 @@ snapshots:
       axe-core: 4.11.4
       mustache: 4.2.0
 
-  axios-ntlm@1.4.6(debug@4.4.3):
+  axios-ntlm@1.4.6(debug@4.4.3(supports-color@10.2.2)):
     dependencies:
-      axios: 1.18.0(debug@4.4.3)
+      axios: 1.18.0(debug@4.4.3(supports-color@10.2.2))
       des.js: 1.1.0
       dev-null: 0.1.1
       js-md4: 0.3.2
@@ -12705,19 +12705,29 @@ snapshots:
       - debug
       - supports-color
 
-  axios@1.13.6(debug@4.4.3):
+  axios@1.13.6(debug@4.4.3(supports-color@10.2.2)):
     dependencies:
-      follow-redirects: 1.16.0(debug@4.4.3)
+      follow-redirects: 1.16.0(debug@4.4.3(supports-color@10.2.2))
       form-data: 4.0.6
       proxy-from-env: 1.1.0
     transitivePeerDependencies:
       - debug
 
-  axios@1.18.0(debug@4.4.3):
+  axios@1.18.0(debug@4.4.3(supports-color@10.2.2)):
     dependencies:
-      follow-redirects: 1.16.0(debug@4.4.3)
+      follow-redirects: 1.16.0(debug@4.4.3(supports-color@10.2.2))
       form-data: 4.0.6
       https-proxy-agent: 5.0.1
+      proxy-from-env: 2.1.0
+    transitivePeerDependencies:
+      - debug
+      - supports-color
+
+  axios@1.18.0(supports-color@10.2.2):
+    dependencies:
+      follow-redirects: 1.16.0(debug@4.4.3(supports-color@10.2.2))
+      form-data: 4.0.6
+      https-proxy-agent: 5.0.1(supports-color@10.2.2)
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
       - debug
@@ -13238,6 +13248,15 @@ snapshots:
 
   docker-modem@5.0.7:
     dependencies:
+      debug: 4.4.3(supports-color@5.5.0)
+      readable-stream: 3.6.2
+      split-ca: 1.0.1
+      ssh2: 1.17.0
+    transitivePeerDependencies:
+      - supports-color
+
+  docker-modem@5.0.7(supports-color@10.2.2):
+    dependencies:
       debug: 4.4.3(supports-color@10.2.2)
       readable-stream: 3.6.2
       split-ca: 1.0.1
@@ -13251,6 +13270,17 @@ snapshots:
       '@grpc/grpc-js': 1.14.4
       '@grpc/proto-loader': 0.7.15
       docker-modem: 5.0.7
+      protobufjs: 8.6.3
+      tar-fs: 2.1.4
+    transitivePeerDependencies:
+      - supports-color
+
+  dockerode@5.0.0(supports-color@10.2.2):
+    dependencies:
+      '@balena/dockerignore': 1.0.2
+      '@grpc/grpc-js': 1.14.4
+      '@grpc/proto-loader': 0.7.15
+      docker-modem: 5.0.7(supports-color@10.2.2)
       protobufjs: 8.6.3
       tar-fs: 2.1.4
     transitivePeerDependencies:
@@ -13583,7 +13613,7 @@ snapshots:
     dependencies:
       tabbable: 6.5.0
 
-  follow-redirects@1.16.0(debug@4.4.3):
+  follow-redirects@1.16.0(debug@4.4.3(supports-color@10.2.2)):
     optionalDependencies:
       debug: 4.4.3(supports-color@10.2.2)
 
@@ -13651,7 +13681,7 @@ snapshots:
   gaxios@6.7.1:
     dependencies:
       extend: 3.0.2
-      https-proxy-agent: 7.0.6(supports-color@10.2.2)
+      https-proxy-agent: 7.0.6
       is-stream: 2.0.1
       node-fetch: 2.7.0
       uuid: 9.0.1
@@ -13662,7 +13692,7 @@ snapshots:
   gaxios@7.1.3:
     dependencies:
       extend: 3.0.2
-      https-proxy-agent: 7.0.6(supports-color@10.2.2)
+      https-proxy-agent: 7.0.6
       node-fetch: 3.3.2
       rimraf: 5.0.10
     transitivePeerDependencies:
@@ -13777,7 +13807,16 @@ snapshots:
   gmail-getter@2.4.0:
     dependencies:
       '@google-cloud/local-auth': 3.0.1
-      axios: 1.18.0(debug@4.4.3)
+      axios: 1.18.0(debug@4.4.3(supports-color@10.2.2))
+    transitivePeerDependencies:
+      - debug
+      - encoding
+      - supports-color
+
+  gmail-getter@2.4.0(supports-color@10.2.2):
+    dependencies:
+      '@google-cloud/local-auth': 3.0.1
+      axios: 1.18.0(supports-color@10.2.2)
     transitivePeerDependencies:
       - debug
       - encoding
@@ -13987,6 +14026,13 @@ snapshots:
   http-proxy-agent@7.0.2:
     dependencies:
       agent-base: 7.1.4
+      debug: 4.4.3(supports-color@5.5.0)
+    transitivePeerDependencies:
+      - supports-color
+
+  http-proxy-agent@7.0.2(supports-color@10.2.2):
+    dependencies:
+      agent-base: 7.1.4
       debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
@@ -14000,7 +14046,21 @@ snapshots:
   https-proxy-agent@5.0.1:
     dependencies:
       agent-base: 6.0.2
+      debug: 4.4.3(supports-color@5.5.0)
+    transitivePeerDependencies:
+      - supports-color
+
+  https-proxy-agent@5.0.1(supports-color@10.2.2):
+    dependencies:
+      agent-base: 6.0.2(supports-color@10.2.2)
       debug: 4.4.3(supports-color@10.2.2)
+    transitivePeerDependencies:
+      - supports-color
+
+  https-proxy-agent@7.0.6:
+    dependencies:
+      agent-base: 7.1.4
+      debug: 4.4.3(supports-color@5.5.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -14289,7 +14349,7 @@ snapshots:
     dependencies:
       dequal: 2.0.3
 
-  json-schema-resolver@3.0.0:
+  json-schema-resolver@3.0.0(supports-color@10.2.2):
     dependencies:
       debug: 4.4.3(supports-color@10.2.2)
       fast-uri: 3.1.2
@@ -14855,7 +14915,7 @@ snapshots:
   micromark@4.0.2:
     dependencies:
       '@types/debug': 4.1.13
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3(supports-color@5.5.0)
       decode-named-character-reference: 1.3.0
       devlop: 1.1.0
       micromark-core-commonmark: 2.0.3
@@ -15425,6 +15485,13 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  properties-reader@3.0.1(supports-color@10.2.2):
+    dependencies:
+      '@kwsites/file-exists': 1.1.1(supports-color@10.2.2)
+      mkdirp: 3.0.1
+    transitivePeerDependencies:
+      - supports-color
+
   property-expr@2.0.6: {}
 
   property-information@7.2.0: {}
@@ -15712,7 +15779,7 @@ snapshots:
 
   require-in-the-middle@8.0.1:
     dependencies:
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3(supports-color@5.5.0)
       module-details-from-path: 1.0.4
     transitivePeerDependencies:
       - supports-color
@@ -15992,10 +16059,12 @@ snapshots:
 
   smart-buffer@4.2.0: {}
 
+  snappyjs@0.7.0: {}
+
   socks-proxy-agent@8.0.5:
     dependencies:
       agent-base: 7.1.4
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3(supports-color@5.5.0)
       socks: 2.8.9
     transitivePeerDependencies:
       - supports-color
@@ -16259,12 +16328,35 @@ snapshots:
       archiver: 7.0.1
       async-lock: 1.4.1
       byline: 5.0.0
-      debug: 4.4.3(supports-color@10.2.2)
+      debug: 4.4.3(supports-color@5.5.0)
       docker-compose: 1.4.2
       dockerode: 5.0.0
       get-port: 7.2.0
       proper-lockfile: 4.1.2
       properties-reader: 3.0.1
+      ssh-remote-port-forward: 1.0.4
+      tar-fs: 3.1.2
+      tmp: 0.2.7
+      undici: 8.5.0
+    transitivePeerDependencies:
+      - bare-abort-controller
+      - bare-buffer
+      - react-native-b4a
+      - supports-color
+
+  testcontainers@12.0.3(supports-color@10.2.2):
+    dependencies:
+      '@balena/dockerignore': 1.0.2
+      '@types/dockerode': 4.0.1
+      archiver: 7.0.1
+      async-lock: 1.4.1
+      byline: 5.0.0
+      debug: 4.4.3(supports-color@10.2.2)
+      docker-compose: 1.4.2
+      dockerode: 5.0.0(supports-color@10.2.2)
+      get-port: 7.2.0
+      proper-lockfile: 4.1.2
+      properties-reader: 3.0.1(supports-color@10.2.2)
       ssh-remote-port-forward: 1.0.4
       tar-fs: 3.1.2
       tmp: 0.2.7
@@ -16446,7 +16538,22 @@ snapshots:
   unleash-client@6.11.0:
     dependencies:
       http-proxy-agent: 7.0.2
-      https-proxy-agent: 7.0.6(supports-color@10.2.2)
+      https-proxy-agent: 7.0.6
+      ip-address: 10.2.0
+      launchdarkly-eventsource: 2.2.0
+      lru-cache: 11.5.1
+      make-fetch-happen: 15.0.6
+      murmurhash3js: 3.0.1
+      proxy-from-env: 1.1.0
+      re2js: 1.3.3
+      semver: 7.8.5
+    transitivePeerDependencies:
+      - supports-color
+
+  unleash-client@6.11.0(supports-color@10.2.2):
+    dependencies:
+      http-proxy-agent: 7.0.2(supports-color@10.2.2)
+      https-proxy-agent: 7.0.6
       ip-address: 10.2.0
       launchdarkly-eventsource: 2.2.0
       lru-cache: 11.5.1

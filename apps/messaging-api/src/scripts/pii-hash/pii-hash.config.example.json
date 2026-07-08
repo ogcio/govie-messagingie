@@ -1,0 +1,9 @@
+{
+  "region": "eu-west-1",
+  "endpoint": "",
+  "applications": {
+    "profile-api": { "secret-name": "REPLACE_WITH_AWS_SECRET_NAME" },
+    "messaging-api": { "secret-value": "REPLACE_WITH_BASE64_SECRET_VALUE" },
+    "secure-api-gateway": { "secret-name": "REPLACE_WITH_AWS_SECRET_NAME" }
+  }
+}

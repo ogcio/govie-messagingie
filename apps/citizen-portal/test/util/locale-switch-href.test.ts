@@ -4,12 +4,7 @@ import { buildLocaleSwitchHref } from "@/util/locale-switch-href"
 describe("buildLocaleSwitchHref", () => {
   it("swaps locale in the path", () => {
     expect(
-      buildLocaleSwitchHref(
-        "/en/wrong-login-method-error",
-        "en",
-        "ga",
-        null,
-      ),
+      buildLocaleSwitchHref("/en/wrong-login-method-error", "en", "ga", null),
     ).toBe("/ga/wrong-login-method-error")
   })
 

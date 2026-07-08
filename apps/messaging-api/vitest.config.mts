@@ -19,6 +19,7 @@ export default defineConfig({
     },
     include: [
       "./src/@(test?(s)|__test?(s)__)/**/*.test.@(js|cjs|mjs|tap|cts|jsx|mts|ts|tsx)",
+      "./src/scripts/**/*.test.@(js|cjs|mjs|tap|cts|jsx|mts|ts|tsx)",
       //"./src/test/services/message-events/summary-event-logger.test.ts"
     ],
 

@@ -20,7 +20,6 @@ import {
   Stack,
   ToastProvider,
 } from "@ogcio/design-system-react"
-import { LoadMaterialSymbols } from "@/components/load-material-symbols"
 import { signIn } from "@ogcio/sag-client"
 import {
   CONNECTOR_MYGOVID,
@@ -46,6 +45,7 @@ import { ConsentBanner } from "@/components/consent-banner"
 import { FeatureFlagsProvider } from "@/components/feature-flags-provider"
 import { ApplicationFooter } from "@/components/layout/application-footer"
 import { AppMainContent } from "@/components/layout/containers"
+import { LoadMaterialSymbols } from "@/components/load-material-symbols"
 import { PageHeader } from "@/components/navigation/page-header"
 import { TRACE_MESSAGES } from "@/const/traces"
 import { env } from "@/env/env.client"

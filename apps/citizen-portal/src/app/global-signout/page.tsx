@@ -21,10 +21,7 @@ function Redirect() {
   useEffect(() => {
     if (!isReady) return
 
-    const target = new URL(
-      `/${locale}/global-signout`,
-      window.location.origin,
-    )
+    const target = new URL(`/${locale}/global-signout`, window.location.origin)
 
     searchParams.forEach((value, key) => {
       target.searchParams.set(key, value)

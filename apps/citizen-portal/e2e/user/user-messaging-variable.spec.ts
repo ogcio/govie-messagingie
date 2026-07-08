@@ -4,6 +4,8 @@ import { createPageWithVideo } from "../helpers/browser-context"
 import { clickButton, logout } from "../utils/functions"
 import { sendMessageAndVerify } from "../utils/message-helpers"
 
+const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
+
 let page: Page
 
 test.describe("User Messages page", () => {
@@ -42,10 +44,9 @@ test.describe("User Messages page", () => {
     await sendMessageAndVerify(page)
 
     await logout(page)
+
     //login as citizen to view the message
-    if (
-      page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
-    ) {
+    if (page.url().includes(`${AUTH_URL}`)) {
       // Click the MyGovID login button
       await page.getByRole("button", { name: "Continue with MyGovId" }).click()
     }
@@ -76,7 +77,7 @@ test.describe("User Messages page", () => {
     // The message detail view actually rendered (proves we are not on a
     // blank/error page — without this, a message that rendered nothing at
     // all would still pass the negative assertion below).
-    await expect(page.getByRole("link", { name: "Go back" })).toBeVisible()
+    await expect(page.getByRole("link", { name: "Back" })).toBeVisible()
 
     // The template placeholders were substituted: the raw tokens must not
     // leak into the rendered message body.

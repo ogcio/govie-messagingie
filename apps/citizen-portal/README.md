@@ -253,6 +253,108 @@ common ones:
 > the small set of runtime env vars (`PORT`, `OTEL_*`, etc.) consumed
 > inside the container.
 
+## Feature flags & standalone deployments
+
+> Full reference (rationale, touch points, extending, testing):
+> [`docs/feature-flags.md`](../../docs/feature-flags.md).
+
+The consolidated app ships every zone and cross-block integration by
+default, but a future adopter may want to run a reduced subset (e.g.
+MessagingIE without Dashboard, as in the Department of Education
+deployment) without exposing UI, links, or redirects that imply the
+presence of building blocks that are not deployed (AB#39580).
+
+Two kinds of flag exist:
+
+### Build-time topology flags (`NEXT_PUBLIC_ENABLE_*`)
+
+Baked into the static export, so flipping one needs a rebuild. They are
+plain booleans (`true`/`false`, also accepting `1`/`0`/`yes`/`no`/`on`/`off`)
+parsed in [`src/env/env.client.ts`](src/env/env.client.ts) and consumed
+through the single helper module
+[`src/lib/feature-config.ts`](src/lib/feature-config.ts). **All default
+`true`**, so every current deployment is unchanged.
+
+| Flag | Default | When `false` |
+| --- | --- | --- |
+| `NEXT_PUBLIC_ENABLE_DASHBOARD` | `true` | Dashboard drawer link hidden; `/{locale}/` landing never resolves to dashboard; a direct visit to `/{locale}/my-dashboard` redirects to the first enabled landing zone; unmatched-path fallback no longer points at dashboard. |
+| `NEXT_PUBLIC_ENABLE_MESSAGING` | `true` | MessagingIE drawer link hidden; the recent-messages (`MyMessages`) widget is omitted from the dashboard landing; messaging is no longer a landing fallback. |
+| `NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION` | `true` | Journey-Builder sign-out iframe is not added to the global-signout fan-out (no reference to a Journey-Builder origin). |
+| `NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION` | `true` | Payments sign-out iframe is not added to the global-signout fan-out. |
+
+Profile has no flag — every building block requires Profile, so the
+profile zone is always enabled and is the terminal landing fallback.
+
+These resolve via Docker `ARG`/`ENV` (default `"true"`) in
+[`Dockerfile`](Dockerfile) / [`Dockerfile.local`](Dockerfile.local). A
+standalone build sets them per scenario, e.g.:
+
+```bash
+docker build \
+  --build-arg NEXT_PUBLIC_ENABLE_DASHBOARD=false \
+  ... apps/citizen-portal
+```
+
+The shared `pipeline-citizen-portal.yml` does not pass these build-args,
+so the standard CI build inherits the `true` Dockerfile defaults; a
+reduced-topology pipeline overrides them at the `--build-arg` level.
+
+#### Deployment scenarios → flag values
+
+| Scenario | `ENABLE_DASHBOARD` | `ENABLE_MESSAGING` | `ENABLE_JOURNEY_INTEGRATION` |
+| --- | --- | --- | --- |
+| Profile + MessagingIE (no Dashboard) | `false` | `true` | `true` |
+| Profile + Forms (no Dashboard, no MessagingIE) | `false` | `false` | `true` |
+| Profile + Forms + MessagingIE + Journey Builder (no Dashboard) | `false` | `true` | `true` |
+| Profile + Forms + Journey Builder (no Dashboard, no MessagingIE) | `false` | `false` | `true` |
+
+(Forms is reached via direct `NEXT_PUBLIC_FORMS_SERVICE_URL` links, not a
+citizen-portal zone, so it needs no zone flag. Disabling Journey or
+Payments only removes their sign-out fan-out reference; leave them `true`
+unless that building block is genuinely absent.)
+
+### Build-time rollout flag — `NEXT_PUBLIC_ENABLE_LEA` (AB#40267)
+
+An environment-specific rollout switch (not a topology flag) for the Life
+Events Accelerator (LEA) experience — the new dashboard and the link to an
+application submission from the message view. Parsed by the same helper in
+[`src/env/env.client.ts`](src/env/env.client.ts) and read via
+`isLeaEnabled()` in [`src/lib/feature-config.ts`](src/lib/feature-config.ts).
+
+Unlike the topology flags it **defaults `false`** and the shared pipeline
+**does** forward it (`--build-arg NEXT_PUBLIC_ENABLE_LEA=$(nextPublicEnableLea)`),
+so its value can differ per environment:
+
+| Flag | Default | Dev | UAT | Prod |
+| --- | --- | --- | --- | --- |
+| `NEXT_PUBLIC_ENABLE_LEA` | `false` | `true` | `true` | `false` |
+
+Prod keeps the default (non-LEA) version. Gate the LEA surfaces on
+`isLeaEnabled()` when they are built.
+
+### Runtime flag — `submission-linking` (Unleash)
+
+Defined in
+[`src/components/feature-flags-provider.tsx`](src/components/feature-flags-provider.tsx)
+and exposed as `isSubmissionLinkingEnabled` from `useFeatureFlags()`. It
+is the runtime, per-user gate for messaging surfaces that link a message
+to a Journey-Builder submission, and can be turned off **without a
+redeploy**.
+
+It defaults **on**: when Unleash is unconfigured or unreachable the
+fallback keeps it enabled, matching a fully-flagged deployment whose
+`submission-linking` toggle is on. To disable submission-linked UI in a
+deployment that does run Unleash, create the `submission-linking` flag
+and turn it off. (The build-time `NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION`
+decides whether a deployment ships Journey-Builder at all; this decides
+the live visibility of the linked UI within such a build.)
+
+> Out of scope for this change (citizen-portal only): the messaging-api
+> `externalId` field, the Journey-Builder messaging plugin, and the SAG
+> `dashboard` → `journey-builder` allowed-resource. These live outside
+> this app and are the next surface to wire behind `submission-linking`
+> when bidirectional submission linking is actually implemented.
+
 ## Architectural notes
 
 ### URL-content parity via canonicalisation
@@ -307,7 +409,9 @@ on the other two without an extra round-trip.
 
 ## Branch / PR discipline
 
-This work lives on `feat/AB#38246` (and its `-part-II` follow-up).
+This work lives on `feat/AB#38246` (and its `-part-II` follow-up);
+follow-on stories use their own ticket branch (e.g. the feature-flagging
+work on `feat/AB#39580-feature-flagging-consolidated-webapp`).
 Every PR into `dev` from this branch is **purely additive** outside the
 consolidation surface:
 

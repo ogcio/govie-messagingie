@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 import {
-  PAGE_SIZE,
   buildMessagesUrl,
   computeTotalPages,
+  PAGE_SIZE,
 } from "@/components/messages/pagination-utils"
 import { parseTab } from "@/components/messages/parse-tab"
 

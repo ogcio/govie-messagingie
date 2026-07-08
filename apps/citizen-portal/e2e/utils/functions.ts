@@ -5,6 +5,8 @@ import { navigateAndVerifyHeading } from "./navigation-helpers"
 import { addNewRecipient } from "./recipient-helpers"
 
 const ADMIN_URL = process.env.ADMIN_URL || "http://localhost:3001"
+const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
+const PROFILE_URL = process.env.PROFILE_URL || "http://localhost:3003"
 
 export const generateTestData = () => ({
   uuid: crypto.randomUUID(),
@@ -42,13 +44,13 @@ export async function clickButton(page: Page, buttonName: string) {
 export async function logout(page: Page) {
   if (page.url().includes("-admin")) {
     await page.context().clearCookies()
-    await page.goto("/")
+    await page.goto(`/`)
   } else {
     await clickButton(page, "Menu")
     await clickButton(page, "Logout")
-
-    await confirmSignout(page)
+    await page.waitForLoadState("networkidle")
   }
+  await confirmSignout(page)
 }
 
 export async function confirmSignout(page: Page) {
@@ -78,9 +80,7 @@ export async function confirmGlobalSignout(page: Page) {
     await page.waitForURL(/sign-in|oidc\/session\/end/, { timeout: 90_000 })
   }
 
-  await expect(
-    page.getByRole("button", { name: "Continue with MyGovId" }),
-  ).toBeVisible({ timeout: 15_000 })
+  await confirmSignout(page)
 }
 
 export async function sendMessageToDevCitizen(page: Page, nonSecure = false) {

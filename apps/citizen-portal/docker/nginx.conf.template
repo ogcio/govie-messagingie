@@ -107,6 +107,12 @@ http {
     default      1;
   }
 
+  map $http_accept_language $preferred_locale {
+    ~*^\s*ga(?:[-_][A-Za-z]+)?\b ga;
+    ~*^\s*en(?:[-_][A-Za-z]+)?\b en;
+    default en;
+  }
+
   # ----------------------------------------------------------------------
   # Zone routing table — MUST mirror `src/util/get-zone-from-path.ts`.
   #
@@ -122,7 +128,7 @@ http {
     "~^/[a-z]{2}/(messages|secure-messages)(/|$)"                                                                                                          ${MESSAGING_HOST};
     "~^/[a-z]{2}/(my-profile|accessibility-statement|contact-support|cookie-policy|wrong-account-error|wrong-login-method-error|global-signout)(/|$)"      ${PROFILE_HOST};
     "~^/[a-z]{2}/my-dashboard(/|$)"                                                                                                                        ${DASHBOARD_HOST};
-    "~^/(onboarding|post-global-signout|wrong-login-method-error|global-signout)(/|$)"                                                                    ${PROFILE_HOST};
+    "~^/(onboarding|post-global-signout|wrong-account-error|wrong-login-method-error|global-signout)(/|$)"                                              ${PROFILE_HOST};
     "~^/api/(application-signout|clear-session)(/|$)"                                                                                                      ${PROFILE_HOST};
   }
 
@@ -321,6 +327,25 @@ http {
       limit_req zone=general burst=60 nodelay;
     }
 
+    # Same-origin proxy for SAG file downloads. A plain <a> link can't send the
+    # X-Application header the gateway requires, so nginx injects it here. Cookie
+    # is forwarded by default → gateway session auth works (shared parent domain).
+    # X-Application is "messaging": attachment cards render only in the messages
+    # zone, whose SAG audience is "messaging". Path under /_next/ per CloudFront/WAF.
+    location /_next/files/ {
+      add_header X-Trace-ID $otel_trace_id always;
+      proxy_pass ${NEXT_PUBLIC_SAG_URL}/;
+      proxy_http_version 1.1;
+      proxy_ssl_server_name on;
+      proxy_set_header Host ${SAG_HOST};
+      proxy_set_header X-Application "messaging";
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_buffering off;
+      limit_req zone=general burst=60 nodelay;
+    }
+
     # Health check endpoint for container orchestration probes
     location = /health {
       otel_trace off;
@@ -344,6 +369,34 @@ http {
     # Restrict messageId to UUID-like patterns to prevent injection.
     location ~ "^/([a-z]{2}(?:-[A-Z]{2})?)/secure-messages/([0-9a-fA-F-]+)$" {
       return 302 /$1/secure-messages?id=$2;
+    }
+
+    # Legacy compatibility redirects for the privacy policy and terms of use.
+    # apps/profile defined these as Next.js `redirects()`; profile-next mirrors
+    # them in nginx. Dev routes 100% of profile.* traffic to citizen-portal
+    # (CloudFront canary_weight=1.0) while UAT still hits profile-next, so
+    # these bounces must exist here too or JB/messaging footer links 404.
+    location = /en/privacy-policy {
+      return 302 https://www.gov.ie/en/messaging-ie/publications/privacy-statement/;
+    }
+
+    location = /ga/privacy-policy {
+      return 302 https://www.gov.ie/ga/messaging-ie-ga/foilseachain/r%C3%A1iteas-pr%C3%ADobh%C3%A1ideachais/;
+    }
+
+    location = /en/terms-of-use {
+      return 302 https://www.gov.ie/en/messaging-ie/publications/terms-and-conditions/;
+    }
+
+    location = /ga/terms-of-use {
+      return 302 https://www.gov.ie/ga/messaging-ie-ga/foilseachain/terms-and-conditions/;
+    }
+
+    # Unprefixed fallbacks: redirect to the locale-prefixed form so the rules
+    # above can dispatch to the correct gov.ie destination.
+    location ~ ^/(privacy-policy|terms-of-use)$ {
+      add_header Vary "Accept-Language" always;
+      return 302 /$preferred_locale$uri$is_args$args;
     }
 
     # Restrict to safe HTTP methods only (static site + monitoring POST)

@@ -24,7 +24,12 @@ const ORG_FIXTURES: Record<
 vi.mock("@ogcio/sag-client/react", () => ({
   useGatewayFetch: (path: string | null) => {
     if (!path) {
-      return { data: undefined, error: null, isLoading: false, refresh: vi.fn() }
+      return {
+        data: undefined,
+        error: null,
+        isLoading: false,
+        refresh: vi.fn(),
+      }
     }
     const orgMatch = path.match(/^\/profile\/api\/v1\/organisations\/(.+)$/)
     const data = orgMatch ? ORG_FIXTURES[orgMatch[1]] : undefined

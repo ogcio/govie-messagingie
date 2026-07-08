@@ -1,6 +1,5 @@
 "use client"
 
-import { useEnv } from "@citizen-portal/shared"
 import {
   Heading,
   Link,
@@ -12,6 +11,7 @@ import {
   CONNECTOR_MYGOVID,
   useAuth,
   useGatewayFetch,
+  useSagClient,
 } from "@ogcio/sag-client/react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
@@ -75,7 +75,13 @@ function OnboardingContent() {
   const t = useTranslations("onboard")
   const { user } = useAuth()
   const searchParams = useSearchParams()
-  const { sagUrl, sagAppName } = useEnv()
+  // Use the SAG client from the enclosing OnboardingShell provider, NOT the
+  // app-level env. The shell runs the provider as the `profile` app (session +
+  // sign-in bind to `profile`), so the onboarding POST must send the SAME app
+  // in `X-Application`. Reading `sagAppName` from env instead sent
+  // `citizen-portal`, which the gateway's strict per-app match rejected with a
+  // 401 against the profile-bound session (AB#40235).
+  const client = useSagClient()
   const source = resolveOnboardingSource(searchParams.get("source"))
 
   const [status, setStatus] = useState<OnboardingStatus>("idle")
@@ -96,12 +102,12 @@ function OnboardingContent() {
     onboardingTriggered.current = true
 
     setStatus("assigning_role")
-    fetch(`${sagUrl}/profile/api/v1/onboarding`, {
+    fetch(`${client.gatewayUrl}/profile/api/v1/onboarding`, {
       method: "POST",
       credentials: "include",
       headers: {
         "Content-Type": "application/json",
-        "X-Application": sagAppName,
+        "X-Application": client.appName,
       },
       body: "{}",
     })
@@ -122,7 +128,7 @@ function OnboardingContent() {
       .catch(() => {
         setStatus("error")
       })
-  }, [user?.sub, sagUrl, sagAppName])
+  }, [user?.sub, client.gatewayUrl, client.appName])
 
   useEffect(() => {
     if (status !== "role_assigned") return

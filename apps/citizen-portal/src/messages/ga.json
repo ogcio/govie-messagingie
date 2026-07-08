@@ -163,10 +163,14 @@
       "toolbarAriaLabel": "Gníomhartha teachtaireachta",
       "attachmentOnlyFallback": "Roghnaigh an ceanglán/na ceangláin chun ábhar do theachtaireachta a réamhamharc",
       "attachment": {
-        "preview": "Réamhamharc",
+        "open": "Oscail",
         "download": "Íoslódáil",
-        "previewFile": "Réamhamharc {fileName}",
-        "downloadFile": "Íoslódáil {fileName}"
+        "openFile": "Oscail {fileName}",
+        "downloadFile": "Íoslódáil {fileName}",
+        "downloading": "Á íoslódáil",
+        "savedToDevice": "Sábháilte ar an ngléas",
+        "previewUnavailable": "Níl réamhamharc ar fáil",
+        "downloadFailed": "Theip ar an íoslódáil"
       }
     }
   },

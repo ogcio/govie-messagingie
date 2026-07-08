@@ -20,7 +20,7 @@
     "test:local": "vitest"
   },
   "dependencies": {
-    "@ogcio/sag-client": "0.7.4",
+    "@ogcio/sag-client": "0.7.5",
     "@t3-oss/env-nextjs": "0.13.11",
     "zod": "4.4.3"
   },

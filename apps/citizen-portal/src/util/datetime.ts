@@ -5,10 +5,7 @@ const LOCALE = "en-IE"
 
 type DateStyle = "short" | "medium" | "long"
 
-const LOCALE_OPTIONS: Record<
-  DateStyle,
-  Intl.DateTimeFormatOptions
-> = {
+const LOCALE_OPTIONS: Record<DateStyle, Intl.DateTimeFormatOptions> = {
   short: { day: "2-digit", month: "2-digit", year: "numeric" },
   medium: { day: "numeric", month: "short", year: "numeric" },
   long: { day: "numeric", month: "long", year: "numeric" },

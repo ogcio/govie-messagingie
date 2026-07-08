@@ -5,6 +5,9 @@ import { createAuthenticatedPage } from "../helpers/user-auth.helper"
 let page: Page
 const maxDiff = 0.02
 
+const PROFILE_URL = process.env.PROFILE_URL || "http://localhost:3004"
+const DASHBOARD_URL = process.env.DASHBOARD_URL || "http://localhost:3003"
+
 test.describe("User Visual Regression", () => {
   test.beforeAll(async ({ browser }) => {
     page = await createAuthenticatedPage(browser, "e2e_citizen_1@user.com")
@@ -29,7 +32,7 @@ test.describe("User Visual Regression", () => {
   test("profile page visual snapshot @visual", async () => {
     await page.waitForLoadState("networkidle")
 
-    await page.goto("https://profile.dev.services.gov.ie")
+    await page.goto(`${PROFILE_URL}/en`)
     await page.waitForLoadState("networkidle")
     await expect(page).toHaveScreenshot("user-profile.png", {
       fullPage: true,
@@ -40,7 +43,7 @@ test.describe("User Visual Regression", () => {
   test("dashboard page visual snapshot @visual", async () => {
     await page.waitForLoadState("networkidle")
 
-    await page.goto("https://dashboard.dev.services.gov.ie/en/my-dashboard")
+    await page.goto(`${DASHBOARD_URL}/en/my-dashboard`)
     await page.waitForLoadState("networkidle")
     await expect(page).toHaveScreenshot("user-dashboard.png", {
       fullPage: true,

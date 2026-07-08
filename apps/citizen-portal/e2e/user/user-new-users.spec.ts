@@ -2,12 +2,14 @@ import { expect, test } from "@playwright/test"
 import { setSafeLevel, setSafeLevelAndUser } from "../helpers/user-auth.helper"
 import { generateTestData, logout } from "../utils/functions"
 
+const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
+const PROFILE_URL = process.env.PROFILE_URL || "http://localhost:3003"
+const DASHBOARD_URL = process.env.DASHBOARD_URL || "http://localhost:3004"
+
 test.describe("User Messaging page", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/")
-    if (
-      page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
-    ) {
+    if (page.url().includes(`${AUTH_URL}`)) {
       // Click the MyGovID login button
       await page.getByRole("button", { name: "Continue with MyGovId" }).click()
     }
@@ -63,9 +65,7 @@ test.describe("User Messaging page", () => {
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
     await logout(page)
     await page.goto("/")
-    if (
-      page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
-    ) {
+    if (page.url().includes(`${AUTH_URL}`)) {
       // Click the MyGovID login button
       await page.getByRole("button", { name: "Continue with MyGovId" }).click()
     }
@@ -90,9 +90,7 @@ test.describe("User Messaging page", () => {
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
     await logout(page)
     await page.goto("/")
-    if (
-      page.url().includes("https://authorization.dev.services.gov.ie/sign-in")
-    ) {
+    if (page.url().includes(`${AUTH_URL}`)) {
       // Click the MyGovID login button
       await page.getByRole("button", { name: "Continue with MyGovId" }).click()
     }
@@ -106,7 +104,7 @@ test.describe("User Messaging page", () => {
     page,
   }) => {
     await setSafeLevel(page, "2")
-    await page.goto("https://dashboard.dev.services.gov.ie")
+    await page.goto(`${DASHBOARD_URL}`)
     await expect(page.getByText("Your messages")).toBeVisible()
   })
 
@@ -114,7 +112,7 @@ test.describe("User Messaging page", () => {
     page,
   }) => {
     await setSafeLevel(page, "1")
-    await page.goto("https://dashboard.dev.services.gov.ie")
+    await page.goto(`${DASHBOARD_URL}`)
     await expect(
       page
         .locator(
@@ -124,11 +122,11 @@ test.describe("User Messaging page", () => {
     ).toHaveText("Complete Your MyGovID Account Verification to Proceed")
   })
 
-  test("a user with safe level 0 access the dashboard @regression", async ({
+  test("a user with safe level 0 cannot access the dashboard @regression", async ({
     page,
   }) => {
     await setSafeLevel(page, "0")
-    await page.goto("https://dashboard.dev.services.gov.ie")
+    await page.goto(`${DASHBOARD_URL}`)
     await expect(
       page
         .locator(
@@ -142,7 +140,7 @@ test.describe("User Messaging page", () => {
     page,
   }) => {
     await setSafeLevel(page, "2")
-    await page.goto("https://profile.dev.services.gov.ie")
+    await page.goto(`${PROFILE_URL}`)
     await expect(
       page.getByText(
         "The information below includes everything we have sourced from your MyGovID and currently have on file.",
@@ -154,7 +152,7 @@ test.describe("User Messaging page", () => {
     page,
   }) => {
     await setSafeLevel(page, "1")
-    await page.goto("https://profile.dev.services.gov.ie")
+    await page.goto(`${PROFILE_URL}`)
     await expect(
       page
         .locator(
@@ -168,7 +166,7 @@ test.describe("User Messaging page", () => {
     page,
   }) => {
     await setSafeLevel(page, "0")
-    await page.goto("https://profile.dev.services.gov.ie")
+    await page.goto(`${PROFILE_URL}`)
     await expect(
       page
         .locator(

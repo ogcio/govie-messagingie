@@ -12,6 +12,7 @@
     "dev": "FASTIFY_AUTOLOAD_TYPESCRIPT=1 node --watch --import tsx --env-file .env src/index.ts | pino-pretty",
     "start": "node --env-file=.env --import ./dist/instrumentation.js dist/index.js",
     "verify-smtp": "tsx ./src/scripts/verify-smtp/index.ts",
+    "pii-hash": "tsx ./src/scripts/pii-hash/index.ts",
     "send-message-batches": "tsx --env-file=./src/scripts/send-message-batches/.env ./src/scripts/send-message-batches/entry-console.ts",
     "send-message-batches:pino": "tsx --env-file=./src/scripts/send-message-batches/.env ./src/scripts/send-message-batches/entry-pino.ts",
     "format": "biome check --write",
@@ -66,6 +67,8 @@
     "pg": "8.22.0",
     "pino": "10.3.1",
     "postgrator": "8.0.0",
+    "protobufjs": "8.6.3",
+    "snappyjs": "0.7.0",
     "typebox": "1.3.0",
     "unleash-client": "6.11.0"
   },

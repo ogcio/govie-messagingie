@@ -19,9 +19,7 @@ describe("isChunkLoadError", () => {
 
   it("detects the webpack message for CSS chunks", () => {
     expect(
-      isChunkLoadError(
-        new Error("Loading CSS chunk 0a1y2k5a97ahg failed."),
-      ),
+      isChunkLoadError(new Error("Loading CSS chunk 0a1y2k5a97ahg failed.")),
     ).toBe(true)
   })
 
@@ -35,16 +33,16 @@ describe("isChunkLoadError", () => {
     ).toBe(true)
     expect(
       isChunkLoadError(
-        new TypeError(
-          "error loading dynamically imported module: foo.js",
-        ),
+        new TypeError("error loading dynamically imported module: foo.js"),
       ),
     ).toBe(true)
   })
 
   it("returns false for unrelated errors", () => {
     expect(isChunkLoadError(new Error("Network request failed"))).toBe(false)
-    expect(isChunkLoadError(new TypeError("Cannot read property 'x' of undefined"))).toBe(false)
+    expect(
+      isChunkLoadError(new TypeError("Cannot read property 'x' of undefined")),
+    ).toBe(false)
   })
 
   it("tolerates non-Error inputs", () => {

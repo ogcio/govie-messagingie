@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test"
+import { expect, type Page, test } from "@playwright/test"
 import { loginDemo } from "./login-demo.helper"
 import { stubAuthForDemo } from "./stub-auth-for-demo"
 

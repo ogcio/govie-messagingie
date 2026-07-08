@@ -6,12 +6,21 @@ import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Suspense, useEffect, useRef, useState } from "react"
 import { env } from "@/env/env.client"
+import {
+  isJourneyIntegrationEnabled,
+  isPaymentsIntegrationEnabled,
+} from "@/lib/feature-config"
 import { getValidReturnUrl } from "@/util/valid-return-url"
 
 const IFRAME_TIMEOUT_MS = 20_000
 const MIN_DELAY_MS = 3000
 const POST_GLOBAL_SIGNOUT_COOKIE = "postGlobalSignoutUrl"
+const POST_GLOBAL_SIGNOUT_PATH = "/post-global-signout"
+// Signals to /post-global-signout that the upstream MyGovID (Azure B2C) session
+// still needs to be ended via a top-level navigation. See AB#39676.
+const POST_GLOBAL_SIGNOUT_MYGOVID_COOKIE = "postGlobalSignoutMyGovId"
 const LOGTO_SOCIAL_CONNECTOR_ID_COOKIE_NAME = "connectorsToShow"
+const GLOBAL_SIGNOUT_ROLE_CITIZEN = "citizen"
 
 function trimTrailingSlash(url: string) {
   return url.replace(/\/$/, "")
@@ -27,6 +36,14 @@ function buildNewApplicationSignoutUrl(baseUrl: string) {
 
 function setPostGlobalSignoutCookie(postRedirectUri: string) {
   document.cookie = `${POST_GLOBAL_SIGNOUT_COOKIE}=${encodeURIComponent(postRedirectUri)}; path=/; max-age=300`
+}
+
+// Flag citizen sign-outs so /post-global-signout ends the upstream MyGovID
+// (Azure B2C) session via a top-level navigation. A hidden cross-site iframe
+// cannot carry the B2C cookies, so the session must be ended by a real
+// navigation. See AB#39676.
+function setMyGovIdEndSessionFlagCookie() {
+  document.cookie = `${POST_GLOBAL_SIGNOUT_MYGOVID_COOKIE}=1; path=/; max-age=300`
 }
 
 function clearConnectorsToShowCookie() {
@@ -57,15 +74,15 @@ function postGatewaySignOut(
   form.submit()
 }
 
-function buildIframeUrlList(role: string | null) {
+export function buildIframeUrlList(role: string | null) {
   const urls: string[] = []
 
   const isCitizen = role === "citizen"
 
-  // Only MyGovID citizens have an upstream Azure B2C session to terminate.
-  if (isCitizen && env.NEXT_PUBLIC_MYGOVID_END_SESSION_URL) {
-    urls.push(env.NEXT_PUBLIC_MYGOVID_END_SESSION_URL)
-  }
+  // NOTE: MyGovID citizens DO have an upstream Azure B2C session to terminate,
+  // but it is a cross-site logout that CANNOT be cleared from a hidden iframe
+  // (third-party cookies are not sent). It is performed as a top-level
+  // navigation in the completion handler below instead. See AB#39676.
 
   const { sagUrl } = getEnv()
 
@@ -74,9 +91,15 @@ function buildIframeUrlList(role: string | null) {
   // below logs the user out of every zone at once — no per-zone iframe is
   // needed. Only apps that keep their OWN session cookies must be cleared
   // per-origin here. payments and journey-builder still own independent
-  // sessions for every user until they migrate behind the SAG.
-  urls.push(buildLegacyApplicationSignoutUrl(env.NEXT_PUBLIC_PAYMENTS_URL))
-  urls.push(buildLegacyApplicationSignoutUrl(env.NEXT_PUBLIC_JOURNEY_URL))
+  // sessions for every user until they migrate behind the SAG. Each is
+  // gated by its deployment-topology flag (AB#39580) so a standalone
+  // deployment that ships without that building block never references it.
+  if (isPaymentsIntegrationEnabled()) {
+    urls.push(buildLegacyApplicationSignoutUrl(env.NEXT_PUBLIC_PAYMENTS_URL))
+  }
+  if (isJourneyIntegrationEnabled()) {
+    urls.push(buildLegacyApplicationSignoutUrl(env.NEXT_PUBLIC_JOURNEY_URL))
+  }
 
   // Admin apps also keep their own sessions, but only public servants ever
   // have one — skip them entirely for citizens.
@@ -186,16 +209,37 @@ function GlobalSignoutInner() {
     }
     finishedRef.current = true
 
+    // Both branches converge on /post-global-signout, which is the single place
+    // that ends the upstream MyGovID (Azure B2C) session for citizens via a
+    // top-level navigation. The flag cookie tells it whether that step is
+    // required. See AB#39676.
+    const isCitizen =
+      role === GLOBAL_SIGNOUT_ROLE_CITIZEN &&
+      Boolean(env.NEXT_PUBLIC_MYGOVID_END_SESSION_URL)
+
     if (sagSignout && postRedirectUri) {
+      // SAG (and thus Logto) is already terminated by the time we reach here.
+      if (isCitizen) {
+        setPostGlobalSignoutCookie(postRedirectUri)
+        setMyGovIdEndSessionFlagCookie()
+        window.location.href = new URL(
+          POST_GLOBAL_SIGNOUT_PATH,
+          env.NEXT_PUBLIC_BASE_URL,
+        ).toString()
+        return
+      }
       window.location.href = postRedirectUri
       return
     }
 
     const fallbackRedirect = postRedirectUri ?? env.NEXT_PUBLIC_BASE_URL
     setPostGlobalSignoutCookie(fallbackRedirect)
+    if (isCitizen) {
+      setMyGovIdEndSessionFlagCookie()
+    }
 
     const postGlobalSignoutUrl = new URL(
-      "/post-global-signout",
+      POST_GLOBAL_SIGNOUT_PATH,
       env.NEXT_PUBLIC_BASE_URL,
     ).toString()
 
@@ -205,7 +249,7 @@ function GlobalSignoutInner() {
     // ClientShell#handleSessionExpired.
     const { sagUrl, sagAppName } = getEnv()
     postGatewaySignOut(sagUrl, sagAppName, postGlobalSignoutUrl)
-  }, [iframesDone, minDelayDone, postRedirectUri, sagSignout])
+  }, [iframesDone, minDelayDone, postRedirectUri, sagSignout, role])
 
   return (
     <output

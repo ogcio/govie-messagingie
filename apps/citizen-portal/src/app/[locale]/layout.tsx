@@ -2,6 +2,7 @@ import { notFound } from "next/navigation"
 import { hasLocale, NextIntlClientProvider } from "next-intl"
 import { getTranslations, setRequestLocale } from "next-intl/server"
 import { HtmlLangScript } from "@/components/html-lang-script"
+import { type Locale, messagesMap } from "@/i18n/locale"
 import { routing } from "@/i18n/routing"
 import favicon from "@/public/favicon.ico"
 import "./styles.css"
@@ -49,7 +50,10 @@ export default async function Layout({
   setRequestLocale(locale)
 
   return (
-    <NextIntlClientProvider>
+    <NextIntlClientProvider
+      locale={locale}
+      messages={messagesMap[locale as Locale]}
+    >
       <HtmlLangScript locale={locale} />
       {children}
     </NextIntlClientProvider>

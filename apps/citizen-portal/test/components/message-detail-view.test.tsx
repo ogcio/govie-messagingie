@@ -193,18 +193,32 @@ vi.mock("@/components/messages/secure-email-viewer", () => ({
 }))
 
 vi.mock("@ogcio/design-system-react", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@ogcio/design-system-react")>()
+  const actual =
+    await importOriginal<typeof import("@ogcio/design-system-react")>()
   return {
     ...actual,
     Link: ({
       children,
       onClick,
+      dataTestid,
+      iconStart: _iconStart,
+      iconEnd: _iconEnd,
+      noColor: _noColor,
+      disabled,
       ...rest
     }: {
       children: React.ReactNode
       onClick?: (e: React.MouseEvent) => void
+      dataTestid?: string
+      disabled?: boolean
     } & Record<string, unknown>) => (
-      <a href='#' onClick={onClick} {...rest}>
+      <a
+        href='#'
+        onClick={onClick}
+        data-testid={dataTestid}
+        aria-disabled={disabled}
+        {...rest}
+      >
         {children}
       </a>
     ),
@@ -291,12 +305,8 @@ describe("MessageDetailView", () => {
     expect(
       screen.getByText("Payslip - Mark Murphy - 26-03-2026.pdf"),
     ).toBeInTheDocument()
-    expect(
-      screen.getByTestId("attachment-preview-action"),
-    ).toBeInTheDocument()
-    expect(
-      screen.getByTestId("attachment-download-action"),
-    ).toBeInTheDocument()
+    expect(screen.getByTestId("attachment-preview-action")).toBeInTheDocument()
+    expect(screen.getByTestId("attachment-download-action")).toBeInTheDocument()
   })
 
   it("opens the delete confirmation modal and redirects with a flash on confirm", async () => {

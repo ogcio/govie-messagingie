@@ -22,6 +22,7 @@ import { AttachmentCard } from "./attachment-card"
 import { BulkActionToolbar } from "./bulk-action-toolbar"
 import { DeleteConfirmationModal } from "./delete-confirmation-modal"
 import { DeleteResultToast } from "./delete-result-toast"
+import { DEFAULT_PAGE_SIZE, parsePageSize } from "./page-size"
 import { SecureEmailViewer } from "./secure-email-viewer"
 import styles from "./unified-inbox.module.css"
 import { UnifiedInboxTable } from "./unified-inbox-table"
@@ -30,7 +31,6 @@ import {
   useDeleteMessages,
 } from "./use-delete-messages"
 import { useMarkMessageAsRead } from "./use-mark-message-as-read"
-import { DEFAULT_PAGE_SIZE, parsePageSize } from "./page-size"
 import { useMessageSelection } from "./use-message-selection"
 
 /**

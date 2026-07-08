@@ -1,6 +1,12 @@
 import { renderHook, waitFor } from "@testing-library/react"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { NEXT_LOCALE_COOKIE } from "@/const"
 import { matchLocale, useLocalePreference } from "@/hooks/use-locale-preference"
+
+function clearLocaleCookie() {
+  // biome-ignore lint/suspicious/noDocumentCookie: test cleanup
+  document.cookie = `${NEXT_LOCALE_COOKIE}=; Max-Age=0; path=/`
+}
 
 /**
  * `useLocalePreference` drives the locale-landing redirect on
@@ -63,10 +69,12 @@ describe("useLocalePreference", () => {
   }
 
   beforeEach(() => {
+    clearLocaleCookie()
     stubLanguages(["en-US", "en"])
   })
 
   afterEach(() => {
+    clearLocaleCookie()
     if (originalLanguages) {
       Object.defineProperty(Navigator.prototype, "languages", originalLanguages)
     }
@@ -97,6 +105,25 @@ describe("useLocalePreference", () => {
     await waitFor(() => expect(result.current.isReady).toBe(true))
     // navigator.language stub returns "en" when languages array is empty.
     expect(result.current.locale).toBe("en")
+  })
+
+  it("prefers the NEXT_LOCALE cookie over the browser language", async () => {
+    // Browser says English, but the user's persisted choice is Irish.
+    stubLanguages(["en-US", "en"])
+    // biome-ignore lint/suspicious/noDocumentCookie: test setup
+    document.cookie = `${NEXT_LOCALE_COOKIE}=ga; path=/`
+    const { result } = renderHook(() => useLocalePreference())
+    await waitFor(() => expect(result.current.isReady).toBe(true))
+    expect(result.current.locale).toBe("ga")
+  })
+
+  it("ignores an unsupported cookie value and falls back to the browser", async () => {
+    stubLanguages(["ga-IE"])
+    // biome-ignore lint/suspicious/noDocumentCookie: test setup
+    document.cookie = `${NEXT_LOCALE_COOKIE}=fr; path=/`
+    const { result } = renderHook(() => useLocalePreference())
+    await waitFor(() => expect(result.current.isReady).toBe(true))
+    expect(result.current.locale).toBe("ga")
   })
 
   it("re-detects when the browser fires a languagechange event", async () => {

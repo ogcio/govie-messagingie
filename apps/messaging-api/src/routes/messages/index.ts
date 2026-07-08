@@ -353,8 +353,10 @@ export default async function messages(app: FastifyInstance) {
       const result = await assignMessageTag({
         pool: app.pg.pool,
         userId: userData.userId,
+        accessToken: userData.accessToken,
         messageIds: request.body.messageIds,
         tagId: request.body.tagId,
+        logger: request.log,
       });
 
       return reply.send({ data: result });

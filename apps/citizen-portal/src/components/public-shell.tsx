@@ -13,13 +13,14 @@ import {
 } from "@ogcio/design-system-react"
 import { LogoHarpWhite, LogoWhite } from "@ogcio/design-system-react/logos"
 import { usePathname, useSearchParams } from "next/navigation"
-import { useLocale, useTranslations } from "next-intl"
-import { Suspense, type ReactNode } from "react"
+import { useTranslations } from "next-intl"
+import { type ReactNode, Suspense } from "react"
 import { MainContainer } from "@/components/layout/containers"
 import { LANG_EN, LANG_GA } from "@/const"
+import { useActiveLocale } from "@/hooks/use-active-locale"
 import { ZONE_CONFIG } from "@/lib/zone-config"
-import { buildLocaleSwitchHref } from "@/util/locale-switch-href"
 import { getZoneFromPath } from "@/util/get-zone-from-path"
+import { buildLocaleSwitchHref } from "@/util/locale-switch-href"
 
 /**
  * Unauthenticated chrome for the public route group (privacy policy,
@@ -69,7 +70,7 @@ export function PublicShell({
   logoHref,
   showContactSupport = true,
 }: PublicShellProps) {
-  const locale = useLocale()
+  const locale = useActiveLocale()
   const path = usePathname()
   const tNav = useTranslations("navigation.header")
   const titleT = useTranslations("navigation.title")

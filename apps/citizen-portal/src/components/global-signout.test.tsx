@@ -27,8 +27,8 @@ vi.mock("@citizen-portal/shared", () => ({
   }),
 }))
 
-vi.mock("@/env/env.client", () => ({
-  env: {
+const envHolder = vi.hoisted(() => ({
+  value: {
     NEXT_PUBLIC_BASE_URL: "https://citizen.uat.test",
     NEXT_PUBLIC_SAG_URL: "https://sag.uat.test",
     NEXT_PUBLIC_DASHBOARD_ADMIN_URL: "https://dashboard-admin.uat.test",
@@ -36,9 +36,22 @@ vi.mock("@/env/env.client", () => ({
     NEXT_PUBLIC_JOURNEY_URL: "https://journey.uat.test",
     NEXT_PUBLIC_PROFILE_ADMIN_URL: "https://profile-admin.uat.test",
     NEXT_PUBLIC_MESSAGING_ADMIN_URL: "https://messaging-admin.uat.test",
-    NEXT_PUBLIC_MYGOVID_END_SESSION_URL: undefined,
+    NEXT_PUBLIC_MYGOVID_END_SESSION_URL: undefined as string | undefined,
+    // Topology flags default enabled (AB#39580): payments + journey are
+    // part of this deployment, so their sign-out iframes are fanned out.
+    // (Dedicated gating coverage lives in test/components/global-signout.test.tsx.)
+    NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION: true,
+    NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION: true,
   },
 }))
+vi.mock("@/env/env.client", () => ({
+  get env() {
+    return envHolder.value
+  },
+}))
+
+const MYGOVID_END_SESSION_URL =
+  "https://nonprod-account.mygovid-nonprod.ie/policy/oauth2/v2.0/logout"
 
 import { GlobalSignout } from "./global-signout"
 
@@ -46,6 +59,11 @@ let hrefValue = ""
 
 beforeEach(() => {
   hrefValue = ""
+  envHolder.value.NEXT_PUBLIC_MYGOVID_END_SESSION_URL = undefined
+  for (const name of ["postGlobalSignoutUrl", "postGlobalSignoutMyGovId"]) {
+    // biome-ignore lint/suspicious/noDocumentCookie: reset between tests
+    document.cookie = `${name}=; Max-Age=0; path=/`
+  }
   vi.useFakeTimers()
   Object.defineProperty(window, "location", {
     configurable: true,
@@ -85,6 +103,30 @@ describe("GlobalSignout (sagSignout flow)", () => {
     })
 
     expect(hrefValue).toBe(POST_REDIRECT_URI)
+  })
+
+  // AB#39676: both sign-out branches converge on /post-global-signout, which
+  // ends the upstream Azure B2C session for citizens via a top-level navigation
+  // (an iframe cannot carry the cross-site B2C cookies). A SAG citizen is routed
+  // straight there with the MyGovID flag + destination cookies set.
+  it("routes a citizen through /post-global-signout with the MyGovID flag set", () => {
+    envHolder.value.NEXT_PUBLIC_MYGOVID_END_SESSION_URL =
+      MYGOVID_END_SESSION_URL
+    searchParamsHolder.value = new URLSearchParams({
+      postRedirectUri: POST_REDIRECT_URI,
+      sagSignout: "true",
+      role: "citizen",
+    })
+
+    render(<GlobalSignout />)
+
+    act(() => {
+      vi.advanceTimersByTime(20_000)
+    })
+
+    expect(hrefValue).toBe("https://citizen.uat.test/post-global-signout")
+    expect(document.cookie).toContain("postGlobalSignoutUrl=")
+    expect(document.cookie).toContain("postGlobalSignoutMyGovId=1")
   })
 })
 

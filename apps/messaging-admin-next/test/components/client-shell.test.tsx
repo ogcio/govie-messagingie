@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react"
+import { fireEvent, render, screen, waitFor } from "@testing-library/react"
 import {
   afterEach,
   beforeEach,
@@ -8,21 +8,27 @@ import {
   vi,
 } from "vitest"
 
-const { useAuthMock, usePublicServantGuardMock, signInMock, selectOrganizationMock } =
-  vi.hoisted(() => {
-    // Must run before `@/env/env.client` is evaluated by the module graph below.
-    process.env.NEXT_PUBLIC_BASE_URL ??= "http://localhost:3022"
-    process.env.NEXT_PUBLIC_SAG_URL ??= "http://localhost:3030"
-    process.env.NEXT_PUBLIC_PROFILE_URL ??= "http://localhost:3003"
-    process.env.NEXT_PUBLIC_PROFILE_ADMIN_URL ??= "http://localhost:3033"
+const {
+  useAuthMock,
+  usePublicServantGuardMock,
+  signInMock,
+  signOutMock,
+  selectOrganizationMock,
+} = vi.hoisted(() => {
+  // Must run before `@/env/env.client` is evaluated by the module graph below.
+  process.env.NEXT_PUBLIC_BASE_URL ??= "http://localhost:3022"
+  process.env.NEXT_PUBLIC_SAG_URL ??= "http://localhost:3030"
+  process.env.NEXT_PUBLIC_PROFILE_URL ??= "http://localhost:3003"
+  process.env.NEXT_PUBLIC_PROFILE_ADMIN_URL ??= "http://localhost:3033"
 
-    return {
-      useAuthMock: vi.fn(),
-      usePublicServantGuardMock: vi.fn(),
-      signInMock: vi.fn(),
-      selectOrganizationMock: vi.fn(),
-    }
-  })
+  return {
+    useAuthMock: vi.fn(),
+    usePublicServantGuardMock: vi.fn(),
+    signInMock: vi.fn(),
+    signOutMock: vi.fn(),
+    selectOrganizationMock: vi.fn(),
+  }
+})
 
 vi.mock("@ogcio/sag-client", () => ({
   selectOrganization: (...args: unknown[]) => selectOrganizationMock(...args),
@@ -54,9 +60,27 @@ vi.mock("@ogcio/sag-client/react", () => ({
   usePublicServantGuard: (args: unknown) => usePublicServantGuardMock(args),
 }))
 
+type MockHeaderItem = {
+  label?: string
+  onClick?: React.MouseEventHandler<HTMLElement>
+}
+
 vi.mock("@ogcio/design-system-react", () => ({
   Container: ({ children }: { children: React.ReactNode }) => (
     <div data-testid='ds-container'>{children}</div>
+  ),
+  Header: ({ items }: { items?: MockHeaderItem[] }) => (
+    <header data-testid='forbidden-header'>
+      {(items ?? []).map((item) => (
+        <button
+          type='button'
+          key={item.label}
+          onClick={(e) => item.onClick?.(e)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </header>
   ),
   LoadMaterialSymbols: () => null,
   Spinner: () => <span data-testid='ds-spinner' />,
@@ -64,6 +88,11 @@ vi.mock("@ogcio/design-system-react", () => ({
     <div data-testid='ds-stack'>{children}</div>
   ),
   ToastProvider: () => null,
+}))
+
+vi.mock("next-intl", () => ({
+  useTranslations: () => (key: string) =>
+    key === "drawer.link.logout" ? "Logout" : key,
 }))
 
 vi.mock("@/components/ApplicationFooter", () => ({
@@ -119,6 +148,7 @@ const defaultAuth = {
   claims: undefined as { organizations?: string[] } | undefined,
   loading: false,
   signIn: signInMock,
+  signOut: signOutMock,
 }
 
 function clearAllCookies() {
@@ -189,6 +219,39 @@ describe("ClientShell — gate states", () => {
     expect(await screen.findByTestId("not-authorized")).toBeInTheDocument()
     expect(screen.queryByTestId("child")).not.toBeInTheDocument()
     // A user with the wrong role is forbidden — we must NOT re-trigger sign-in.
+    expect(signInMock).not.toHaveBeenCalled()
+  })
+
+  // AB#40066: a forbidden (logged-in, wrong-role) user previously saw the bare
+  // NotAuthorized panel with no header/footer and no way to sign out. The
+  // forbidden branch must now render the chrome (header + footer) and a working
+  // logout control.
+  it("renders header (with logout) and footer for a forbidden user so they can sign out", async () => {
+    useAuthMock.mockReturnValue({
+      ...defaultAuth,
+      user: { sub: "u1", name: "Alice" },
+      claims: { organizations: [] },
+    })
+    usePublicServantGuardMock.mockReturnValue({
+      resolved: true,
+      authorized: false,
+    })
+
+    render(
+      <ClientShell>
+        <span data-testid='child'>protected</span>
+      </ClientShell>,
+    )
+
+    expect(await screen.findByTestId("not-authorized")).toBeInTheDocument()
+    // Layout is present: branded header + footer (previously both missing).
+    expect(screen.getByTestId("forbidden-header")).toBeInTheDocument()
+    expect(screen.getByTestId("app-footer")).toBeInTheDocument()
+
+    // The logout control works and signs the user out.
+    const logout = screen.getByRole("button", { name: "Logout" })
+    fireEvent.click(logout)
+    expect(signOutMock).toHaveBeenCalledTimes(1)
     expect(signInMock).not.toHaveBeenCalled()
   })
 

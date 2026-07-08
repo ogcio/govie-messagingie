@@ -537,24 +537,35 @@ async function executeSoftDelete(
 export async function assignMessageTag(params: {
   pool: Pool;
   userId: string;
+  accessToken: string;
   messageIds: string[];
   tagId: string | null;
+  logger: FastifyBaseLogger;
 }): Promise<{ tagId: string | null; messageIds: string[] }> {
-  const { pool, userId, messageIds, tagId } = params;
+  const { pool, userId, accessToken, messageIds, tagId, logger } = params;
+  const uniqueMessageIds = Array.from(new Set(messageIds));
   const client = await pool.connect();
   try {
-    // Verify message exists and belongs to the user
+    // Verify every message exists
     const messageResult = await client.query<{ id: string; user_id: string }>(
       `SELECT id, user_id FROM messages WHERE id = ANY($1)`,
-      [messageIds],
+      [uniqueMessageIds],
     );
 
-    if (
-      messageResult.rows.length < messageIds.length ||
-      messageResult.rows.some((row) => row.user_id !== userId)
-    ) {
+    if (messageResult.rows.length < uniqueMessageIds.length) {
       throw httpErrors.notFound("Message not found");
     }
+
+    // A message can be moved when it belongs to the logged-in user OR to one
+    // of their linked profiles. The inbox lists messages for linked profiles
+    // too (see `listMessages`), so validating against the logged-in user id
+    // alone would 404 on messages the user can legitimately see and move.
+    await ensureMessagesBelongToUserOrLinkedProfiles({
+      recipientIds: messageResult.rows.map((row) => row.user_id),
+      userId,
+      accessToken,
+      logger,
+    });
 
     // If assigning a tag, verify it exists and belongs to the user
     if (tagId !== null) {
@@ -570,12 +581,45 @@ export async function assignMessageTag(params: {
 
     await client.query(`UPDATE messages SET tag_id = $1 WHERE id = ANY($2)`, [
       tagId,
-      messageIds,
+      uniqueMessageIds,
     ]);
 
     return { tagId, messageIds };
   } finally {
     client.release();
+  }
+}
+
+async function ensureMessagesBelongToUserOrLinkedProfiles(params: {
+  recipientIds: string[];
+  userId: string;
+  accessToken: string;
+  logger: FastifyBaseLogger;
+}): Promise<void> {
+  const { recipientIds, userId, accessToken, logger } = params;
+  const uniqueRecipientIds = Array.from(new Set(recipientIds));
+
+  // Only reach out to the profile service when a message is addressed to
+  // someone other than the logged-in user, mirroring the delete flow.
+  const hasOtherRecipients = uniqueRecipientIds.some((id) => id !== userId);
+  let validUserIds = [userId];
+  if (hasOtherRecipients) {
+    const linkedProfiles = await getLinkedProfiles({
+      userData: { organizationId: undefined, userId, accessToken },
+      logger,
+    });
+    validUserIds = Array.from(new Set([userId, ...linkedProfiles]));
+  }
+
+  const invalidRecipientIds = uniqueRecipientIds.filter(
+    (id) => !validUserIds.includes(id),
+  );
+  if (invalidRecipientIds.length > 0) {
+    logger.warn(
+      { invalidRecipientIds },
+      "User attempted to move messages they don't have access to",
+    );
+    throw httpErrors.notFound("Message not found");
   }
 }
 

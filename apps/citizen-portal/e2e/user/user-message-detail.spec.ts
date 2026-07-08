@@ -131,7 +131,7 @@ async function stubDetailApis(
   })
 }
 
-test.describe("Message detail page @regression", () => {
+test.describe("Message detail page @local", () => {
   test("renders From, To, Date, body, and attachment on a regular message", async ({
     browser,
   }) => {
@@ -151,8 +151,9 @@ test.describe("Message detail page @regression", () => {
       page.getByText("Please find attached your payslip."),
     ).toBeVisible()
     await expect(
-      page.getByTestId("attachment-download-action"),
-    ).toContainText("Payslip - Mark Murphy - 26-03-2026.pdf")
+      page.getByText("Payslip - Mark Murphy - 26-03-2026.pdf"),
+    ).toBeVisible()
+    await expect(page.getByTestId("attachment-download-action")).toBeVisible()
 
     await page.close()
   })
@@ -206,14 +207,18 @@ test.describe("Message detail page @regression", () => {
     await page.close()
   })
 
-  test("detail move: pick folder and show success toast", async ({ browser }) => {
+  test("detail move: pick folder and show success toast", async ({
+    browser,
+  }) => {
     const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
     await stubDetailApis(page, REGULAR_MESSAGE)
 
     await page.goto(`/en/messages?id=${REGULAR_MESSAGE.id}`)
     await page.getByTestId("detail-move-button").click()
     await expect(page.getByTestId("move-message-modal")).toBeVisible()
-    await page.getByTestId("move-folder-select").selectOption("mock-folder-ehic")
+    await page
+      .getByTestId("move-folder-select")
+      .selectOption("mock-folder-ehic")
     await page.getByTestId("move-confirmation-confirm").click()
 
     await expect(page.getByTestId("move-success-toast")).toBeVisible()

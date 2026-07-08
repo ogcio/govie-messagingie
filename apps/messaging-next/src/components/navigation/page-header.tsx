@@ -14,10 +14,11 @@ import {
 } from "@ogcio/design-system-react"
 import { LogoHarpWhite, LogoWhite } from "@ogcio/design-system-react/logos"
 import { usePathname } from "next/navigation"
-import { useLocale, useTranslations } from "next-intl"
+import { useTranslations } from "next-intl"
 import { useState } from "react"
 import { LANG_EN, LANG_GA } from "@/const"
 import { env } from "@/env/env.client"
+import { useActiveLocale } from "@/hooks/use-active-locale"
 import { DrawerLink } from "./drawer-link"
 import { UserMenuDrawer } from "./user-menu-drawer"
 
@@ -28,7 +29,7 @@ export function PageHeader({
   publicName: string
   onSignOut: () => void
 }) {
-  const locale = useLocale()
+  const locale = useActiveLocale()
   const path = usePathname()
   const t = useTranslations("navigation.header")
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
@@ -81,7 +82,10 @@ export function PageHeader({
             profileHref={`${NEXT_PUBLIC_PROFILE_URL}/${locale}/my-profile`}
             onSignOut={onSignOut}
           >
-            <DrawerLink bold href={`${NEXT_PUBLIC_DASHBOARD_URL}/${locale}/my-dashboard`}>
+            <DrawerLink
+              bold
+              href={`${NEXT_PUBLIC_DASHBOARD_URL}/${locale}/my-dashboard`}
+            >
               {t("drawer.dashboard")}
             </DrawerLink>
             <DrawerLink bold href={`/${locale}/messages`}>

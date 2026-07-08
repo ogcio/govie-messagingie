@@ -30,18 +30,33 @@ const FeatureFlagNames = {
   UnifiedInbox: "unified-inbox",
   /** Profile zone — gates the "export my data" lifecycle action. */
   ExportUser: "export-user",
+  /**
+   * Submission linking (AB#39580) — runtime toggle for messaging surfaces
+   * that link a message to a Journey-Builder submission. Defaults ON so
+   * current deployments are unchanged; can be turned off without a
+   * redeploy when submission-linked functionality must be hidden. (The
+   * build-time `NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION` flag governs
+   * whether a deployment ships Journey-Builder at all; this governs the
+   * per-user/runtime visibility of the linked UI within such a build.)
+   */
+  SubmissionLinking: "submission-linking",
 } as const
 
 interface AvailableFeatureFlags {
   isFlagsReady: boolean
   isUnifiedInboxEnabled: boolean
   isUserExportEnabled: boolean
+  isSubmissionLinkingEnabled: boolean
 }
 
 const defaultFeatureFlags: AvailableFeatureFlags = {
   isFlagsReady: true,
   isUnifiedInboxEnabled: false,
   isUserExportEnabled: false,
+  // Defaults ON: when Unleash is unconfigured (e.g. standalone deploy
+  // without a flag server) submission linking stays enabled so behaviour
+  // matches a fully-flagged deployment that has the flag turned on.
+  isSubmissionLinkingEnabled: true,
 }
 
 const FeatureFlagsContext =
@@ -60,14 +75,28 @@ function FeatureFlagsBridge({ children }: { children: ReactNode }) {
 
   const isUnifiedInboxEnabled = useFlag(FeatureFlagNames.UnifiedInbox)
   const isUserExportEnabled = useFlag(FeatureFlagNames.ExportUser)
+  const isSubmissionLinkingEnabled = useFlag(FeatureFlagNames.SubmissionLinking)
 
   const value = useMemo<AvailableFeatureFlags>(
     () => ({
       isFlagsReady,
       isUnifiedInboxEnabled: useFallbackValues ? false : isUnifiedInboxEnabled,
       isUserExportEnabled: useFallbackValues ? false : isUserExportEnabled,
+      // Submission linking defaults ON: while flags are loading or the
+      // proxy is unreachable we keep it enabled so behaviour matches a
+      // deployment whose `submission-linking` flag is turned on (the
+      // documented default). Turn the flag OFF in Unleash to hide it.
+      isSubmissionLinkingEnabled: useFallbackValues
+        ? true
+        : isSubmissionLinkingEnabled,
     }),
-    [isFlagsReady, useFallbackValues, isUnifiedInboxEnabled, isUserExportEnabled],
+    [
+      isFlagsReady,
+      useFallbackValues,
+      isUnifiedInboxEnabled,
+      isUserExportEnabled,
+      isSubmissionLinkingEnabled,
+    ],
   )
 
   return (

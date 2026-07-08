@@ -193,6 +193,12 @@
  * Footer selects (initial UX): (1) Chevron uses DS transform vars that can drop out —
  * use a single translateY. (2) Same fixed width on both: native <select> grows for the
  * widest <option> (“50” vs “1”), so boxes looked mismatched. (3) Cell vertical-align.
+ *
+ * The fixed width must clear the DS `.gi-select` padding (8px left + 32px right
+ * for the chevron) plus the 2px border on each side. At the previous 3.5rem
+ * (56px) that left only ~12px of content box, so the two-digit “50” option was
+ * clipped behind the chevron. 4.5rem (72px) leaves ~28px — enough to render
+ * “50” in full while keeping both selects the same width.
  */
 .desktopTable :global(tfoot .gi-select-icon),
 .mobileFooter :global(.gi-select-icon) {
@@ -203,9 +209,9 @@
 .desktopTable :global(tfoot .gi-select),
 .mobileFooter :global(.gi-select) {
   box-sizing: border-box;
-  width: var(--gieds-space-14, 3.5rem);
-  min-width: var(--gieds-space-14, 3.5rem);
-  max-width: var(--gieds-space-14, 3.5rem);
+  width: var(--gieds-space-18, 4.5rem);
+  min-width: var(--gieds-space-18, 4.5rem);
+  max-width: var(--gieds-space-18, 4.5rem);
 }
 
 /*

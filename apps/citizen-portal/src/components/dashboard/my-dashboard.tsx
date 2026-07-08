@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl"
 import { TwoColumnLayout } from "@/components/layout/containers"
 import { BoldLink } from "@/components/navigation/bold-link"
 import { usePublicName } from "@/hooks/use-public-name"
+import { isZoneEnabled } from "@/lib/feature-config"
 import govieLogo from "@/public/govie.png"
 import { MyMessages } from "./my-messages"
 
@@ -25,7 +26,7 @@ export function MyDashboard() {
     <TwoColumnLayout>
       <Stack direction='column' gap={5}>
         <Heading as='h2'>{t("welcome", { name: displayName })}</Heading>
-        <MyMessages />
+        {isZoneEnabled("messages") ? <MyMessages /> : null}
       </Stack>
 
       <Stack direction='column' gap={5}>

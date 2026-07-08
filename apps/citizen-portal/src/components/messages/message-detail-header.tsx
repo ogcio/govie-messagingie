@@ -1,9 +1,9 @@
 "use client"
 
 import { useTranslations } from "next-intl"
-import { SenderName } from "./sender-name"
-import styles from "./message-detail.module.css"
 import { formatDate } from "@/util/datetime"
+import styles from "./message-detail.module.css"
+import { SenderName } from "./sender-name"
 
 export interface MessageDetailHeaderProps {
   subject: string

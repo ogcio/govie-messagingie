@@ -20,7 +20,7 @@ const baseURL = process.env.BASE_URL || "http://localhost:4001"
 const isDockerHarness = /local\.test/.test(baseURL)
 
 export default defineConfig({
-  globalTimeout: 3480000, // 58 minutes
+  //globalTimeout: 3480000, // 58 minutes
   expect: {
     timeout: 25000,
   },

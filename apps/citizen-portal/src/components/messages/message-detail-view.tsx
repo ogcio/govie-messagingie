@@ -11,14 +11,11 @@ import { findMockMessageById } from "@/mock/messages"
 import type { Message } from "@/types"
 import { AttachmentCard } from "./attachment-card"
 import { DeleteConfirmationModal } from "./delete-confirmation-modal"
-import {
-  DELETE_FLASH_KEY,
-  MOVE_FLASH_KEY,
-} from "./message-action-flash-keys"
+import { DELETE_FLASH_KEY, MOVE_FLASH_KEY } from "./message-action-flash-keys"
+import styles from "./message-detail.module.css"
 import { MessageDetailBody } from "./message-detail-body"
 import { MessageDetailHeader } from "./message-detail-header"
 import { MessageDetailToolbar } from "./message-detail-toolbar"
-import styles from "./message-detail.module.css"
 import { MoveMessageModal } from "./move-message-modal"
 import { useDeleteMessages } from "./use-delete-messages"
 import { useMarkMessageAsRead } from "./use-mark-message-as-read"
@@ -134,7 +131,9 @@ export function MessageDetailView({ id }: MessageDetailViewProps) {
           attachmentCount={attachments.length}
         />
 
-        {attachments.length > 0 && <AttachmentList attachmentIds={attachments} />}
+        {attachments.length > 0 && (
+          <AttachmentList attachmentIds={attachments} />
+        )}
       </div>
 
       <DeleteConfirmationModal

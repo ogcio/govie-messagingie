@@ -10,9 +10,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of August 2025.\n\nIf you have any queries, please contact HR.",
     "isSeen": false,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000001-0000-4000-8000-000000000001"
-    ]
+    "attachments": ["10000001-0000-4000-8000-000000000001"]
   },
   {
     "id": "00000002-0000-4000-8000-000000000002",
@@ -25,9 +23,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of July 2025.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000002-0000-4000-8000-000000000002"
-    ]
+    "attachments": ["10000002-0000-4000-8000-000000000002"]
   },
   {
     "id": "00000003-0000-4000-8000-000000000003",
@@ -40,9 +36,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of June 2025.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000003-0000-4000-8000-000000000003"
-    ]
+    "attachments": ["10000003-0000-4000-8000-000000000003"]
   },
   {
     "id": "00000004-0000-4000-8000-000000000004",
@@ -55,9 +49,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of May 2025.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000004-0000-4000-8000-000000000004"
-    ]
+    "attachments": ["10000004-0000-4000-8000-000000000004"]
   },
   {
     "id": "00000005-0000-4000-8000-000000000005",
@@ -70,9 +62,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of April 2025.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000005-0000-4000-8000-000000000005"
-    ]
+    "attachments": ["10000005-0000-4000-8000-000000000005"]
   },
   {
     "id": "00000006-0000-4000-8000-000000000006",
@@ -85,9 +75,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of March 2025.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000006-0000-4000-8000-000000000006"
-    ]
+    "attachments": ["10000006-0000-4000-8000-000000000006"]
   },
   {
     "id": "00000007-0000-4000-8000-000000000007",
@@ -100,9 +88,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of February 2025.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000007-0000-4000-8000-000000000007"
-    ]
+    "attachments": ["10000007-0000-4000-8000-000000000007"]
   },
   {
     "id": "00000008-0000-4000-8000-000000000008",
@@ -115,9 +101,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of January 2025.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000008-0000-4000-8000-000000000008"
-    ]
+    "attachments": ["10000008-0000-4000-8000-000000000008"]
   },
   {
     "id": "00000009-0000-4000-8000-000000000009",
@@ -130,9 +114,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of December 2024.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000009-0000-4000-8000-000000000009"
-    ]
+    "attachments": ["10000009-0000-4000-8000-000000000009"]
   },
   {
     "id": "0000000a-0000-4000-8000-00000000000a",
@@ -145,9 +127,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of November 2024.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "1000000a-0000-4000-8000-00000000000a"
-    ]
+    "attachments": ["1000000a-0000-4000-8000-00000000000a"]
   },
   {
     "id": "0000000b-0000-4000-8000-00000000000b",
@@ -160,9 +140,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of October 2024.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "1000000b-0000-4000-8000-00000000000b"
-    ]
+    "attachments": ["1000000b-0000-4000-8000-00000000000b"]
   },
   {
     "id": "0000000c-0000-4000-8000-00000000000c",
@@ -175,9 +153,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of September 2024.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "1000000c-0000-4000-8000-00000000000c"
-    ]
+    "attachments": ["1000000c-0000-4000-8000-00000000000c"]
   },
   {
     "id": "0000000d-0000-4000-8000-00000000000d",
@@ -190,9 +166,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of August 2024.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "1000000d-0000-4000-8000-00000000000d"
-    ]
+    "attachments": ["1000000d-0000-4000-8000-00000000000d"]
   },
   {
     "id": "0000000e-0000-4000-8000-00000000000e",
@@ -205,9 +179,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of July 2024.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "1000000e-0000-4000-8000-00000000000e"
-    ]
+    "attachments": ["1000000e-0000-4000-8000-00000000000e"]
   },
   {
     "id": "0000000f-0000-4000-8000-00000000000f",
@@ -220,9 +192,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of June 2024.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "1000000f-0000-4000-8000-00000000000f"
-    ]
+    "attachments": ["1000000f-0000-4000-8000-00000000000f"]
   },
   {
     "id": "00000010-0000-4000-8000-000000000010",
@@ -235,9 +205,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of May 2024.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000010-0000-4000-8000-000000000010"
-    ]
+    "attachments": ["10000010-0000-4000-8000-000000000010"]
   },
   {
     "id": "00000011-0000-4000-8000-000000000011",
@@ -250,9 +218,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of April 2024.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000011-0000-4000-8000-000000000011"
-    ]
+    "attachments": ["10000011-0000-4000-8000-000000000011"]
   },
   {
     "id": "00000012-0000-4000-8000-000000000012",
@@ -265,9 +231,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of March 2024.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000012-0000-4000-8000-000000000012"
-    ]
+    "attachments": ["10000012-0000-4000-8000-000000000012"]
   },
   {
     "id": "00000013-0000-4000-8000-000000000013",
@@ -280,9 +244,7 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of February 2024.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000013-0000-4000-8000-000000000013"
-    ]
+    "attachments": ["10000013-0000-4000-8000-000000000013"]
   },
   {
     "id": "00000014-0000-4000-8000-000000000014",
@@ -295,8 +257,6 @@
     "plainText": "Dear colleague,\n\nPlease find attached your payslip for the month of January 2024.\n\nIf you have any queries, please contact HR.",
     "isSeen": true,
     "attachmentsCount": 1,
-    "attachments": [
-      "10000014-0000-4000-8000-000000000014"
-    ]
+    "attachments": ["10000014-0000-4000-8000-000000000014"]
   }
 ]

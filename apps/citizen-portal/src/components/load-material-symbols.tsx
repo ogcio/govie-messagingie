@@ -7,6 +7,8 @@ import { Fragment } from "react"
  * detail toolbar).
  */
 export function LoadMaterialSymbols() {
+  // NOTE: Google Fonts requires `icon_names` to be sorted alphabetically
+  // (ASCII order) — an unsorted list yields a 400 and no font loads at all.
   const iconNames = [
     "accessibility_new",
     "add_circle",
@@ -35,9 +37,11 @@ export function LoadMaterialSymbols() {
     "content_copy",
     "credit_card",
     "delete",
+    "description",
     "directions_car",
     "do_not_disturb_on",
     "download",
+    "draft",
     "drive_file_move",
     "edit",
     "error",
@@ -46,6 +50,7 @@ export function LoadMaterialSymbols() {
     "first_page",
     "health_and_safety",
     "home",
+    "image",
     "info",
     "keyboard_arrow_down",
     "keyboard_arrow_up",
@@ -63,6 +68,7 @@ export function LoadMaterialSymbols() {
     "person",
     "person_cancel",
     "person_check",
+    "picture_as_pdf",
     "refresh",
     "search",
     "send",
@@ -71,6 +77,7 @@ export function LoadMaterialSymbols() {
     "space_dashboard",
     "swap_vert",
     "sync",
+    "table_chart",
     "thumb_down",
     "thumb_up",
     "unfold_more",

@@ -163,10 +163,14 @@
       "toolbarAriaLabel": "Message actions",
       "attachmentOnlyFallback": "Please select the attachment(s) to preview your message content",
       "attachment": {
-        "preview": "Preview",
+        "open": "Open",
         "download": "Download",
-        "previewFile": "Preview {fileName}",
-        "downloadFile": "Download {fileName}"
+        "openFile": "Open {fileName}",
+        "downloadFile": "Download {fileName}",
+        "downloading": "Downloading",
+        "savedToDevice": "Saved to device",
+        "previewUnavailable": "Preview unavailable",
+        "downloadFailed": "Download failed"
       }
     }
   },
