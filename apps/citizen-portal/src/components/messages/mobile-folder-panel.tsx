@@ -1,15 +1,16 @@
 "use client"
 
 import { Button, Icon, InputText } from "@ogcio/design-system-react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useUrlSearchParams } from "@/hooks/use-url-search-params"
 import { FOLDER_NAME_MAX_LENGTH } from "./folder-form-modal"
+import { InboxUnreadBadge } from "./inbox-unread-badge"
 import { DELETED_FOLDER_ID, INBOX_FOLDER_ID } from "./message-folders-sidebar"
 import styles from "./mobile-panel.module.css"
 import { useCreateFolder } from "./use-create-folder"
 import { useFolders } from "./use-folders"
-import { useInboxUnreadCount } from "./use-inbox-unread-count"
 
 export interface MobileFolderPanelProps {
   isOpen: boolean
@@ -28,12 +29,11 @@ const PANEL_TOAST_DURATION = 4_000
 export function MobileFolderPanel({ isOpen, onClose }: MobileFolderPanelProps) {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const searchParams = useUrlSearchParams()
   const t = useTranslations("home.folders")
   const tMove = useTranslations("home.move.modal")
 
   const selectedFolderId = searchParams.get("folder") ?? INBOX_FOLDER_ID
-  const unreadCount = useInboxUnreadCount()
   const { folders, refresh: refreshFolders } = useFolders()
   const { createFolder, isLoading: isCreating } = useCreateFolder()
 
@@ -175,11 +175,7 @@ export function MobileFolderPanel({ isOpen, onClose }: MobileFolderPanelProps) {
               onClick={() => navigateToFolder(INBOX_FOLDER_ID)}
             >
               <span className={styles.folderLabel}>{tMove("inbox")}</span>
-              {unreadCount > 0 ? (
-                <span className={styles.unreadBadge} aria-hidden>
-                  {unreadCount}
-                </span>
-              ) : null}
+              <InboxUnreadBadge />
             </button>
           </li>
           {folders.map((folder) => (

@@ -78,6 +78,7 @@ export const env = defineZoneEnv({
      */
     NEXT_PUBLIC_PAYMENTS_URL: requiredUrl.default("http://localhost:3013"),
     NEXT_PUBLIC_JOURNEY_URL: requiredUrl.default("http://localhost:3014"),
+    NEXT_PUBLIC_FORMS_URL: requiredUrl.default("http://localhost:4000"),
 
     /** Optional IdP end-session URL (citizen role only, global signout). */
     NEXT_PUBLIC_MYGOVID_END_SESSION_URL: optionalUrl,
@@ -104,6 +105,7 @@ export const env = defineZoneEnv({
     NEXT_PUBLIC_ENABLE_MESSAGING: booleanFlag("true"),
     NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION: booleanFlag("true"),
     NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION: booleanFlag("true"),
+    NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION: booleanFlag("true"),
 
     /**
      * Life Events Accelerator (LEA) flag (AB#40267). Build-time only —
@@ -173,6 +175,17 @@ export const env = defineZoneEnv({
       .string()
       .optional()
       .superRefine(requiredInProduction),
+    /** Grafana Session Replay (AB#40467). Disabled by default; enable per environment via pipeline. */
+    NEXT_PUBLIC_FARO_REPLAY_ENABLED: booleanFlag("false"),
+    /**
+     * Fraction (0..1) of sampled sessions that are also recorded for replay.
+     * Applied on top of Faro's own session sampling.
+     */
+    NEXT_PUBLIC_FARO_REPLAY_SAMPLING_RATE: z.coerce
+      .number()
+      .min(0)
+      .max(1)
+      .default(0),
     NEXT_PUBLIC_VERSION: z.string().default(process.env.version ?? "0.0.0"),
   },
   runtimeEnv: {
@@ -184,6 +197,7 @@ export const env = defineZoneEnv({
       process.env.NEXT_PUBLIC_DASHBOARD_ADMIN_URL,
     NEXT_PUBLIC_PAYMENTS_URL: process.env.NEXT_PUBLIC_PAYMENTS_URL,
     NEXT_PUBLIC_JOURNEY_URL: process.env.NEXT_PUBLIC_JOURNEY_URL,
+    NEXT_PUBLIC_FORMS_URL: process.env.NEXT_PUBLIC_FORMS_URL,
     NEXT_PUBLIC_MYGOVID_END_SESSION_URL:
       process.env.NEXT_PUBLIC_MYGOVID_END_SESSION_URL,
     NEXT_PUBLIC_FORMS_SERVICE_URL: process.env.NEXT_PUBLIC_FORMS_SERVICE_URL,
@@ -197,6 +211,8 @@ export const env = defineZoneEnv({
       process.env.NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION,
     NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION:
       process.env.NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION,
+    NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION:
+      process.env.NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION,
     NEXT_PUBLIC_ENABLE_LEA: process.env.NEXT_PUBLIC_ENABLE_LEA,
     NEXT_PUBLIC_ENABLE_MOCK_MESSAGES:
       process.env.NEXT_PUBLIC_ENABLE_MOCK_MESSAGES,
@@ -214,6 +230,10 @@ export const env = defineZoneEnv({
       process.env.NEXT_PUBLIC_FARO_SERVICE_NAMESPACE,
     NEXT_PUBLIC_FARO_PROPAGATE_TRACE_HEADER:
       process.env.NEXT_PUBLIC_FARO_PROPAGATE_TRACE_HEADER,
+    NEXT_PUBLIC_FARO_REPLAY_ENABLED:
+      process.env.NEXT_PUBLIC_FARO_REPLAY_ENABLED,
+    NEXT_PUBLIC_FARO_REPLAY_SAMPLING_RATE:
+      process.env.NEXT_PUBLIC_FARO_REPLAY_SAMPLING_RATE,
     NEXT_PUBLIC_VERSION: process.env.version,
   },
 })

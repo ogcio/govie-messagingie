@@ -24,7 +24,7 @@ test.describe("Feature flags — fully enabled deployment", () => {
 
   test("the dashboard ships the recent-messages widget @regression", async () => {
     await page.goto("/en/my-dashboard")
-    await expect(page.getByText("Your messages")).toBeVisible()
+    await expect(page.getByText("Your recent messages")).toBeVisible()
     await expect(page.getByText("View all messages")).toBeVisible()
   })
 

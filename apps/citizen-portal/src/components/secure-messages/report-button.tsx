@@ -1,9 +1,10 @@
 "use client"
 
-import { Button, Spinner } from "@ogcio/design-system-react"
+import { Button } from "@ogcio/design-system-react"
 import { useAuth } from "@ogcio/sag-client/react"
 import { useTranslations } from "next-intl"
 import { useCallback, useState } from "react"
+import { CssSpinner } from "@/components/css-spinner"
 import { env } from "@/env/env.client"
 
 export function ReportButton() {
@@ -23,7 +24,7 @@ export function ReportButton() {
   return (
     <Button variant='secondary' disabled={isLoading} onClick={handleReport}>
       {t("report")}
-      {isLoading && <Spinner />}
+      {isLoading && <CssSpinner />}
     </Button>
   )
 }

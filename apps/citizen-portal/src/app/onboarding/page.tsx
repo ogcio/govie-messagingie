@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  Heading,
-  Link,
-  Paragraph,
-  Spinner,
-  Stack,
-} from "@ogcio/design-system-react"
+import { Heading, Link, Paragraph, Stack } from "@ogcio/design-system-react"
 import {
   CONNECTOR_MYGOVID,
   useAuth,
@@ -16,6 +10,7 @@ import {
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Suspense, useCallback, useEffect, useRef, useState } from "react"
+import { CssSpinner } from "@/components/css-spinner"
 import { env } from "@/env/env.client"
 import { resolveOnboardingSource } from "./resolve-onboarding-source"
 
@@ -228,7 +223,7 @@ function OnboardingContent() {
 
   return (
     <OnboardingPanel>
-      <Spinner size='xl' />
+      <CssSpinner size='xl' />
       <Paragraph>
         {status === "assigning_role"
           ? "Verifying your identity..."
@@ -255,7 +250,7 @@ function OnboardingInner() {
   if (loading || !user) {
     return (
       <OnboardingPanel>
-        <Spinner size='xl' />
+        <CssSpinner size='xl' />
       </OnboardingPanel>
     )
   }
@@ -268,7 +263,7 @@ export default function OnboardingPage() {
     <Suspense
       fallback={
         <OnboardingPanel>
-          <Spinner size='xl' />
+          <CssSpinner size='xl' />
         </OnboardingPanel>
       }
     >

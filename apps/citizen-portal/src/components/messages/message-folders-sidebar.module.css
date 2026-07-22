@@ -13,22 +13,6 @@
   min-width: 0;
 }
 
-.unreadBadge {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  min-width: 1.5rem;
-  height: 1.5rem;
-  padding: 0 var(--gieds-space-2);
-  border-radius: var(--gieds-border-radius-sm, 4px);
-  background: var(--gieds-color-gray-950, #0b0c0c);
-  color: var(--gieds-color-white, #ffffff);
-  font-size: 0.875rem;
-  font-weight: var(--gieds-font-weight-700, 700);
-  line-height: 1;
-}
-
 .folderMenuButton {
   display: inline-flex;
   align-items: center;

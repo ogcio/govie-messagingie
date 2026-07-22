@@ -39,6 +39,7 @@ export default defineConfig({
       NEXT_PUBLIC_ENABLE_MESSAGING: "true",
       NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION: "true",
       NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION: "true",
+      NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION: "false",
     },
   },
 

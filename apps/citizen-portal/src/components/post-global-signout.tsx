@@ -1,7 +1,7 @@
 "use client"
 
-import { Spinner } from "@ogcio/design-system-react"
 import { useEffect, useRef } from "react"
+import { CssSpinner } from "@/components/css-spinner"
 import { env } from "@/env/env.client"
 import { getValidReturnUrl } from "@/util/valid-return-url"
 
@@ -86,7 +86,7 @@ export function PostGlobalSignout() {
       className='gi-flex gi-items-center gi-justify-center'
       style={{ minHeight: "50vh" }}
     >
-      <Spinner size='xl' />
+      <CssSpinner size='xl' />
     </output>
   )
 }

@@ -17,7 +17,7 @@
   "dashboard": {
     "welcome": "Fáilte air ais, {name}",
     "messages": {
-      "title": "Taeachtaireachtaí mo",
+      "title": "Do theachtaireachtaí is déanaí",
       "link": "Féach ar gach teachtaireacht",
       "view": "Féach ar teachtaireacht",
       "empty": "Gan teachtaireachtaí nua",
@@ -27,6 +27,60 @@
       "title": "Cuardaigh gnéithe nó foinse",
       "description": "Is ardán Rialtas é seo - tascanna riachtanacha riaracháin a fháil ar an ardán seo.",
       "link": "Féach gov.ie"
+    }
+  },
+  "submissions": {
+    "heading": "D'iarratais",
+    "backToDashboard": "Ar ais go dtí an painéal",
+    "loading": "Ag lódáil iarratais",
+    "error": "Earráid agus iarratais á lódáil: {message}",
+    "empty": {
+      "all": "Níl aon iarratas agat go fóill.",
+      "search": "Níl aon iarratas a mheaitseálann do chuardach."
+    },
+    "table": {
+      "column": {
+        "id": "Aitheantas",
+        "application": "Iarratas",
+        "status": "Stádas",
+        "date": "Dáta"
+      },
+      "aria": {
+        "applicationList": "Liosta iarratas"
+      }
+    },
+    "status": {
+      "initiated": "Tosaithe",
+      "submitted": "Curtha isteach",
+      "processing": "Á phróiseáil",
+      "completed": "Críochnaithe",
+      "cancelled": "Cealaithe"
+    },
+    "recent": {
+      "title": "D'iarratais le déanaí",
+      "loading": "Ag lódáil iarratais",
+      "empty": "Níl aon iarratas agat go fóill.",
+      "error": "Earráid agus iarratais á lódáil: {message}",
+      "link": "Féach ar gach iarratas"
+    },
+    "detail": {
+      "heading": "Sonraí an iarratais",
+      "loading": "Ag lódáil iarratais",
+      "notFound": "Iarratas gan aimsiú",
+      "toolbarAriaLabel": "Gníomhartha iarratais",
+      "applicationFor": "Iarratas ar",
+      "description": "Cur síos",
+      "id": "Aitheantas",
+      "startDate": "Dáta tosaithe",
+      "submittedDate": "Dáta a cuireadh isteach",
+      "status": "Stádas",
+      "related": {
+        "title": "Teachtaireachtaí gaolmhara",
+        "empty": "Níl aon teachtaireacht a bhaineann leis an iarratas seo.",
+        "attachment": "Tá ceangaltán ann",
+        "read": "Léite",
+        "unread": "Gan léamh"
+      }
     }
   },
   "home": {
@@ -56,7 +110,10 @@
         "status": "Scag de réir stádais",
         "all": "Gach teachtaireacht",
         "unread": "Neamhléite",
-        "read": "Léite"
+        "read": "Léite",
+        "button": "Scagairí",
+        "apply": "Cuir i bhfeidhm",
+        "clear": "Glan"
       },
       "from": "Ó",
       "unknownSender": "Seoltóir anaithnid",
@@ -86,7 +143,8 @@
       "toolbar": {
         "ariaLabel": "Gníomhartha mórchóir",
         "selectedCount": "{count} roghnaithe",
-        "delete": "Scrios"
+        "delete": "Scrios",
+        "clearSelection": "Glan an roghnúchán"
       },
       "confirm": {
         "title": "{count, plural, one {Scrios an teachtaireacht?} other {Scrios # teachtaireacht?}}",
@@ -161,6 +219,8 @@
       "delete": "Scrios",
       "noSubject": "(gan ábhar)",
       "toolbarAriaLabel": "Gníomhartha teachtaireachta",
+      "backToApplication": "Ar ais chuig an iarratas",
+      "backToApplicationNamed": "Ar ais chuig {title}",
       "attachmentOnlyFallback": "Roghnaigh an ceanglán/na ceangláin chun ábhar do theachtaireachta a réamhamharc",
       "attachment": {
         "open": "Oscail",
@@ -188,14 +248,17 @@
     "title": {
       "messages": "MessagingIE",
       "profile": "Mo Próifíl",
-      "dashboard": "Painéal Rialaithe"
+      "dashboard": "Painéal Rialaithe",
+      "applications": "Iarratais"
     },
     "header": {
       "title": "MessagingIE",
       "onboarding": "Ionduchtú",
       "drawer": {
         "dashboard": "Painéal Rialaithe",
+        "applications": "Iarratais",
         "messaging": "MessagingIE",
+        "whatsNew": "Cad atá nua",
         "close": "Dún"
       },
       "menu": "Roghchlár",
@@ -210,6 +273,7 @@
     },
     "footer": {
       "link": {
+        "whatsNew": "Cad atá nua",
         "privacy": "Príobháideacht",
         "cookies": "Fianáin",
         "accessibilityStatement": "Tuarascáil Inrochtaineachta",
@@ -250,6 +314,13 @@
       "title": "Tá do bhosca isteach nuashonraithe",
       "description": "Tá cúpla athrú tagtha isteach - seo a bhfuil le fios agat."
     }
+  },
+  "whatsNew": {
+    "title": "Cad atá nua",
+    "intro": "Nuashonruithe agus feabhsuithe le déanaí ar MessagingIE.",
+    "empty": "Níl aon nuashonruithe le taispeáint faoi láthair.",
+    "error": "Níorbh fhéidir linn na nuashonruithe is déanaí a lódáil. Bain triail as arís ar ball.",
+    "loading": "Nuashonruithe á lódáil"
   },
   "accountLinking": {
     "title": "Cén fhreagra is atá agat?",

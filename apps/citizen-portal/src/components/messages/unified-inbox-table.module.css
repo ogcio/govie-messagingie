@@ -1,41 +1,3 @@
-/* Search row */
-.searchRow {
-  display: flex;
-  gap: var(--gieds-space-2);
-  align-items: stretch;
-  width: 100%;
-}
-
-.searchRow > :first-child {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Unread count (inline variant used on mobile next to the Select button) */
-.unreadCount {
-  font-size: 0.9375rem;
-  color: var(--gieds-color-gray-700, #51555e);
-}
-
-/*
- * Unread count (desktop block rendered above the table). Dimensions
- * mirror the DS `DataTableSelectedRowsBanner` that swaps into this
- * slot when a selection is active — same `min-height`, same vertical
- * padding, same flex/align treatment — so toggling a selection does
- * not shift the table below up or down. Horizontal padding matches
- * the banner's internal inset so the "(N) unread messages" text lines
- * up horizontally with the banner's "(N) messages selected" counter
- * when they flip.
- */
-.unreadCountDesktop {
-  display: flex;
-  align-items: center;
-  min-height: 3rem;
-  padding: var(--gieds-space-2) var(--gieds-space-3);
-  font-size: 0.9375rem;
-  color: var(--gieds-color-gray-700, #51555e);
-}
-
 /* Empty state — loading uses the shared <MessagesLoading /> spinner. */
 .emptyState {
   display: flex;
@@ -126,19 +88,30 @@
 }
 
 /*
- * DS gap (no `onClick` / interactive variant on `TableRow`): clickable
- * row affordance.
+ * DS gap (no clickable/link variant on `TableRow`): whole-row navigation.
  *
- * Whole-row click is the primary navigation gesture in this list; DS
- * `TableRow` has no built-in `onClick` / clickable variant, so we paint
- * the cursor + hover tint + focus ring ourselves. The component-side
- * row also gets `role='button'` and `tabIndex={0}` so this visual state
- * lines up with assistive tech.
+ * Whole-row click is the primary navigation gesture in this list. DS
+ * `TableRow` has no built-in clickable/link variant, so the subject cell
+ * renders a real `<a>` (Next `<Link>`) that we stretch across the row
+ * (see `.rowLink`), and paint the cursor + hover tint + focus ring here.
+ * A real anchor — rather than an `onClick`/`role="button"` on the `<tr>` —
+ * keeps keyboard focus, Enter-to-open, open-in-new-tab and middle-click
+ * working for free. `.clickableRow` is the positioned containing block
+ * the overlay stretches against.
  *
- * Removable when DS `TableRow` ships an `onClick` / `clickable` /
- * `as='button'` variant.
+ * Removable when DS `TableRow` ships a `clickable` / `as='a'` variant.
  */
 .clickableRow {
+  position: relative;
+  /*
+   * Safari/WebKit ignore `position: relative` on `<tr>` and let the
+   * stretched-link `::after` escape the row. On the last row the overlay
+   * can cover the viewport so every click opens that message. `transform`
+   * plus `clip-path` establish a containing block and clip the overlay to
+   * the row in WebKit — see https://mtsknn.fi/blog/relative-tr-in-safari/
+   */
+  transform: translate(0);
+  clip-path: inset(0);
   cursor: pointer;
 }
 
@@ -147,10 +120,39 @@
 }
 
 /*
+ * Stretched-link overlay: the subject anchor's `::after` covers the whole
+ * row so the entire row is the hit area. The link text inherits the row's
+ * colour/weight so the subject still reads as plain text, not a blue
+ * hyperlink.
+ */
+.rowLink {
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+}
+
+.rowLink::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/*
+ * Keep the leading select-column checkbox clickable above the row-wide
+ * link overlay by lifting the cell into a higher stacking level, so
+ * pointer events land on the checkbox instead of the anchor beneath it.
+ */
+.selectCell {
+  position: relative;
+  z-index: 2;
+}
+
+/*
  * Selected-row highlight (desktop). DS `TableRow` has no `selected`
  * variant, so a checked row previously signalled its state only through
  * the checkbox — unlike the mobile list, which tints the whole row. This
- * mirrors the mobile `.mobileRowSelected` gray-200 tone (and gray-300 on
+ * mirrors the mobile ListCard selected-state gray-200 tone (and gray-300 on
  * hover) so selection reads consistently across both viewports. The
  * doubled `.selectedRow` selector lifts specificity above
  * `.clickableRow:hover` and `.unreadRow` so the selection tint always
@@ -164,29 +166,78 @@
   background-color: var(--gieds-color-gray-300, #c9ccd1);
 }
 
-.clickableRow:focus-visible {
+/*
+ * Focus lands on the subject anchor, but the ring should frame the whole
+ * row — so draw it on the row-covering overlay rather than the text.
+ */
+.rowLink:focus-visible::after {
   outline: var(--gieds-border-width-200) solid var(--gieds-color-primary-700);
   outline-offset: -2px;
 }
 
-/* Mobile footer */
-.mobileFooter {
-  display: none;
-  padding: var(--gieds-space-3) 0;
-}
-
-.mobileFooter :global(.gi-table-pagination) {
-  justify-content: center;
-}
-
 /*
- * Section root. On desktop a no-op block element. On mobile it becomes a
- * flex column so the pagination footer below can be pushed to the bottom
- * of the available viewport via `margin-top: auto`. See the mobile media
- * query at the bottom of this file for the rest of the wiring.
+ * Section root. On mobile it becomes a flex column (see media query below)
+ * so the list body and pagination footer can share the viewport band.
  */
 .tableRoot {
   display: block;
+}
+
+/*
+ * Shared list chrome column: search/banner header, optional desktop meta
+ * row, then the table. Used by the messages inbox and applications list so
+ * spacing stays aligned across both surfaces.
+ */
+.listChrome {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+  min-height: 0;
+}
+
+/*
+ * Search + desktop bulk toolbar occupy one grid cell. The inactive layer
+ * stays `visibility: hidden` so its height still reserves space and the
+ * table below does not jump when a selection toggles the chrome.
+ */
+.listChromeHeader {
+  display: grid;
+  width: 100%;
+}
+
+.listChromeHeader > * {
+  grid-area: 1 / 1;
+  align-self: start;
+  width: 100%;
+}
+
+.listChromeHeaderInactive {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/*
+ * Desktop toolbar row that swaps in for search. Suppressed on mobile —
+ * the select-mode header carries the same actions there.
+ */
+.headerToolbarSlot {
+  display: block;
+  width: 100%;
+}
+
+.headerToolbarPlaceholder {
+  min-height: 3rem;
+}
+
+/*
+ * Shared offset between the lifted list chrome and the desktop table on
+ * both the messages inbox and applications list.
+ */
+.listChromeTable {
+  margin-top: var(--gieds-space-4);
+  width: 100%;
 }
 
 /*
@@ -200,14 +251,12 @@
  * clipped behind the chevron. 4.5rem (72px) leaves ~28px — enough to render
  * “50” in full while keeping both selects the same width.
  */
-.desktopTable :global(tfoot .gi-select-icon),
-.mobileFooter :global(.gi-select-icon) {
+.desktopTable :global(tfoot .gi-select-icon) {
   display: block;
   transform: translate(0, calc(-50% + 2px));
 }
 
-.desktopTable :global(tfoot .gi-select),
-.mobileFooter :global(.gi-select) {
+.desktopTable :global(tfoot .gi-select) {
   box-sizing: border-box;
   width: var(--gieds-space-18, 4.5rem);
   min-width: var(--gieds-space-18, 4.5rem);
@@ -247,8 +296,7 @@
   font-size: var(--gieds-font-size-300);
 }
 
-.desktopTable :global(.gi-table-pagination-label),
-.mobileFooter :global(.gi-table-pagination-label) {
+.desktopTable :global(.gi-table-pagination-label) {
   font-size: var(--gieds-font-size-300);
 }
 
@@ -286,12 +334,10 @@
  * banner's `actions` slot instead and the rules below hide the DS-owned
  * label so only the localised copy remains visible.
  *
- * The banner's surface styling (gray-900, light chips) is kept as-is.
- * Two extra overrides apply on top:
- *   1) Flatten the bottom corners so the banner's bottom edge sits
- *      flush against the table header below — DS ships `gi-rounded-md`
- *      on all four corners, which otherwise leaves a visible seam.
- *   2) Stretch the `actions` wrapper to fill the remaining width and
+ * The banner keeps its rounded DS outline because it swaps into the lifted
+ * search chrome slot rather than stitching flush to the table header.
+ * Extra overrides on top:
+ *   1) Stretch the `actions` wrapper to fill the remaining width and
  *      align its children on the cross axis with `center`. DS's root
  *      paints `justify-content: space-between` + `items-center` across
  *      `[hidden label] [actions div]`, but the actions div itself is
@@ -307,11 +353,6 @@
  *      together on the right + all vertically centred, within the same
  *      DS chrome.
  */
-.bulkBannerHideDefaultLabel {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-}
-
 .bulkBannerHideDefaultLabel > span:first-child {
   display: none;
 }
@@ -391,7 +432,7 @@
   gap: var(--gieds-space-3);
   min-height: 3rem;
   /*
-   * Horizontal padding matches .mobileRow's var(--gieds-space-3) so the
+   * Horizontal padding matches ListCard's var(--gieds-space-3) so the
    * "unread count / Select" toolbar lines up with the row content below
    * once the mobile list is full-bleed (no longer inside DS container
    * gutters). Vertical padding stays small because min-height owns the
@@ -465,11 +506,13 @@
  * (or `subtle-on-dark`) variant.
  */
 .mobileCloseButton {
+  /* biome-ignore lint/complexity/noImportantStyles: needed to override the equal-specificity DS `.gi-btn-secondary-light` border-color rule (see comment above) */
   border-color: rgba(255, 255, 255, 0.25) !important;
 }
 
 .mobileCloseButton:hover:not(:disabled),
 .mobileCloseButton:focus-visible {
+  /* biome-ignore lint/complexity/noImportantStyles: needed to override the equal-specificity DS `.gi-btn-secondary-light` border-color rule (see comment above) */
   border-color: rgba(255, 255, 255, 0.6) !important;
 }
 
@@ -494,56 +537,24 @@
   display: none;
 }
 
-.mobileRow {
+/*
+ * List region between chrome (search / select header) and pagination.
+ * Desktop: size to content — table rows are shorter than mobile cards and
+ * pagination lives in the table footer, so a page-size-based min-height
+ * would leave a large empty band below the table when `pageSize` > 6.
+ */
+.listBody {
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--gieds-space-3);
+  flex: 1 1 auto;
+  flex-direction: column;
   width: 100%;
-  padding: var(--gieds-space-3-5) var(--gieds-space-3);
-  border: none;
-  border-bottom: var(--gieds-border-width-100) solid
-    var(--gieds-color-gray-200, #d8dadf);
-  background: none;
-  text-align: left;
-  cursor: pointer;
-  font: inherit;
-  color: inherit;
+  background-color: var(--gieds-color-white, #ffffff);
 }
 
-/*
- * DS gap (no decorative `InputCheckbox` that safely nests inside a
- * `<button>`): mobile row checkbox indicator.
- *
- * The mobile row is a single `<button>` that either opens the message
- * (default) or toggles the row's selection (select mode), which rules
- * out nesting a real DS `<input type="checkbox">` (interactive-inside-
- * interactive — invalid HTML + unreachable to assistive tech). Instead
- * the row's selection state is carried by `aria-pressed` on the button
- * and this wrapper paints `CheckboxIndicatorIcon` as a decorative
- * stand-in whose stroke colour matches DS's `InputCheckbox`
- * (`border-color: --gieds-color-border-system-neutral-default` ≈
- * gray-700). `pointer-events: none` keeps the wrapper from stealing
- * the row's click target; `aria-hidden` on the SVG keeps the glyph out
- * of the screen-reader tree. No `checked` colour bump — DS paints the
- * tick in the same neutral tone as the frame, and matching that keeps
- * the mobile and desktop checkboxes visually identical across states.
- *
- * Removable when DS ships an `InputCheckbox` variant that is safe to
- * mount inside an interactive ancestor (e.g. `presentation`-only,
- * non-focusable).
- */
-.mobileCheckbox {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  pointer-events: none;
-  /*
-   * DS gap: matches the DS InputCheckbox's border colour token directly so
-   * the mobile SVG indicator paints at exactly the same tone as the real
-   * checkbox used on desktop / in the mobile select-all header.
-   */
-  color: var(--gieds-color-border-system-neutral-default, #0b0c0c);
+.listBody:has(+ [data-inbox-pagination-footer])
+  .mobileList
+  > button:last-child {
+  border-bottom: none;
 }
 
 /*
@@ -560,68 +571,6 @@
   vertical-align: middle;
 }
 
-/*
- * Selected-row highlight (mobile). Reuses the unread gray-200 tone so the
- * selected row has the same visual weight as an unread row in the screenshot;
- * the checkbox inside .mobileCheckbox carries the canonical "is selected"
- * state for assistive tech via aria-pressed on the button itself.
- */
-.mobileRowSelected {
-  background-color: var(--gieds-color-gray-200, #d8dadf);
-}
-
-.mobileRowSelected:hover {
-  background-color: var(--gieds-color-gray-300, #c9ccd1);
-}
-
-.mobileRow.unreadRow {
-  background-color: var(--gieds-color-gray-200, #d8dadf);
-}
-
-.mobileRow:hover {
-  background: var(--gieds-color-gray-50, #f7f7f8);
-}
-
-.mobileRow:focus-visible {
-  outline: var(--gieds-border-width-200) solid var(--gieds-color-primary-700);
-  outline-offset: -2px;
-}
-
-.mobileRowTop {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--gieds-space-2);
-}
-
-.mobileSender {
-  font-size: var(--gieds-font-size-300);
-  font-weight: var(--gieds-font-weight-500);
-  color: var(--gieds-color-gray-900, #252526);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mobileDate {
-  font-size: 0.9375rem;
-  /* Gray-700 for ≥4.5:1 on gray-200 (unread) and white backgrounds */
-  color: var(--gieds-color-gray-700, #51555e);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.mobileSubject {
-  font-size: var(--gieds-font-size-200);
-  line-height: 1.35;
-  color: var(--gieds-color-gray-700, #51555e);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-  flex: 1;
-}
-
 /* ── Responsive ── */
 @media (max-width: 767px) {
   .desktopTable {
@@ -633,46 +582,28 @@
   }
 
   /*
-   * Mobile section root stretches to fill the remaining viewport height
-   * (between the page header above and the application footer below) so
-   * `.mobileFooter` can be pushed to the bottom via `margin-top: auto`
-   * even when the message list is short (e.g. one page, one message).
-   * The 16rem reservation approximates the page-header crest, the main
-   * container's vertical margins (space-10 + space-16), and the app
-   * footer height — picking it slightly tall is harmless because the
-   * section will simply grow with the content past that floor.
-   *
-   * Combined with `position: sticky; bottom: 0` on `.mobileFooter`
-   * below, this gives both behaviours users expect from a "sticky"
-   * pagination: it sits at the visual bottom of the inbox when the
-   * list is short, and remains pinned to the viewport edge while
-   * scrolling once the list overflows.
+   * Flex column so the shared `InboxPagination` footer can sit after a
+   * flex-growing `.listBody`. Viewport min-height is owned by the parent
+   * `.listRoot` / `.mobileFullBleed` wrappers in unified-inbox.module.css.
    */
   .tableRoot {
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
-    min-height: calc(100dvh - 16rem);
+    min-height: 0;
   }
 
-  .mobileFooter {
-    display: block;
-    position: sticky;
-    bottom: 0;
-    margin-top: auto;
-    background-color: var(--gieds-color-white, #ffffff);
-    border-top: var(--gieds-border-width-100) solid
-      var(--gieds-color-gray-200, #d8dadf);
-    z-index: 10;
-    /* Respect iOS home-indicator safe area without crowding the chevrons */
-    padding-bottom: max(var(--gieds-space-3), env(safe-area-inset-bottom, 0px));
+  /*
+   * Mobile only: reserve a full page of ListCard height (6rem each) so the
+   * sticky pagination footer stays in the same place when the last page has
+   * fewer messages than `pageSize`.
+   */
+  .listBody {
+    min-height: calc(var(--inbox-list-page-size, 6) * 6rem);
   }
 
   .mobileSelectHeader {
     display: flex;
-  }
-
-  .unreadCountDesktop {
-    display: none;
   }
 
   /*
@@ -685,15 +616,17 @@
     display: none;
   }
 
+  .headerToolbarSlot {
+    display: none;
+  }
+
   /*
-   * Re-add the row-level horizontal gutter (matches .mobileRow padding) on
-   * the search bar. The mobile list is now full-bleed, so the DS Container's
-   * padding is gone and the search would otherwise sit flush against the
-   * viewport edges while the rows below keep their indent — the mismatch
-   * the user flagged. .mobileSelectHeader applies the same gutter directly
-   * in its base declaration so both select-mode and read-mode states align.
+   * Re-add the row-level horizontal gutter (matches ListCard padding) on
+   * the search/filter header. The mobile list is full-bleed, so the DS
+   * Container's padding is gone and the header would otherwise sit flush
+   * against the viewport edges while the rows below keep their indent.
    */
-  .searchRow {
+  .dataTableHeaderChrome {
     padding: 0 var(--gieds-space-3);
   }
 }
@@ -701,11 +634,5 @@
 @media (min-width: 768px) {
   .mobileSelectHeader {
     display: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .mobileRow {
-    transition: none;
   }
 }

@@ -1,41 +1,40 @@
 "use client"
 
 import { useCrossZoneLink } from "@citizen-portal/shared"
-import {
-  FormField,
-  Heading,
-  Link,
-  Paragraph,
-  Spinner,
-  Stack,
-} from "@ogcio/design-system-react"
+import { FormField, Link, Paragraph } from "@ogcio/design-system-react"
 import { SagFetchError } from "@ogcio/sag-client"
 import { useAuth, useGatewayFetch } from "@ogcio/sag-client/react"
 import { useLocale, useTranslations } from "next-intl"
-import { FullWidthContainer } from "@/components/layout/containers"
-import { BoldLink } from "@/components/navigation/bold-link"
+import { ListCard } from "@/components/list-card/list-card"
+import { SenderName } from "@/components/messages/sender-name"
+import { PanelLoading } from "@/components/panel-loading"
+import { useIdleMount } from "@/hooks/use-idle-mount"
+import type { Message } from "@/types"
+import { formatDate } from "@/util/datetime"
+import { DashboardPanel } from "./dashboard-panel"
+import panelStyles from "./dashboard-panel.module.css"
 
-interface Message {
-  id: string
-  subject: string
-  createdAt: string
-}
+const RECENT_LIMIT = 3
 
 /**
- * Recent-messages preview card shown on the dashboard landing.
- *
- * Always cross-zones to the messages app for the "view all" CTA and
- * per-message deep links — even after the consolidation, those routes
- * live on the messaging hostname (Phase C keeps cross-zone hard-nav
- * for URL-content parity).
+ * Recent-messages preview shown on the LEA dashboard landing, alongside the
+ * recent-applications panel. Each row is the shared inbox `ListCard` (sender +
+ * date header, subject preview) minus the bulk-selection checkbox; tapping a
+ * card cross-navigates to the messages zone (a different hostname), so it uses
+ * a hard navigation rather than the in-zone router.
  */
 export function MyMessages() {
   const t = useTranslations("dashboard.messages")
+  const tTable = useTranslations("home.table")
   const locale = useLocale()
   const { user, loading: authLoading } = useAuth()
   const crossZone = useCrossZoneLink()
+  const idleReady = useIdleMount()
 
-  const messagesPath = user ? "/messaging/api/v1/messages/?limit=3" : null
+  const messagesPath =
+    user && idleReady
+      ? `/messaging/api/v1/messages/?limit=${RECENT_LIMIT}`
+      : null
 
   const {
     data: messages,
@@ -50,65 +49,65 @@ export function MyMessages() {
     authLoading || !messagesPath || isLoading || hasTransientAuthError
 
   return (
-    /*
-     * `fixedHeight="auto"` overrides DS Stack's default `height: 100%`.
-     * Without it the dashboard's left column stretches to the height of
-     * the gov.ie card on its right (via CSS Grid `align-items: stretch`)
-     * and the "View all messages" CTA gets pushed to the bottom of that
-     * stretched box, leaving a large vertical gap between the message
-     * list and the button. Sizing to content keeps the button glued
-     * right under the list regardless of the neighbouring column.
-     */
-    <Stack direction='column' gap={5} fixedHeight='auto'>
-      <Heading as='h3'>{t("title")}</Heading>
+    <DashboardPanel
+      title={t("title")}
+      cta={
+        <Link href={crossZone("messages", `/${locale}/messages`)} asButton={{}}>
+          {t("link")}
+        </Link>
+      }
+    >
       {isWaitingForMessages ? (
-        <output
-          aria-label='Loading messages'
-          className='gi-flex gi-items-center gi-justify-center'
-        >
-          <Spinner size='lg' />
-        </output>
+        <div className={panelStyles.bodyInset}>
+          <PanelLoading ariaLabel={t("view")} />
+        </div>
       ) : messages?.length ? (
-        <Stack direction='column' gap={5} fixedHeight='auto' hasDivider>
-          {messages.map(({ id, subject, createdAt }) => (
-            <FullWidthContainer key={id}>
-              <Paragraph>
-                {new Date(createdAt).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })}
-              </Paragraph>
-              <BoldLink
-                href={crossZone("messages", `/${locale}/messages?id=${id}`)}
-              >
-                {subject}
-              </BoldLink>
-            </FullWidthContainer>
-          ))}
-        </Stack>
+        messages.map((message) => (
+          <ListCard
+            key={message.id}
+            title={<SenderName organisationId={message.organisationId} />}
+            date={
+              <time dateTime={message.createdAt}>
+                {formatDate(message.createdAt, "medium")}
+              </time>
+            }
+            preview={message.subject}
+            previewUnderline={false}
+            hasAttachment={Boolean(message.attachmentsCount)}
+            attachmentAriaLabel={
+              message.attachmentsCount
+                ? `${message.attachmentsCount} ${tTable("attachment", { count: message.attachmentsCount })}`
+                : undefined
+            }
+            statusLabel={
+              message.isSeen ? tTable("filter.read") : tTable("filter.unread")
+            }
+            isUnread={!message.isSeen}
+            onClick={() => {
+              window.location.href = crossZone(
+                "messages",
+                `/${locale}/messages?id=${message.id}`,
+              )
+            }}
+          />
+        ))
       ) : (
-        <Paragraph>{t("empty")}</Paragraph>
+        <Paragraph className={panelStyles.bodyInset}>{t("empty")}</Paragraph>
       )}
       {error != null &&
         !isWaitingForMessages &&
         !(error instanceof SagFetchError && error.status === 401) && (
-          <FormField
-            error={{
-              text: t("error", {
-                message:
-                  error instanceof Error ? error.message : "Unknown error",
-              }),
-            }}
-          />
+          <div className={panelStyles.bodyInset}>
+            <FormField
+              error={{
+                text: t("error", {
+                  message:
+                    error instanceof Error ? error.message : "Unknown error",
+                }),
+              }}
+            />
+          </div>
         )}
-      <Link
-        href={crossZone("messages", `/${locale}/messages`)}
-        asButton={{}}
-        className='gi-mt-3'
-      >
-        {t("link")}
-      </Link>
-    </Stack>
+    </DashboardPanel>
   )
 }

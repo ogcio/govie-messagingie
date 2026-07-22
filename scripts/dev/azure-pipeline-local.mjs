@@ -111,18 +111,24 @@ class AzurePipelineLocal {
         name: "Unit Tests",
         commands: [
           "pnpm test",
-          "pnpm --filter messaging test",
+          "pnpm --filter messaging-next test",
+          "pnpm --filter messaging-admin-next test",
           "pnpm --filter messaging-api test",
         ],
       },
       {
         name: "Build Services",
-        commands: ["pnpm build:api", "pnpm build:www"],
+        commands: [
+          "pnpm build:api",
+          "pnpm build:next",
+          "pnpm build:admin-next",
+        ],
       },
       {
         name: "Docker Builds",
         commands: [
-          "docker build -f apps/messaging/Dockerfile -t messaging .",
+          "docker build -f apps/messaging-next/Dockerfile -t messaging-next .",
+          "docker build -f apps/messaging-admin-next/Dockerfile -t messaging-admin-next .",
           "docker build -f apps/messaging-api/Dockerfile -t messaging-api .",
         ],
       },
@@ -205,7 +211,7 @@ jobs:
           cache: 'npm'
       - run: npm install -g pnpm
       - run: pnpm install
-      - run: pnpm --filter messaging test
+      - run: pnpm --filter messaging-next test
 
   unit-tests-messaging-api:
     runs-on: ubuntu-latest
@@ -231,8 +237,8 @@ jobs:
           cache: 'npm'
       - run: npm install -g pnpm
       - run: pnpm install
-      - run: pnpm build:www
-      - run: docker build -f apps/messaging/Dockerfile -t messaging .
+      - run: pnpm build:next
+      - run: docker build -f apps/messaging-next/Dockerfile -t messaging-next .
 
   build-messaging-api:
     runs-on: ubuntu-latest
@@ -256,7 +262,7 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'messaging:latest'
+          image-ref: 'messaging-next:latest'
           format: 'sarif'
           output: 'trivy-results.sarif'
       - name: Upload Trivy scan results to GitHub Security tab
@@ -347,11 +353,12 @@ jobs:
 
     console.log("\n📦 Services:")
     console.log("- messaging-api")
-    console.log("- messaging")
+    console.log("- messaging-next")
+    console.log("- messaging-admin-next")
 
     console.log("\n🔧 Local Equivalents:")
     console.log("- Security: pnpm lint, pnpm test")
-    console.log("- Build: pnpm build, pnpm build:api, pnpm build:www")
+    console.log("- Build: pnpm build, pnpm build:api, pnpm build:next")
     console.log("- Docker: docker build -f apps/*/Dockerfile")
     console.log("- Tests: pnpm test, pnpm --filter * test")
   }

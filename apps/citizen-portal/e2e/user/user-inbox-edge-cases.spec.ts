@@ -3,10 +3,9 @@ import type { Message } from "@/types"
 import { createAuthenticatedPage } from "../helpers/user-auth.helper"
 
 /*
- * Edge-case coverage for the Unified Inbox (feature flag `unified-inbox`)
- * that the happy-path specs miss: empty inbox, a search that matches
- * nothing, a delete that fails server-side, and a list long enough to
- * paginate.
+ * Edge-case coverage for the Unified Inbox that the happy-path specs miss:
+ * empty inbox, a search that matches nothing, a delete that fails
+ * server-side, and a list long enough to paginate.
  *
  * The list + delete APIs are stubbed so every test is hermetic against
  * backend state and runs on the local dev server. The component's
@@ -154,6 +153,68 @@ test.describe("Unified Inbox edge cases @regression", () => {
       page.getByText("No messages matched your search."),
     ).toBeVisible()
     await expect(page.locator('[data-testid^="select-row-"]')).toHaveCount(0)
+
+    await page.close()
+  })
+
+  test("Reset returns to the full inbox list after a search", async ({
+    browser,
+  }) => {
+    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
+    await stubMessagingApis(page, { searchMessages: [] })
+
+    await page.goto("/en/messages")
+    await expect(
+      page.getByRole("row", { name: /First message/i }),
+    ).toBeVisible()
+
+    await page.getByTestId("search-input").fill("zzz-no-such-message-zzz")
+    await page.getByTestId("search-input").press("Enter")
+
+    await expect(
+      page.getByText("No messages matched your search."),
+    ).toBeVisible()
+
+    await page.getByRole("button", { name: "Clear input" }).click()
+
+    await expect(
+      page.getByRole("row", { name: /First message/i }),
+    ).toBeVisible()
+    await expect(page.getByTestId("search-input")).toHaveValue("")
+
+    await page.close()
+  })
+
+  test("clearing search after page reload returns the full inbox list", async ({
+    browser,
+  }) => {
+    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
+    await stubMessagingApis(page, { searchMessages: [] })
+
+    await page.goto("/en/messages")
+    await expect(
+      page.getByRole("row", { name: /First message/i }),
+    ).toBeVisible()
+
+    await page.getByTestId("search-input").fill("zzz-no-such-message-zzz")
+    await page.getByTestId("search-input").press("Enter")
+
+    await expect(
+      page.getByText("No messages matched your search."),
+    ).toBeVisible()
+
+    await page.reload()
+    await expect(page.getByTestId("search-input")).toHaveValue(
+      "zzz-no-such-message-zzz",
+    )
+
+    await page.getByRole("button", { name: "Clear input" }).click()
+
+    await expect(
+      page.getByRole("row", { name: /First message/i }),
+    ).toBeVisible()
+    await expect(page.getByTestId("search-input")).toHaveValue("")
+    await expect(page.getByTestId("search-pending-spinner")).toHaveCount(0)
 
     await page.close()
   })

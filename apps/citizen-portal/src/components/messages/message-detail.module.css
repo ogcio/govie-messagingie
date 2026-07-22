@@ -119,6 +119,17 @@
   text-decoration: underline;
 }
 
+.toolbarAction:focus {
+  outline: none;
+}
+
+.toolbarAction:focus-visible {
+  outline: var(--gieds-border-width-200, 2px) solid
+    var(--gieds-color-primary-700, #004d44);
+  outline-offset: 2px;
+  text-decoration: none;
+}
+
 .toolbarAction:disabled,
 .toolbarAction[aria-disabled="true"] {
   cursor: not-allowed;
@@ -128,6 +139,11 @@
 
 .toolbarIcon {
   color: var(--gieds-color-emerald-700, #004d44);
+}
+
+.applicationLink {
+  padding-top: var(--gieds-space-4);
+  border-top: 1px solid var(--gieds-color-gray-200, #e5e5e6);
 }
 
 @media (min-width: 768px) {

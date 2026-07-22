@@ -1,16 +1,28 @@
 import { fireEvent, render, screen } from "@testing-library/react"
+import type { ComponentProps, ReactNode } from "react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { InboxListChromeHeader } from "@/components/messages/inbox-list-chrome-header"
+import tableStyles from "@/components/messages/unified-inbox-table.module.css"
 import { UnifiedInboxTable } from "@/components/messages/unified-inbox-table"
 import { useMessageSelection } from "@/components/messages/use-message-selection"
 import type { Message } from "@/types"
 
 const mockPush = vi.fn()
+const mockReplace = vi.fn()
+const mockReplaceState = vi.fn()
 let currentSearchParams = new URLSearchParams()
 const MOCK_PATHNAME = "/en/messages"
+
+function syncSearchParamsFromHistoryUrl(url: string | URL | null | undefined) {
+  if (typeof url !== "string") return
+  const parsed = new URL(url, "http://localhost")
+  currentSearchParams = new URLSearchParams(parsed.search)
+}
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
     push: mockPush,
+    replace: mockReplace,
   }),
   useSearchParams: () => currentSearchParams,
   usePathname: () => MOCK_PATHNAME,
@@ -97,13 +109,19 @@ vi.mock("next-intl", () => ({
         "home.table.unknownSender": "Unknown sender",
         "home.table.systemSender.support": "MessagingIE",
         "home.table.empty.all": "You have no messages",
-        "home.table.empty.search": `No messages found for "${params?.query ?? ""}"`,
         "home.table.select": "Select",
         "home.table.selectAll": "Select All",
         "home.table.close": "Close",
         "home.table.ariaLabel.selectAll": "Select all messages on this page",
         "search.input.placeholder": "Search",
         "search.button.search": "Search",
+        "search.button.reset": "Reset",
+        "home.table.filter.button": "Filters",
+        "home.table.filter.unread": "Unread",
+        "home.table.filter.read": "Read",
+        "home.table.filter.status": "Filter by status",
+        "home.table.filter.apply": "Apply",
+        "home.table.filter.clear": "Clear",
       }
 
       const value = translations[`${namespace}.${key}`]
@@ -167,6 +185,26 @@ const defaultProps = {
   onPageSizeChange: vi.fn(),
 }
 
+function InboxListChrome({
+  children,
+  bulkActionBar,
+  showToolbar = false,
+}: {
+  children: ReactNode
+  bulkActionBar?: ReactNode
+  showToolbar?: boolean
+}) {
+  return (
+    <div className={tableStyles.listChrome}>
+      <InboxListChromeHeader
+        showToolbar={showToolbar}
+        bulkActionBar={bulkActionBar}
+      />
+      {children}
+    </div>
+  )
+}
+
 // Wrapper that wires a real useMessageSelection hook into the table so
 // interaction tests can drive the checkbox / select-all columns. Per-row
 // deletion is intentionally omitted: the bulk toolbar covers single-message
@@ -179,7 +217,8 @@ function TableWithSelection(
     onOpenFolders?: () => void
     onBulkMove?: () => void
     canMove?: boolean
-  } = {},
+    bulkActionBar?: ReactNode
+} = {},
 ) {
   const selection = useMessageSelection(messages)
   // The mobile "Select" button (data-testid=mobile-select-button) is
@@ -189,16 +228,31 @@ function TableWithSelection(
   // rendered for assertions; tests that exercise the click handler
   // pass their own spy.
   return (
-    <UnifiedInboxTable
-      {...defaultProps}
-      selection={selection}
-      selectMode={props.selectMode}
-      onEnterSelectMode={props.onEnterSelectMode ?? (() => {})}
-      onExitSelectMode={props.onExitSelectMode ?? (() => {})}
-      onOpenFolders={props.onOpenFolders}
-      onBulkMove={props.onBulkMove}
-      canMove={props.canMove}
-    />
+    <InboxListChrome
+      showToolbar={selection.selectedCount > 0}
+      bulkActionBar={props.bulkActionBar}
+    >
+      <UnifiedInboxTable
+        {...defaultProps}
+        selection={selection}
+        selectMode={props.selectMode}
+        onEnterSelectMode={props.onEnterSelectMode ?? (() => {})}
+        onExitSelectMode={props.onExitSelectMode ?? (() => {})}
+        onOpenFolders={props.onOpenFolders}
+        onBulkMove={props.onBulkMove}
+        canMove={props.canMove}
+      />
+    </InboxListChrome>
+  )
+}
+
+function renderInboxTable(
+  props: ComponentProps<typeof UnifiedInboxTable>,
+) {
+  return render(
+    <InboxListChrome>
+      <UnifiedInboxTable {...props} />
+    </InboxListChrome>,
   )
 }
 
@@ -206,10 +260,18 @@ describe("UnifiedInboxTable", () => {
   beforeEach(() => {
     currentSearchParams = new URLSearchParams()
     mockPush.mockClear()
+    mockReplace.mockClear()
+    mockReplaceState.mockClear()
+    vi.spyOn(window.history, "replaceState").mockImplementation(
+      (_state, _title, url) => {
+        mockReplaceState(url)
+        syncSearchParamsFromHistoryUrl(url)
+      },
+    )
   })
 
   it("renders search input and table", () => {
-    render(<UnifiedInboxTable {...defaultProps} />)
+    renderInboxTable({...defaultProps})
 
     expect(screen.getByTestId("search-input")).toBeInTheDocument()
     expect(screen.getByTestId("unified-inbox-table")).toBeInTheDocument()
@@ -219,7 +281,7 @@ describe("UnifiedInboxTable", () => {
   })
 
   it("shows all messages regardless of read state", () => {
-    render(<UnifiedInboxTable {...defaultProps} />)
+    renderInboxTable({...defaultProps})
 
     expect(
       screen.getAllByText("Your annual statement is available").length,
@@ -237,7 +299,7 @@ describe("UnifiedInboxTable", () => {
   // whatever's in threadName" implementation would render the subject
   // in this column.
   it("renders the resolved organisation name in the Sender column", () => {
-    render(<UnifiedInboxTable {...defaultProps} />)
+    renderInboxTable({...defaultProps})
 
     const senderTexts = Array.from(
       screen
@@ -263,7 +325,7 @@ describe("UnifiedInboxTable", () => {
       },
     ]
 
-    render(<UnifiedInboxTable {...defaultProps} messages={orphan} />)
+    renderInboxTable({...defaultProps, messages: orphan})
 
     const senderTexts = Array.from(
       screen
@@ -296,7 +358,7 @@ describe("UnifiedInboxTable", () => {
       },
     ]
 
-    render(<UnifiedInboxTable {...defaultProps} messages={systemMessage} />)
+    renderInboxTable({...defaultProps, messages: systemMessage})
 
     const senderTexts = Array.from(
       screen
@@ -311,33 +373,140 @@ describe("UnifiedInboxTable", () => {
     expect(senderTexts).not.toContain("Unknown sender")
   })
 
-  it("shows unread count when there are unread messages", () => {
-    render(<UnifiedInboxTable {...defaultProps} />)
+  it("does not render an unread count below the search header", () => {
+    renderInboxTable({...defaultProps})
 
-    expect(screen.getAllByText("1 unread").length).toBeGreaterThan(0)
+    expect(screen.queryByText("1 unread")).not.toBeInTheDocument()
   })
 
-  it("pushes search query on Enter key", () => {
-    render(<UnifiedInboxTable {...defaultProps} />)
+  it("pushes search query after debounce", async () => {
+    vi.useFakeTimers()
+    const { rerender } = renderInboxTable({...defaultProps})
+
+    const input = screen.getByTestId("search-input")
+    fireEvent.change(input, { target: { value: "statement" } })
+
+    expect(screen.getByTestId("search-pending-spinner")).toBeInTheDocument()
+    expect(mockReplaceState).not.toHaveBeenCalled()
+
+    vi.advanceTimersByTime(500)
+
+    expect(mockReplaceState).toHaveBeenCalledWith(
+      `${MOCK_PATHNAME}?search=statement`,
+    )
+
+    currentSearchParams = new URLSearchParams("search=statement")
+    rerender(
+      <InboxListChrome key={currentSearchParams.toString()}>
+        <UnifiedInboxTable {...defaultProps} />
+      </InboxListChrome>,
+    )
+    expect(
+      screen.queryByTestId("search-pending-spinner"),
+    ).not.toBeInTheDocument()
+
+    currentSearchParams = new URLSearchParams()
+    vi.useRealTimers()
+  })
+
+  it("pushes search query immediately on Enter", () => {
+    renderInboxTable({...defaultProps})
 
     const input = screen.getByTestId("search-input")
     fireEvent.change(input, { target: { value: "statement" } })
     fireEvent.keyDown(input, { key: "Enter" })
 
-    expect(mockPush).toHaveBeenCalledWith(`${MOCK_PATHNAME}?search=statement`)
+    expect(mockReplaceState).toHaveBeenCalledWith(
+      `${MOCK_PATHNAME}?search=statement`,
+    )
   })
 
-  it("clears the ?search= param when Enter is pressed on an empty input", () => {
-    // Reproduces the prior bug where `router.push("?")` was a no-op in the
-    // Next.js App Router, so users who emptied the input and hit Enter
-    // stayed stuck on the previous filtered URL.
+  it("clears the ?search= param when the debounced input becomes empty", async () => {
+    vi.useFakeTimers()
     currentSearchParams = new URLSearchParams("search=available")
     try {
-      render(<UnifiedInboxTable {...defaultProps} />)
+      renderInboxTable({...defaultProps})
 
       const input = screen.getByTestId("search-input")
       fireEvent.change(input, { target: { value: "" } })
-      fireEvent.keyDown(input, { key: "Enter" })
+      vi.advanceTimersByTime(500)
+
+      expect(mockReplaceState).toHaveBeenCalledWith(MOCK_PATHNAME)
+    } finally {
+      currentSearchParams = new URLSearchParams()
+      vi.useRealTimers()
+    }
+  })
+
+  it("clears the ?search= param when the input clear button is clicked", () => {
+    currentSearchParams = new URLSearchParams("search=available")
+    try {
+      renderInboxTable({...defaultProps})
+
+      fireEvent.click(screen.getByRole("button", { name: "Clear input" }))
+
+      expect(mockReplaceState).toHaveBeenCalledWith(MOCK_PATHNAME)
+      expect(screen.getByTestId("search-input")).toHaveValue("")
+    } finally {
+      currentSearchParams = new URLSearchParams()
+    }
+  })
+
+  it("clears search loaded from the URL after reload and dismisses the spinner", () => {
+    currentSearchParams = new URLSearchParams("limit=20&search=payslip")
+    try {
+      const { rerender } = renderInboxTable({...defaultProps})
+
+      expect(screen.getByTestId("search-input")).toHaveValue("payslip")
+
+      fireEvent.click(screen.getByRole("button", { name: "Clear input" }))
+
+      expect(mockReplaceState).toHaveBeenCalledWith(
+        `${MOCK_PATHNAME}?limit=20`,
+      )
+
+      rerender(
+        <InboxListChrome key='search-cleared'>
+          <UnifiedInboxTable {...defaultProps} />
+        </InboxListChrome>,
+      )
+
+      expect(screen.getByTestId("search-input")).toHaveValue("")
+      expect(
+        screen.queryByTestId("search-pending-spinner"),
+      ).not.toBeInTheDocument()
+    } finally {
+      currentSearchParams = new URLSearchParams()
+    }
+  })
+
+  it("pushes status=unread when the unread filter is applied", () => {
+    renderInboxTable({...defaultProps})
+
+    fireEvent.click(screen.getByTestId("status-filter"))
+    fireEvent.click(screen.getByLabelText("Unread"))
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }))
+
+    expect(mockPush).toHaveBeenCalledWith(`${MOCK_PATHNAME}?status=unread`)
+  })
+
+  it("pushes status=read when the read filter is applied", () => {
+    renderInboxTable({...defaultProps})
+
+    fireEvent.click(screen.getByTestId("status-filter"))
+    fireEvent.click(screen.getByLabelText("Read"))
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }))
+
+    expect(mockPush).toHaveBeenCalledWith(`${MOCK_PATHNAME}?status=read`)
+  })
+
+  it("clears status from the URL when filters are cleared", () => {
+    currentSearchParams = new URLSearchParams("status=unread")
+    try {
+      renderInboxTable({...defaultProps})
+
+      fireEvent.click(screen.getByTestId("status-filter"))
+      fireEvent.click(screen.getByRole("button", { name: "Clear" }))
 
       expect(mockPush).toHaveBeenCalledWith(MOCK_PATHNAME)
     } finally {
@@ -346,7 +515,7 @@ describe("UnifiedInboxTable", () => {
   })
 
   it("shows loading state", () => {
-    render(<UnifiedInboxTable {...defaultProps} messages={[]} isLoading />)
+    renderInboxTable({ ...defaultProps, messages: [], isLoading: true })
 
     // Spinner is rendered inside an <output aria-label="Loading"> wrapper
     // (the shared <MessagesLoading /> component used by the page-level
@@ -356,7 +525,7 @@ describe("UnifiedInboxTable", () => {
   })
 
   it("shows empty state when no messages", () => {
-    render(<UnifiedInboxTable {...defaultProps} messages={[]} />)
+    renderInboxTable({...defaultProps, messages: [] })
 
     expect(screen.getByText("You have no messages")).toBeInTheDocument()
   })
@@ -415,7 +584,7 @@ describe("UnifiedInboxTable", () => {
       "select-all-checkbox",
     ) as HTMLInputElement
     expect(initial.checked).toBe(false)
-    expect(initial.getAttribute("aria-checked")).toBe("false")
+    expect(initial.getAttribute("aria-checked")).not.toBe("mixed")
     expect(initial.className).not.toMatch(/gi-checkbox-indeterminate/)
 
     fireEvent.click(screen.getByTestId("select-row-msg-1"))
@@ -423,14 +592,13 @@ describe("UnifiedInboxTable", () => {
     const partial = screen.getByTestId(
       "select-all-checkbox",
     ) as HTMLInputElement
-    expect(partial.getAttribute("aria-checked")).toBe("mixed")
+    expect(partial.checked).toBe(true)
     expect(partial.className).toMatch(/gi-checkbox-indeterminate/)
 
     fireEvent.click(screen.getByTestId("select-row-msg-2"))
 
     const full = screen.getByTestId("select-all-checkbox") as HTMLInputElement
     expect(full.checked).toBe(true)
-    expect(full.getAttribute("aria-checked")).toBe("true")
     expect(full.className).not.toMatch(/gi-checkbox-indeterminate/)
   })
 
@@ -501,37 +669,31 @@ describe("UnifiedInboxTable", () => {
     expect(onExitSelectMode).toHaveBeenCalledTimes(1)
   })
 
-  it("renders the bulkActionBar slot exactly once and suppresses the desktop unread-count row", () => {
-    // The slot has to be a single node so Playwright strict-mode queries
-    // like `getByTestId('bulk-delete-button')` don't see duplicates across
-    // mobile/desktop render paths. It also has to replace — not stack with
-    // — the `(N) unread` desktop line when the user has a selection, so
-    // the two never appear together in the same render: with this test
-    // fixture the unread text should appear exactly once (in the mobile
-    // select-header, which is display:none on desktop but stays in the
-    // DOM), and the desktop block is skipped entirely.
+  it("renders the bulkActionBar slot exactly once when rows are selected", () => {
     render(
-      <UnifiedInboxTable
-        {...defaultProps}
-        bulkActionBar={<div data-testid='bulk-action-bar-slot'>banner</div>}
+      <TableWithSelection
+        bulkActionBar={
+          <div data-testid='bulk-action-bar-slot'>banner</div>
+        }
       />,
     )
+
+    fireEvent.click(screen.getByTestId("select-row-msg-1"))
 
     expect(screen.getAllByTestId("bulk-action-bar-slot")).toHaveLength(1)
-    expect(screen.getAllByText("1 unread")).toHaveLength(1)
+    expect(screen.getByText("1 selected")).toBeInTheDocument()
   })
 
-  it("keeps the search input mounted when the bulkActionBar slot is filled", () => {
-    // On mobile the banner takes the search bar's vertical slot via CSS
-    // (`searchSlotHiddenOnMobile`), but the input must stay in the DOM so
-    // in-flight draft state and focus survive a select → clear round-trip.
+  it("shows the bulk toolbar in place of search when rows are selected", () => {
     render(
-      <UnifiedInboxTable
-        {...defaultProps}
+      <TableWithSelection
         bulkActionBar={<div data-testid='bulk-action-bar-slot'>banner</div>}
       />,
     )
 
-    expect(screen.getByTestId("search-input")).toBeInTheDocument()
+    fireEvent.click(screen.getByTestId("select-row-msg-1"))
+
+    expect(screen.getByTestId("bulk-action-bar-slot")).toBeVisible()
+    expect(screen.getByTestId("search-input").closest("[aria-hidden='true']")).not.toBeNull()
   })
 })

@@ -234,7 +234,7 @@ class DevSetup {
 
     // Check if all required files exist
     const requiredFiles = [
-      "apps/messaging/package.json",
+      "apps/messaging-next/package.json",
       "apps/messaging-api/package.json",
       "package.json",
       "pnpm-workspace.yaml",
@@ -247,7 +247,7 @@ class DevSetup {
     }
 
     // Check if environment files exist
-    const envFiles = ["apps/messaging/.env", "apps/messaging-api/.env"]
+    const envFiles = ["apps/messaging-next/.env", "apps/messaging-api/.env"]
 
     for (const file of envFiles) {
       if (!existsSync(join(this.rootDir, file))) {

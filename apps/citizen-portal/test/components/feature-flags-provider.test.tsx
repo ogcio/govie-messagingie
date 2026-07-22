@@ -6,8 +6,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 // even while flags are loading or Unleash is unreachable.
 const unleash = vi.hoisted(() => ({
   flags: {
-    "unified-inbox": false,
-    "export-user": false,
     "submission-linking": true,
   } as Record<string, boolean>,
 }))
@@ -65,8 +63,6 @@ const renderProbe = () =>
 describe("FeatureFlagsProvider — submission-linking", () => {
   beforeEach(() => {
     unleash.flags = {
-      "unified-inbox": false,
-      "export-user": false,
       "submission-linking": true,
     }
     fallback.isFlagsReady = true

@@ -11,7 +11,15 @@ vi.mock("next/navigation", () => ({
 }))
 
 vi.mock("@/components/messages/use-inbox-unread-count", () => ({
-  useInboxUnreadCount: () => 1,
+  useInboxUnreadCount: () => ({ count: 1, isLoading: false }),
+}))
+
+vi.mock("@/components/messages/inbox-unread-badge", () => ({
+  InboxUnreadBadge: () => (
+    <span data-testid='inbox-unread-badge' aria-hidden>
+      1
+    </span>
+  ),
 }))
 
 vi.mock("@/components/messages/use-folders", () => ({
@@ -140,7 +148,7 @@ describe("MessageFoldersSidebar", () => {
     expect(
       screen.getByRole("button", { name: "Inbox, 1 unread message" }),
     ).toBeInTheDocument()
-    expect(screen.getByText("1")).toBeInTheDocument()
+    expect(screen.getByTestId("inbox-unread-badge")).toHaveTextContent("1")
     expect(screen.getByRole("button", { name: "EHIC" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Payslips" })).toBeInTheDocument()
     expect(screen.getByRole("button", { name: "Deleted" })).toBeInTheDocument()

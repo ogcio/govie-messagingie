@@ -2,6 +2,7 @@
 
 import type { AuthUser } from "@ogcio/sag-client"
 import { useGatewayFetch } from "@ogcio/sag-client/react"
+import { useIdleMount } from "@/hooks/use-idle-mount"
 
 interface Profile {
   publicName: string
@@ -21,8 +22,9 @@ interface Profile {
  * name source.
  */
 export function usePublicName(user: AuthUser | undefined): string {
+  const idleReady = useIdleMount()
   const { data } = useGatewayFetch<Profile>(
-    user?.sub ? `/profile/api/v1/profiles/${user.sub}` : null,
+    user?.sub && idleReady ? `/profile/api/v1/profiles/${user.sub}` : null,
   )
 
   return data?.publicName ?? user?.name ?? user?.email ?? ""

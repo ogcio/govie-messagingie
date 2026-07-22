@@ -10,13 +10,12 @@ const __dirname = dirname(__filename);
 
 // App name mapping
 const APP_NAME_MAP = {
-  messaging: "MessagingIE App",
+  "messaging-next": "MessagingIE App",
   "messaging-api": "MessagingIE API",
-  "messaging-admin": "MessagingIE Admin App",
+  "messaging-admin-next": "MessagingIE Admin App",
 };
 
-// Order: digital-wallet first, digital-wallet-verifier second, then others alphabetically
-const APP_ORDER = ["messaging", "messaging-api", "messaging-admin"];
+const APP_ORDER = ["messaging-next", "messaging-api", "messaging-admin-next"];
 
 const APPS_DIR = join(__dirname, "../apps");
 const ROOT_PACKAGE_JSON = join(__dirname, "../package.json");

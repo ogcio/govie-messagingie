@@ -1,0 +1,45 @@
+/*
+ * List-view root. Mirrors the messages inbox `.tableRoot`: stretch to fill the
+ * remaining viewport height so the pagination footer stays pinned when a page
+ * has fewer rows than the previous one.
+ */
+.listRoot {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 16rem);
+}
+
+.listRoot *,
+.listRoot *::before,
+.listRoot *::after {
+  min-width: 0;
+}
+
+.error {
+  margin-top: var(--gieds-space-4);
+}
+
+.inboxBleed {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.inboxBleed
+  > :not([data-inbox-pagination-footer])
+  + :not([data-inbox-pagination-footer]) {
+  margin-top: var(--gieds-space-5);
+}
+
+@media (max-width: 767px) {
+  .inboxBleed {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+  }
+}

@@ -1,15 +1,10 @@
 "use client"
 
-import {
-  Heading,
-  Link,
-  Paragraph,
-  Spinner,
-  Stack,
-} from "@ogcio/design-system-react"
+import { Heading, Link, Paragraph, Stack } from "@ogcio/design-system-react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Suspense } from "react"
+import { CssSpinner } from "@/components/css-spinner"
 import { env } from "@/env/env.client"
 import { getValidReturnUrl } from "@/util/valid-return-url"
 
@@ -55,7 +50,7 @@ export function WrongAccountErrorClient() {
           className='gi-flex gi-items-center gi-justify-center'
           style={{ minHeight: "30vh" }}
         >
-          <Spinner size='xl' />
+          <CssSpinner size='xl' />
         </output>
       }
     >

@@ -5,14 +5,14 @@ meta {
 }
 
 get {
-  url: {{baseUrl}}/api/v1/messages?recipientUserId={{process.env.CITIZEN_USER_PROFILE_ID}}&organisationId=ogcio&status=delivered
+  url: {{baseUrl}}/api/v1/messages?recipientUserId={{process.env.CITIZEN_USER_PROFILE_ID}}&organisationId=second-testing&status=delivered
   body: none
   auth: bearer
 }
 
-query {
+params:query {
   recipientUserId: {{process.env.CITIZEN_USER_PROFILE_ID}}
-  organisationId: ogcio
+  organisationId: second-testing
   status: delivered
 }
 

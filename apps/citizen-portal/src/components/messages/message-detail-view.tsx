@@ -1,13 +1,18 @@
 "use client"
 
-import { Paragraph, Spinner, Stack } from "@ogcio/design-system-react"
+import { useCrossZoneLink } from "@citizen-portal/shared"
+import { Icon, Link, Paragraph, Stack } from "@ogcio/design-system-react"
 import { useAuth, useGatewayFetch } from "@ogcio/sag-client/react"
-import { usePathname, useRouter } from "next/navigation"
-import { useTranslations } from "next-intl"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useLocale, useTranslations } from "next-intl"
 import { useCallback, useMemo, useState } from "react"
 import { BackButton } from "@/components/button/back-button"
+import { CssSpinner } from "@/components/css-spinner"
+import { pickLocalized } from "@/components/submissions/localized"
 import { getMockAttachmentIds } from "@/mock/attachments"
 import { findMockMessageById } from "@/mock/messages"
+import { findMockSubmissionIdForRelatedMessage } from "@/mock/related-messages"
+import { findMockSubmissionById } from "@/mock/submissions"
 import type { Message } from "@/types"
 import { AttachmentCard } from "./attachment-card"
 import { DeleteConfirmationModal } from "./delete-confirmation-modal"
@@ -26,21 +31,63 @@ export interface MessageDetailViewProps {
   id: string
 }
 
+function buildMessageMetadataUrl(messageId: string): string {
+  const params = new URLSearchParams({ includeMetadata: "true" })
+  return `/messaging-public-api/api/v1/citizens/messages/${messageId}?${params.toString()}`
+}
+
 export function MessageDetailView({ id }: MessageDetailViewProps) {
   const router = useRouter()
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const locale = useLocale()
+  const crossZone = useCrossZoneLink()
   const tMove = useTranslations("home.move.modal")
+  const tDetail = useTranslations("home.detail")
   useAuth()
+  const submissionIdFromUrl = searchParams.get("submissionId")
+
   const {
     data: apiData,
     error,
     isLoading,
   } = useGatewayFetch<Message>(`/messaging/api/v1/messages/${id}`)
 
+  const { data: metadataMessage } = useGatewayFetch<Message>(
+    submissionIdFromUrl ? null : buildMessageMetadataUrl(id),
+  )
+
   const data = useMemo(() => {
     if (apiData) return apiData
     return findMockMessageById(id)
   }, [apiData, id])
+
+  const submissionId = useMemo(() => {
+    if (submissionIdFromUrl) return submissionIdFromUrl
+    if (metadataMessage?.metadata?.journey?.submissionId) {
+      return metadataMessage.metadata.journey.submissionId
+    }
+    return findMockSubmissionIdForRelatedMessage(id)
+  }, [
+    metadataMessage?.metadata?.journey?.submissionId,
+    submissionIdFromUrl,
+    id,
+  ])
+
+  const submissionTitleFromUrl = searchParams.get("submissionTitle")
+
+  const applicationLink = useMemo(() => {
+    if (!submissionId) return null
+    const mockSubmission = findMockSubmissionById(submissionId)
+    const title =
+      submissionTitleFromUrl ??
+      (mockSubmission ? pickLocalized(mockSubmission.title, locale) : undefined)
+    const href = crossZone(
+      "dashboard",
+      `/${locale}/my-applications?id=${encodeURIComponent(submissionId)}`,
+    )
+    return { href, title }
+  }, [crossZone, locale, submissionId, submissionTitleFromUrl])
 
   const attachments = useMemo(
     () => (data ? getMockAttachmentIds(data) : []),
@@ -63,6 +110,7 @@ export function MessageDetailView({ id }: MessageDetailViewProps) {
   })
 
   const listPath = pathname.split("?")[0]
+  const backHref = listPath
 
   const handleDelete = useCallback(async () => {
     setDeleteConfirmOpen(false)
@@ -92,7 +140,7 @@ export function MessageDetailView({ id }: MessageDetailViewProps) {
         className='gi-flex gi-items-center gi-justify-center'
         style={{ minHeight: "30vh" }}
       >
-        <Spinner size='xl' />
+        <CssSpinner size='xl' />
       </output>
     )
   }
@@ -112,13 +160,14 @@ export function MessageDetailView({ id }: MessageDetailViewProps) {
   return (
     <div className={styles.detailRoot}>
       <MessageDetailToolbar
+        backHref={backHref}
         onMove={() => setMoveModalOpen(true)}
         onDelete={() => setDeleteConfirmOpen(true)}
         isDeleting={isDeleting}
         isMoving={isMoving}
       />
 
-      <div className={styles.detailContent}>
+      <div className={`${styles.detailContent} o11y-replay-block`}>
         <MessageDetailHeader
           subject={data.subject}
           organisationId={data.organisationId}
@@ -134,6 +183,35 @@ export function MessageDetailView({ id }: MessageDetailViewProps) {
         {attachments.length > 0 && (
           <AttachmentList attachmentIds={attachments} />
         )}
+
+        {applicationLink ? (
+          <div className={styles.applicationLink}>
+            <Link
+              href={applicationLink.href}
+              noColor
+              className={styles.toolbarAction}
+              aria-label={
+                applicationLink.title
+                  ? tDetail("backToApplicationNamed", {
+                      title: applicationLink.title,
+                    })
+                  : tDetail("backToApplication")
+              }
+            >
+              <Icon
+                icon='chevron_left'
+                size='md'
+                className={styles.toolbarIcon}
+                ariaHidden
+              />
+              {applicationLink.title
+                ? tDetail("backToApplicationNamed", {
+                    title: applicationLink.title,
+                  })
+                : tDetail("backToApplication")}
+            </Link>
+          </div>
+        ) : null}
       </div>
 
       <DeleteConfirmationModal

@@ -1,0 +1,154 @@
+/*
+ * Mobile list card — single-row item for inbox-style lists.
+ * Spec: 96px height, 12px padding, 320–1024px width, checkbox gap 10px,
+ * attachment gap 8px. Unread = grey + bold; read = white + bottom border;
+ * selected = tinted background.
+ */
+.card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--gieds-space-2-5, 0.625rem);
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 20rem;
+  max-width: 64rem;
+  height: 6rem;
+  padding: var(--gieds-space-3, 0.75rem);
+  border: none;
+  border-bottom: var(--gieds-border-width-100, 1px) solid
+    var(--gieds-color-gray-200, #d8dadf);
+  background-color: var(--gieds-color-white, #ffffff);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.cardUnread {
+  background-color: var(--gieds-color-gray-200, #d8dadf);
+  border-bottom-color: transparent;
+}
+
+.cardSelected {
+  background-color: var(--gieds-color-gray-200, #d8dadf);
+  border-bottom-color: transparent;
+}
+
+.card:hover {
+  background-color: var(--gieds-color-gray-50, #f7f7f8);
+}
+
+.cardUnread:hover,
+.cardSelected:hover {
+  background-color: var(--gieds-color-gray-300, #c9ccd1);
+}
+
+.card:active {
+  background-color: var(--gieds-color-gray-100, #eeeff0);
+}
+
+.cardUnread:active,
+.cardSelected:active {
+  background-color: var(--gieds-color-gray-400, #b9bcc3);
+}
+
+.card:focus-visible {
+  outline: var(--gieds-border-width-200, 2px) solid
+    var(--gieds-color-primary-700, #004d44);
+  outline-offset: -2px;
+}
+
+/*
+ * DS gap (no decorative `InputCheckbox` inside `<button>`): checkbox
+ * indicator is painted via `CheckboxIndicatorIcon` while the parent
+ * button owns selection semantics through `aria-pressed`.
+ */
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  pointer-events: none;
+  color: var(--gieds-color-border-system-neutral-default, #0b0c0c);
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--gieds-space-1, 0.25rem);
+  min-width: 0;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--gieds-space-2, 0.5rem);
+}
+
+.title {
+  font-size: var(--gieds-font-size-200, 0.875rem);
+  line-height: 1.25;
+  color: var(--gieds-color-gray-900, #252526);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.date {
+  font-size: var(--gieds-font-size-200, 0.875rem);
+  line-height: 1.25;
+  color: var(--gieds-color-gray-700, #51555e);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.previewRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--gieds-space-2, 0.5rem);
+  min-width: 0;
+}
+
+.preview {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--gieds-font-size-200, 0.875rem);
+  line-height: 1.35;
+  color: var(--gieds-color-text-tone-convention-default, #2c55a2);
+  text-decoration: underline;
+  text-underline-offset: 0.125rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.previewPlain {
+  text-decoration: none;
+}
+
+.emphasized {
+  font-weight: var(--gieds-font-weight-700, 700);
+}
+
+.regular {
+  font-weight: var(--gieds-font-weight-400, 400);
+}
+
+.attachment {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--gieds-color-gray-700, #51555e);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    transition: none;
+  }
+}

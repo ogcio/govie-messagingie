@@ -58,7 +58,7 @@ From this folder:
 From repo root:
 
 - Build base image: `pnpm docker:build:base` (uses `Dockerfile`)
-- Build MessagingIE API image: `pnpm docker:build:www` (uses `apps/messaging-api/Dockerfile`)
+- Build MessagingIE API image: `pnpm docker:build:api` (uses `apps/messaging-api/Dockerfile`)
 - Run: `docker run -p 8002:8002 messaging-api`
 
 Run (use your local `.env`):

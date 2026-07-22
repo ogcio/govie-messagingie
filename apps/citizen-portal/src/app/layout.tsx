@@ -1,5 +1,5 @@
 import { Lato } from "next/font/google"
-import FrontendObservability from "@/components/frontend-observability"
+import { SwrProvider } from "@/components/swr-provider"
 import "@ogcio/design-system-react/styles.css"
 import "@ogcio/theme-govie/theme.css"
 import "./font-override.css"
@@ -20,8 +20,7 @@ export default function RootLayout({
     // biome-ignore lint/a11y/useHtmlLang: lang is set dynamically per-locale via inline script in [locale]/layout.tsx
     <html suppressHydrationWarning className={lato.variable}>
       <body className='gi-flex gi-flex-col' style={{ minHeight: "100vh" }}>
-        <FrontendObservability />
-        {children}
+        <SwrProvider>{children}</SwrProvider>
       </body>
     </html>
   )

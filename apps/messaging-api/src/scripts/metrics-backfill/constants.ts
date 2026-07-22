@@ -55,7 +55,8 @@ export const MS_PER_DAY = 86_400_000;
 
 // Auth is OPTIONAL: if no app id/secret is configured (e.g. a local collector
 // on localhost:4318), the backfill POSTs without an Authorization header.
-export const LOGTO_OIDC_ENDPOINT = process.env.LOGTO_OIDC_ENDPOINT ?? "";
+export const LOGTO_OIDC_ENDPOINT =
+  process.env.METRICS_BACKFILL_LOGTO_OIDC_ENDPOINT ?? "";
 export const COLLECTOR_TOKEN_APP_ID = process.env.O11Y_ALLOY_CLIENT_ID ?? "";
 export const COLLECTOR_TOKEN_APP_SECRET =
   process.env.O11Y_ALLOY_CLIENT_SECRET ?? "";

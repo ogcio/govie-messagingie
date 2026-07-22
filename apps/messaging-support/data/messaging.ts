@@ -5,7 +5,8 @@ import {
   decodeBooleanParam,
   decodeDateParam,
   decodeListParam,
-  getMessageEventTypeLabel,
+  getMessageEventDisplayLabel,
+  isDisplayableMessageEvent,
   MessageEventStatusKey,
 } from "@/utils/appliedFilter"
 import { serverMessagingFilterKeySelectOptions } from "@/utils/appliedFilter.server"
@@ -362,13 +363,17 @@ export async function getMessages(
         const tableRows: TableMessage[] = []
         for (const row of messageRows) {
           const email = row.status.find((s) => s.type === "email_delivery")
-          const event = row.status.find((s) => s.type !== "email_delivery")
+          const event = row.status.find((s) =>
+            isDisplayableMessageEvent(s.type),
+          )
           tableRows.push({
             id: row.id,
-            emailEventType: email ? getMessageEventTypeLabel(email.type) : "",
+            emailEventType: email
+              ? getMessageEventDisplayLabel(email.type, email.status)
+              : "",
             emailEventStatus: email?.status,
             messagingEventType: event
-              ? getMessageEventTypeLabel(event.type)
+              ? getMessageEventDisplayLabel(event.type, event.status)
               : "",
             messagingEventStatus: event?.status,
             orgId: row.organisation_id,

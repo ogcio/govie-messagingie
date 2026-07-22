@@ -20,7 +20,7 @@ test.describe("User Dashboard Features", () => {
     await expect(
       page.getByRole("heading", { name: "Welcome back, E2E Citizen User" }),
     ).toBeVisible()
-    await expect(page.getByText("Your messages")).toBeVisible()
+    await expect(page.getByText("Your recent messages")).toBeVisible()
     await expect(page.getByText("View all messages")).toBeVisible()
   })
 
@@ -30,7 +30,7 @@ test.describe("User Dashboard Features", () => {
     await expect(
       page.getByRole("heading", { name: "Welcome back, E2E Citizen User" }),
     ).toBeVisible()
-    await expect(page.getByText("Your messages")).toBeVisible()
+    await expect(page.getByText("Your recent messages")).toBeVisible()
     await page.getByText("View all messages").click()
     await expect(page.getByRole("textbox", { name: "Search" })).toBeVisible()
   })

@@ -24,7 +24,6 @@ const SKIP: PackageRules = {
   scoped: {
     // Example:
     // "@govie-services/profile-api": ["pg"],
-    "messaging": ["@ogcio/consent"],
     "messaging-next": ["@ogcio/consent"],
   },
 }
@@ -49,8 +48,8 @@ const SEMVER_ONLY: PackageRules = {
     "@fastify/type-provider-typebox",
   ],
   scoped: {
-    "messaging": ["use-intl"],
-    "messaging-admin": ["use-intl"]
+    "messaging-next": ["use-intl"],
+    "messaging-admin-next": ["use-intl"]
     // Example:
     // "@govie-services/profile": ["swr"],
   },

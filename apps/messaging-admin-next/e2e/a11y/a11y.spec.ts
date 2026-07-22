@@ -1,5 +1,7 @@
 import AxeBuilder from "@axe-core/playwright"
 import { expect, test } from "@playwright/test"
+import { createHtmlReport } from "axe-html-reporter"
+import fs from "fs"
 import { authenticateUser } from "../helpers/auth"
 
 const ADMIN_URL = process.env.ADMIN_URL || "http://localhost:3001"
@@ -24,6 +26,32 @@ test.describe("Accessibility (a11y) checks @regression", () => {
       const accessibilityScanResults = await new AxeBuilder({ page })
         .exclude('iframe[title="reCAPTCHA"]')
         .analyze()
+
+      const pageName = url.replace(/\//g, "-").replace(/-en-/g, "")
+
+      const reportHTML = createHtmlReport({
+        results: accessibilityScanResults,
+        options: {
+          projectKey: "messaging-admin",
+          outputDir: "./e2e/test-results/a11y-report",
+          reportFileName: `accessibility-report-${pageName}.html`,
+        },
+      })
+
+      if (
+        !fs.existsSync(
+          `./e2e/test-results/a11y-report/accessibility-report-${pageName}.html`,
+        )
+      ) {
+        fs.mkdirSync("./e2e/test-results/a11y-report", {
+          recursive: true,
+        })
+      }
+      fs.writeFileSync(
+        `./e2e/test-results/a11y-report/accessibility-report-${pageName}.html`,
+        reportHTML,
+      )
+
       const seriousViolations = accessibilityScanResults.violations.filter(
         (v) => v.impact === "serious" || v.impact === "critical",
       )
@@ -40,6 +68,30 @@ test.describe("Accessibility (a11y) checks @regression", () => {
     const accessibilityScanResults = await new AxeBuilder({ page })
       .exclude('iframe[title="reCAPTCHA"]')
       .analyze()
+
+    const reportHTML = createHtmlReport({
+      results: accessibilityScanResults,
+      options: {
+        projectKey: "messaging-admin",
+        outputDir: "./e2e/test-results/a11y-report",
+        reportFileName: "accessibility-report-profile-admin.html",
+      },
+    })
+
+    if (
+      !fs.existsSync(
+        "./e2e/test-results/a11y-report/accessibility-report-profile-admin.html",
+      )
+    ) {
+      fs.mkdirSync("./e2e/test-results/a11y-report", {
+        recursive: true,
+      })
+    }
+    fs.writeFileSync(
+      "./e2e/test-results/a11y-report/accessibility-report-profile-admin.html",
+      reportHTML,
+    )
+
     const seriousViolations = accessibilityScanResults.violations.filter(
       (v) => v.impact === "serious" || v.impact === "critical",
     )
@@ -60,6 +112,29 @@ test.describe("Accessibility (a11y) checks @regression", () => {
     const accessibilityScanResults = await new AxeBuilder({ page })
       .exclude('iframe[title="reCAPTCHA"]')
       .analyze()
+    const reportHTML = createHtmlReport({
+      results: accessibilityScanResults,
+      options: {
+        projectKey: "messaging-admin",
+        outputDir: "./e2e/test-results/a11y-report",
+        reportFileName: "accessibility-report-service-users-admin.html",
+      },
+    })
+
+    if (
+      !fs.existsSync(
+        "./e2e/test-results/a11y-report/accessibility-report-service-users-admin.html",
+      )
+    ) {
+      fs.mkdirSync("./e2e/test-results/a11y-report", {
+        recursive: true,
+      })
+    }
+    fs.writeFileSync(
+      "./e2e/test-results/a11y-report/accessibility-report-service-users-admin.html",
+      reportHTML,
+    )
+
     const seriousViolations = accessibilityScanResults.violations.filter(
       (v) => v.impact === "serious" || v.impact === "critical",
     )

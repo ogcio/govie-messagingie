@@ -1,9 +1,9 @@
 "use client"
 
-import { Spinner } from "@ogcio/design-system-react"
 import { useLocale } from "next-intl"
 import { Suspense, useEffect } from "react"
 import { MyDashboard } from "@/components/dashboard/my-dashboard"
+import { PageLoading } from "@/components/page-loading"
 import { getEnabledLandingZone, isZoneEnabled } from "@/lib/feature-config"
 import { ZONE_CONFIG } from "@/lib/zone-config"
 
@@ -31,16 +31,12 @@ export default function MyDashboardPage() {
   if (!dashboardEnabled) {
     const fallbackPath = `/${locale}${ZONE_CONFIG[getEnabledLandingZone("dashboard")].rootPath}`
     return (
-      <output
-        aria-label='Loading'
-        className='gi-flex gi-items-center gi-justify-center'
-        style={{ minHeight: "50vh" }}
-      >
-        <Spinner size='xl' />
+      <>
+        <PageLoading minHeight='50vh' />
         <noscript>
           <a href={fallbackPath}>Continue</a>
         </noscript>
-      </output>
+      </>
     )
   }
 

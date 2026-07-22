@@ -1,6 +1,8 @@
 import AxeBuilder from "@axe-core/playwright"
+import { createHtmlReport } from "axe-html-reporter"
 import { expect, test } from "@playwright/test"
 import { createAuthenticatedPage } from "../helpers/user-auth.helper"
+import fs from "fs"
 
 const PROFILE_URL = process.env.PROFILE_URL || "http://localhost:3004"
 const DASHBOARD_URL = process.env.DASHBOARD_URL || "http://localhost:3003"
@@ -24,7 +26,26 @@ test.describe("Accessibility (a11y) checks @regression", () => {
       const accessibilityScanResults = await new AxeBuilder({ page })
         .exclude('iframe[title="reCAPTCHA"]')
         .analyze()
-      const seriousViolations = accessibilityScanResults.violations.filter(
+
+      const pageName = url.replace(/\//g, "-").replace(/-en-/g, "")
+
+      const reportHTML = createHtmlReport({
+      results: accessibilityScanResults,
+      options: {
+        projectKey: "citizen-portal",
+        outputDir: "./e2e/test-results/a11y-report",
+        reportFileName: `accessibility-report-${pageName}.html`,
+        },
+      })
+
+      if (!fs.existsSync(`./e2e/test-results/a11y-report/accessibility-report-${pageName}.html`)) {
+      fs.mkdirSync("./e2e/test-results/a11y-report", {
+        recursive: true,
+        })
+    } 
+    fs.writeFileSync(`./e2e/test-results/a11y-report/accessibility-report-${pageName}.html`, reportHTML)
+
+    const seriousViolations = accessibilityScanResults.violations.filter(
         (v) => v.impact === "serious" || v.impact === "critical",
       )
       expect(seriousViolations, `SERIOUS Violations on ${url}`).toEqual([])
@@ -39,6 +60,23 @@ test.describe("Accessibility (a11y) checks @regression", () => {
     const accessibilityScanResults = await new AxeBuilder({ page })
       .exclude('iframe[title="reCAPTCHA"]')
       .analyze()
+
+    const reportHTML = createHtmlReport({
+      results: accessibilityScanResults,
+      options: {
+        projectKey: "citizen-portal",
+        outputDir: "./e2e/test-results/a11y-report",
+        reportFileName: "accessibility-report-consent.html",
+      },
+    })
+
+    if (!fs.existsSync("./e2e/test-results/a11y-report/accessibility-report-consent.html")) {
+      fs.mkdirSync("./e2e/test-results/a11y-report", {
+        recursive: true,
+      })
+    }
+    fs.writeFileSync("./e2e/test-results/a11y-report/accessibility-report-consent.html", reportHTML)
+
     const seriousViolations = accessibilityScanResults.violations.filter(
       (v) => v.impact === "serious" || v.impact === "critical",
     )
@@ -61,6 +99,23 @@ test.describe("Accessibility (a11y) checks @regression", () => {
     const accessibilityScanResults = await new AxeBuilder({ page })
       .exclude('iframe[title="reCAPTCHA"]')
       .analyze()
+
+    const reportHTML = createHtmlReport({
+      results: accessibilityScanResults,
+      options: {
+        projectKey: "citizen-portal",
+        outputDir: "./e2e/test-results/a11y-report",
+        reportFileName: "accessibility-report-dashboard.html",
+      },
+    })
+
+    if (!fs.existsSync("./e2e/test-results/a11y-report/accessibility-report-dashboard.html")) {
+      fs.mkdirSync("./e2e/test-results/a11y-report", {
+        recursive: true,
+      })
+    }
+    fs.writeFileSync("./e2e/test-results/a11y-report/accessibility-report-dashboard.html", reportHTML)
+
     const seriousViolations = accessibilityScanResults.violations.filter(
       (v) => v.impact === "serious" || v.impact === "critical",
     )
@@ -83,6 +138,23 @@ test.describe("Accessibility (a11y) checks @regression", () => {
     const accessibilityScanResults = await new AxeBuilder({ page })
       .exclude('iframe[title="reCAPTCHA"]')
       .analyze()
+    
+    const reportHTML = createHtmlReport({
+      results: accessibilityScanResults,
+      options: {
+        projectKey: "citizen-portal",
+        outputDir: "./e2e/test-results/a11y-report",
+        reportFileName: "accessibility-report-profile.html",
+      },
+    })
+
+    if (!fs.existsSync("./e2e/test-results/a11y-report/accessibility-report-profile.html")) {
+      fs.mkdirSync("./e2e/test-results/a11y-report", {
+        recursive: true,
+      })
+    }
+    fs.writeFileSync("./e2e/test-results/a11y-report/accessibility-report-profile.html", reportHTML)
+    
     const seriousViolations = accessibilityScanResults.violations.filter(
       (v) => v.impact === "serious" || v.impact === "critical",
     )

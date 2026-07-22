@@ -1,0 +1,83 @@
+/*
+ * Submission detail layout. Full-bleed on mobile; one shared horizontal gutter
+ * aligns the back link, title, field copy, related heading and message rows.
+ */
+.detailRoot {
+  --submission-detail-gutter: var(--gieds-space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--gieds-space-6);
+  width: 100%;
+  margin-top: calc(-1 * var(--gieds-space-6));
+  color: var(--gieds-color-gray-950, #0b0c0c);
+  background-color: var(--gieds-color-white, #ffffff);
+}
+
+.detailGutter {
+  padding-left: var(--submission-detail-gutter);
+  padding-right: var(--submission-detail-gutter);
+  box-sizing: border-box;
+}
+
+.detailToolbar {
+  padding-left: var(--submission-detail-gutter);
+  padding-right: var(--submission-detail-gutter);
+  box-sizing: border-box;
+}
+
+@media (max-width: 767px) {
+  .detailToolbar {
+    padding-bottom: var(--gieds-space-2);
+    border-bottom: var(--gieds-border-width-100, 1px) solid
+      var(--gieds-color-gray-200, #e5e5e6);
+  }
+}
+
+.detailContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gieds-space-6);
+  width: 100%;
+  min-width: 0;
+  align-items: stretch;
+  box-sizing: border-box;
+}
+
+/* Definition list of submission fields, one label/value pair per row. */
+.fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gieds-space-1);
+  padding: var(--gieds-space-4) var(--submission-detail-gutter);
+  border-bottom: var(--gieds-border-width-100, 1px) solid
+    var(--gieds-color-gray-200, #e5e5e6);
+  box-sizing: border-box;
+}
+
+.label {
+  font-weight: var(--gieds-font-weight-700, 700);
+  color: var(--gieds-color-gray-950, #0b0c0c);
+}
+
+.value {
+  margin: 0;
+  color: var(--gieds-color-gray-950, #0b0c0c);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .detailRoot {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+    box-sizing: border-box;
+  }
+}

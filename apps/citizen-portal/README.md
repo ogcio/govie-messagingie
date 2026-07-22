@@ -281,6 +281,7 @@ through the single helper module
 | `NEXT_PUBLIC_ENABLE_MESSAGING` | `true` | MessagingIE drawer link hidden; the recent-messages (`MyMessages`) widget is omitted from the dashboard landing; messaging is no longer a landing fallback. |
 | `NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION` | `true` | Journey-Builder sign-out iframe is not added to the global-signout fan-out (no reference to a Journey-Builder origin). |
 | `NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION` | `true` | Payments sign-out iframe is not added to the global-signout fan-out. |
+| `NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION` | `true` | Forms sign-out iframe is not added to the global-signout fan-out. |
 
 Profile has no flag — every building block requires Profile, so the
 profile zone is always enabled and is the terminal landing fallback.

@@ -9,7 +9,7 @@ import { defineConfig, devices } from "@playwright/test"
  * sufficient. CI scripts continue to set BASE_URL explicitly; the
  * local fallback points at the unified dev server (`pnpm dev` -> :4001).
  */
-const baseURL = process.env.BASE_URL || "http://localhost:4001"
+const baseURL = process.env.BASE_URL || "http://messaging.local.test:4001"
 
 /**
  * Suppress the next-dev webServer when targeting the local docker harness

@@ -5,6 +5,7 @@ import {
   useAuth,
   useGatewayFetch,
 } from "@ogcio/sag-client/react"
+import { useIdleMount } from "@/hooks/use-idle-mount"
 
 const REQUIRED_SAFE_LEVEL = 2
 
@@ -23,31 +24,20 @@ interface ProfileSafeLevel {
 export function useShowApplicationLinks(): boolean {
   const { user, claims, loading: authLoading } = useAuth()
   const isOnboarded = isCitizenOnboarded(claims?.roles)
+  const idleReady = useIdleMount()
 
   const profilePath =
-    user?.sub && isOnboarded
+    user?.sub && isOnboarded && idleReady
       ? `/profile/api/v1/profiles/${user.sub}?consentSubjects=messaging`
       : null
 
-  const {
-    data: profile,
-    isLoading,
-    isValidating,
-  } = useGatewayFetch<ProfileSafeLevel>(profilePath)
+  const { data: profile } = useGatewayFetch<ProfileSafeLevel>(profilePath)
 
   if (authLoading || !user) {
     return false
   }
 
   if (!isOnboarded) {
-    return false
-  }
-
-  if (
-    profilePath &&
-    (isLoading || isValidating) &&
-    profile?.safeLevel === undefined
-  ) {
     return false
   }
 

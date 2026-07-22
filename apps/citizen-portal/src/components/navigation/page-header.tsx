@@ -19,7 +19,7 @@ import { useState } from "react"
 import { LANG_EN, LANG_GA } from "@/const"
 import { useActiveLocale } from "@/hooks/use-active-locale"
 import { useShowApplicationLinks } from "@/hooks/use-show-application-links"
-import { isZoneEnabled } from "@/lib/feature-config"
+import { isLeaEnabled, isZoneEnabled } from "@/lib/feature-config"
 import { ZONE_CONFIG } from "@/lib/zone-config"
 import { getZoneFromPath } from "@/util/get-zone-from-path"
 import { DrawerLink } from "./drawer-link"
@@ -73,12 +73,23 @@ export function PageHeader({
   const zone = getZoneFromPath(path)
   const zoneRootPath = ZONE_CONFIG[zone].rootPath
 
-  const headerTitle = title ?? titleT(zone)
-  const headerLogoHref = logoHref ?? `/${locale}${zoneRootPath}`
+  // LEA applications list/detail live under the dashboard zone but get their
+  // own chrome title and logo target — same pattern as messages owning
+  // "MessagingIE" + /messages while profile pages own "My Profile".
+  const isApplicationsSurface = path.includes("/my-applications")
+
+  const headerTitle =
+    title ?? (isApplicationsSurface ? titleT("applications") : titleT(zone))
+  const headerLogoHref =
+    logoHref ??
+    (isApplicationsSurface
+      ? `/${locale}/my-applications`
+      : `/${locale}${zoneRootPath}`)
 
   const crossZone = useCrossZoneLink()
   const profileHref = crossZone("profile", `/${locale}/my-profile`)
   const dashboardHref = crossZone("dashboard", `/${locale}/my-dashboard`)
+  const applicationsHref = crossZone("dashboard", `/${locale}/my-applications`)
   const messagingHref = crossZone("messages", `/${locale}/messages`)
 
   const isEnglish = locale === LANG_EN
@@ -137,9 +148,21 @@ export function PageHeader({
                 {t("drawer.dashboard")}
               </DrawerLink>
             ) : null}
+            {showApplicationLinks &&
+            isZoneEnabled("dashboard") &&
+            isLeaEnabled() ? (
+              <DrawerLink bold href={applicationsHref}>
+                {t("drawer.applications")}
+              </DrawerLink>
+            ) : null}
             {showApplicationLinks && isZoneEnabled("messages") ? (
               <DrawerLink bold href={messagingHref}>
                 {t("drawer.messaging")}
+              </DrawerLink>
+            ) : null}
+            {zone === "messages" ? (
+              <DrawerLink href={`/${locale}/whats-new`}>
+                {t("drawer.whatsNew")}
               </DrawerLink>
             ) : null}
             <DrawerLink href={languageHref}>{oppositeLabel}</DrawerLink>

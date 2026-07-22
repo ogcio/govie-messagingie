@@ -8,6 +8,7 @@ import styles from "./unified-inbox-table.module.css"
 export interface BulkActionToolbarProps {
   selectedCount: number
   onDelete: () => void
+  onClearSelection?: () => void
   /**
    * Slot for additional bulk actions (e.g. the upcoming `Move to folder`
    * control from the Folders feature). Rendered alongside the Delete button
@@ -35,6 +36,7 @@ export interface BulkActionToolbarProps {
 export function BulkActionToolbar({
   selectedCount,
   onDelete,
+  onClearSelection,
   extraActions,
 }: BulkActionToolbarProps) {
   const t = useTranslations("home.delete.toolbar")
@@ -62,6 +64,17 @@ export function BulkActionToolbar({
           >
             {t("delete")}
           </Button>
+          {onClearSelection ? (
+            <Button
+              data-testid='bulk-clear-selection-button'
+              variant='secondary'
+              appearance='light'
+              size='small'
+              onClick={onClearSelection}
+            >
+              {t("clearSelection")}
+            </Button>
+          ) : null}
         </>
       }
     />

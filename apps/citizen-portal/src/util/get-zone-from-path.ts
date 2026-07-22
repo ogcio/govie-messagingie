@@ -18,6 +18,7 @@ export type Zone = "messages" | "profile" | "dashboard"
 const ZONE_BY_FIRST_SEGMENT: Record<string, Zone> = {
   messages: "messages",
   "secure-messages": "messages",
+  "whats-new": "messages",
   "my-profile": "profile",
   "accessibility-statement": "profile",
   "contact-support": "profile",
@@ -26,6 +27,7 @@ const ZONE_BY_FIRST_SEGMENT: Record<string, Zone> = {
   "wrong-login-method-error": "profile",
   "global-signout": "profile",
   "my-dashboard": "dashboard",
+  "my-applications": "dashboard",
 }
 
 /**

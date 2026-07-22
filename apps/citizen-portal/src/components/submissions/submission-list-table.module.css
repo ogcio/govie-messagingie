@@ -1,0 +1,7 @@
+.idCell {
+  font-weight: var(--gieds-font-weight-500, 500);
+  color: var(--gieds-color-gray-900, #252526);
+  display: block;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}

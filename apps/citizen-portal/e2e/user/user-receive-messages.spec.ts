@@ -114,6 +114,53 @@ test.describe("Admin Message Sending > Citizen Viewing", () => {
     ).toBeVisible()
   })
 
+  test("admin sends message to citizen and they move it to a folder @smoke @regression", async () => {
+    await authenticateUser(authenticatedPage)
+    await sendMessageToDevCitizen(authenticatedPage)
+    await authenticatedPage
+      .getByRole("link", { name: "View Event log" })
+      .click()
+    await authenticatedPage.getByRole("link", { name: "View" }).first().click()
+
+    // Verify message content details
+    // Verify the current date is displayed
+    const currentDate = new Date()
+      .toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+      .replace(/\//g, "-")
+    await expect(
+      authenticatedPage.getByRole("cell", { name: currentDate }).first(),
+    ).toBeVisible()
+
+    // Verify the time is recent (matches HH:MM:SS format and is within reasonable range)
+    const timePattern = /\d{2}:\d{2}:\d{2}/
+    const timeCells = authenticatedPage
+      .getByRole("cell")
+      .filter({ hasText: timePattern })
+    await expect(timeCells.first()).toBeVisible()
+
+    await expect(authenticatedPage.getByText("failed")).not.toBeVisible()
+    //logout as admin
+    await logout(authenticatedPage)
+    await authenticatedPage.waitForLoadState("networkidle")
+    await loginAsCitizen(authenticatedPage, "peter.parker@mail.ie")
+    //open first unread message
+    // First data row (nth(0) is the header). The desktop table's CSS-module
+    // class is hashed at build time, so target by ARIA role instead.
+    await authenticatedPage.getByRole("row").nth(1).click()
+
+    await authenticatedPage.waitForLoadState("networkidle")
+    await authenticatedPage.getByTestId("govie-icon").click()
+    await authenticatedPage.waitForLoadState("networkidle")
+    await authenticatedPage.getByTestId("move-confirmation-confirm").click()
+    await expect(
+      authenticatedPage.getByTestId("move-success-toast"),
+    ).toBeVisible()
+  })
+
   test("citizen can see a secure message in their emails @smoke @regression", async () => {
     await authenticateUser(authenticatedPage)
     await sendMessageToDevCitizen(authenticatedPage)

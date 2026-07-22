@@ -134,7 +134,7 @@ export function createCollectorTokenProvider(
   }
   if (!LOGTO_OIDC_ENDPOINT) {
     throw new Error(
-      "LOGTO_OIDC_ENDPOINT must be set to mint a collector token",
+      "METRICS_BACKFILL_LOGTO_OIDC_ENDPOINT must be set to mint a collector token",
     );
   }
 

@@ -5,6 +5,7 @@ import type {
   DateOption,
   FilterMeta,
   ListMeta,
+  MessageEventStatus,
   MessageEventType,
   TextMeta,
 } from "./appliedFilter.types"
@@ -247,18 +248,38 @@ export const MessageEventStatusKey = {
 export function getMessageEventTypeLabel(key: MessageEventType) {
   switch (key) {
     case "email_delivery":
-      return "Email Notification"
+      return "Notification email delivery"
     case "message_delivery":
-      return "Delivered"
+      return "Message delivery"
     case "message_option_seen":
-      return "Seen"
+      return "Message seen"
     case "message_option_unseen":
-      return "Unseen"
+      return "Message unseen"
     case "message_schedule":
-      return "Scheduled for delivery"
+      return "Message schedule"
     default:
       return "Internal message process"
   }
+}
+
+export const displayableMessageEventTypes: MessageEventType[] = [
+  MessageStatusEventKey.MESSAGE_DELIVERY,
+  MessageStatusEventKey.MESSAGE_OPTION_SEEN,
+  MessageStatusEventKey.MESSAGE_OPTION_UNSEEN,
+  MessageStatusEventKey.MESSAGE_SCHEDULE,
+]
+
+export function isDisplayableMessageEvent(type: MessageEventType): boolean {
+  return displayableMessageEventTypes.includes(type)
+}
+
+export function getMessageEventDisplayLabel(
+  type: MessageEventType,
+  status?: MessageEventStatus,
+): string {
+  const suffix =
+    status === MessageEventStatusKey.SUCCESSFUL ? "success" : "failure"
+  return `${getMessageEventTypeLabel(type)} ${suffix}`
 }
 
 export function isBooleanMeta(t: FilterMeta | null): t is BooleanMeta {

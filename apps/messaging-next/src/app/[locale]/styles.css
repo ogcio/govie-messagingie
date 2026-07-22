@@ -63,68 +63,6 @@
   border-left-width: 0;
 }
 
-/*
- * DS gap (no responsive grid / col-span primitive): old-mode message
- * detail layout.
- *
- * Old `MessagesPage` (feature-flag off) lays the message detail beside
- * the list using a 12-column responsive grid that collapses through
- * 8 / 6 / 4 cols at the standard breakpoints. DS only ships `Container`
- * + `Stack`; there is no grid / `colSpan` / responsive layout primitive
- * we can lean on, so the grid lives here as a self-contained fallback.
- *
- * Removable when DS adds a `Grid` (with responsive `cols` + `colSpan`)
- * primitive.
- */
-.twelve-column-layout {
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  gap: var(--gieds-space-8);
-}
-
-.two-thirds-col-span {
-  grid-column: span 8;
-}
-
-@media (max-width: 1024px) {
-  .twelve-column-layout {
-    gap: var(--gieds-space-6);
-  }
-  .two-thirds-col-span {
-    grid-column: span 12;
-  }
-}
-
-@media (max-width: 768px) {
-  .twelve-column-layout {
-    grid-template-columns: repeat(8, 1fr);
-    gap: var(--gieds-space-6);
-  }
-  .two-thirds-col-span {
-    grid-column: span 8;
-  }
-}
-
-@media (max-width: 640px) {
-  .twelve-column-layout {
-    grid-template-columns: repeat(6, 1fr);
-    gap: var(--gieds-space-4);
-  }
-  .two-thirds-col-span {
-    grid-column: span 6;
-  }
-}
-
-@media (max-width: 480px) {
-  .twelve-column-layout {
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--gieds-space-4);
-  }
-  .two-thirds-col-span {
-    grid-column: span 4;
-  }
-}
-
 [data-module="gieds-footer"] picture > img {
   aspect-ratio: 136 / 48;
   width: auto;

@@ -1,8 +1,3 @@
 "use client"
 
-import dynamic from "next/dynamic"
-
-export const SecureMessagePageClient = dynamic(
-  () => import("./secure-message-page").then((mod) => mod.SecureMessagePage),
-  { ssr: false },
-)
+export { SecureMessagePage as SecureMessagePageClient } from "./secure-message-page"

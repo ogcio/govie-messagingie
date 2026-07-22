@@ -5,11 +5,9 @@ import {
   DataTableFooter,
   DataTableFooterEnd,
   DataTableFooterStart,
-  DataTableHeader,
-  DataTableHeaderSearch,
   Icon,
   InputCheckbox,
-  InputText,
+  InputCheckboxTableCell,
   Paragraph,
   Table,
   TableBody,
@@ -22,25 +20,22 @@ import {
   SelectItem,
   SelectNative,
 } from "@ogcio/design-system-react/select/select-native"
-import { TablePagination } from "@ogcio/design-system-react/table/table-pagination"
 import {
   type ColumnDef,
   flexRender,
   getCoreRowModel,
   useReactTable,
 } from "@tanstack/react-table"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
-import {
-  type ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-} from "react"
-import { CheckboxIndicatorIcon, SearchIcon } from "@/components/icons"
+import { useMemo } from "react"
+import { ListCard } from "@/components/list-card/list-card"
+import { useUrlSearchParams } from "@/hooks/use-url-search-params"
 import type { Message } from "@/types"
 import { formatDate } from "@/util/datetime"
+import { InboxPagination } from "./inbox-pagination"
+import { messageFiltersFromStatusParam } from "./messages-data-table-filters"
 import { MessagesLoading } from "./messages-loading"
 import { SenderName } from "./sender-name"
 import styles from "./unified-inbox-table.module.css"
@@ -82,14 +77,6 @@ export interface UnifiedInboxTableProps {
   onEnterSelectMode?: () => void
   onExitSelectMode?: () => void
   /**
-   * Desktop-only bulk-action banner. Rendered directly below the search
-   * row where the unread-count line normally sits; hidden on mobile via
-   * CSS. Mobile surfaces the same actions inline in the select-mode
-   * header (see `onBulkDelete` below) so the two viewports never stack
-   * duplicate controls.
-   */
-  bulkActionBar?: ReactNode
-  /**
    * Handler invoked by the mobile select-mode header's Delete button.
    * Kept here (rather than on the selection object) because the delete
    * workflow — opening the confirmation modal, clearing selection on
@@ -123,80 +110,25 @@ export function UnifiedInboxTable({
   selectMode = false,
   onEnterSelectMode,
   onExitSelectMode,
-  bulkActionBar,
   onBulkDelete,
   onOpenFolders,
   onBulkMove,
   canMove = false,
 }: UnifiedInboxTableProps) {
   const t = useTranslations("home.table")
-  const tSearch = useTranslations("search")
   const tToolbar = useTranslations("home.delete.toolbar")
   const tMove = useTranslations("home.move")
   const tFolders = useTranslations("home.folders")
-  const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const searchParams = useUrlSearchParams()
 
   const searchValue = searchParams.get("search") ?? ""
-  const [draftSearch, setDraftSearch] = useState(searchValue)
-  const currentPage = Number(searchParams.get("page")) || 1
+  const statusValue = searchParams.get("status")
+  const appliedFilters = useMemo(
+    () => messageFiltersFromStatusParam(statusValue),
+    [statusValue],
+  )
   const totalPages = Math.ceil((totalCount ?? 0) / pageSize)
-
-  useEffect(() => {
-    setDraftSearch(searchValue)
-  }, [searchValue])
-
-  /**
-   * Push the URL for a new search/page state.
-   *
-   * Next.js App Router quirk: `router.push("?")` (empty query string,
-   * relative URL) is treated as a no-op — same path, same `(empty) query`
-   * key, so the router never re-fires and `useSearchParams()` keeps its
-   * previous value. That's the bug behind "clearing the search input +
-   * Enter does nothing": when the user empties the box we'd build an
-   * empty `URLSearchParams` and push `"?"`, which never actually drops
-   * the `?search=...` segment. Falling back to the bare `pathname`
-   * whenever there are no remaining params forces a real navigation
-   * that strips the entire query string in one go.
-   */
-  const pushQuery = useCallback(
-    (params: URLSearchParams) => {
-      const qs = params.toString()
-      router.push(qs ? `${pathname}?${qs}` : pathname)
-    },
-    [router, pathname],
-  )
-
-  const pushSearch = useCallback(
-    (value: string) => {
-      const params = new URLSearchParams(searchParams)
-      params.delete("page")
-
-      if (value.trim()) {
-        params.set("search", value.trim())
-      } else {
-        params.delete("search")
-      }
-      pushQuery(params)
-    },
-    [searchParams, pushQuery],
-  )
-
-  const handleSearch = () => {
-    pushSearch(draftSearch)
-  }
-
-  const handlePageChange = (page: number) => {
-    const params = new URLSearchParams(searchParams)
-    params.set("page", String(page))
-    pushQuery(params)
-  }
-
-  const unreadCount = useMemo(
-    () => messages.filter((msg) => !msg.isSeen).length,
-    [messages],
-  )
 
   const selectionEnabled = Boolean(selection)
   /*
@@ -220,20 +152,22 @@ export function UnifiedInboxTable({
     if (selectionEnabled && selection) {
       cols.push({
         id: "select",
+        meta: { size: "xs-fixed" },
         header: () => (
-          <InputCheckbox
-            {...selectionCheckboxProps({
-              allSelected: selection.allSelected,
-              someSelected: selection.someSelected,
-            })}
+          <InputCheckboxTableCell
+            id='select-all'
+            value='all'
             aria-label={t("ariaLabel.selectAll")}
+            checked={selection.allSelected || selection.someSelected}
+            indeterminate={selection.someSelected}
             onChange={() => selection.toggleAll()}
             data-testid='select-all-checkbox'
           />
         ),
         cell: ({ row }) => (
-          <InputCheckbox
-            size='sm'
+          <InputCheckboxTableCell
+            id={row.original.id}
+            value={row.original.id}
             /*
              * The aria-label is synchronous, but the human-readable
              * sender name is fetched per-org on render (see
@@ -252,7 +186,6 @@ export function UnifiedInboxTable({
             })}
             checked={selection.isSelected(row.original.id)}
             onChange={() => selection.toggle(row.original.id)}
-            onClick={(e) => e.stopPropagation()}
             data-testid={`select-row-${row.original.id}`}
           />
         ),
@@ -270,11 +203,12 @@ export function UnifiedInboxTable({
          * with SWR deduping rows that share an org down to a single
          * request per page. The accessor is kept on `organisationId`
          * purely so react-table's row model has a stable scalar value
-         * for the column — sorting and filtering by raw UUID are not
-         * exposed in the UI.
+         * for the column — the accessor is not exposed for sorting or
+         * filtering in the UI.
          */
         accessorFn: (row) => row.organisationId,
         header: t("column.sender"),
+        meta: { size: "md-fixed" },
         cell: ({ row }) => (
           <SenderName
             organisationId={row.original.organisationId}
@@ -286,14 +220,36 @@ export function UnifiedInboxTable({
         id: "details",
         accessorKey: "subject",
         header: t("column.details"),
+        meta: { size: "fluid" },
+        /*
+         * Whole-row navigation targets a real URL (`?id=<id>` on the same
+         * route — see `selectMessage` in `unified-inbox.tsx`), so the click
+         * target is a genuine `<a>` (Next `<Link>`) rather than an `onClick`
+         * on the `<tr>`. It's rendered on the subject and stretched across
+         * the row via `.rowLink::after` (see CSS), which keeps the anchor's
+         * accessible name = subject while making the whole row the hit area
+         * and gives keyboard focus, Enter-to-open, open-in-new-tab and
+         * middle-click for free. `scroll={false}` matches the previous
+         * `router.push(..., { scroll: false })` behaviour; `prefetch={false}`
+         * avoids firing a prefetch per visible row.
+         */
         cell: ({ row }) => (
-          <span className={styles.detailsText}>{row.original.subject}</span>
+          <Link
+            href={`${pathname}?id=${row.original.id}`}
+            scroll={false}
+            prefetch={false}
+            className={styles.rowLink}
+            data-testid={`message-row-link-${row.original.id}`}
+          >
+            <span className={styles.detailsText}>{row.original.subject}</span>
+          </Link>
         ),
       },
       {
         id: "attachment",
         accessorKey: "attachmentsCount",
         header: "",
+        meta: { size: "xs-fixed" },
         cell: ({ row }) =>
           row.original.attachmentsCount ? (
             <span className='gi-inline-flex gi-items-center gi-justify-center gi-text-gray-600'>
@@ -308,6 +264,7 @@ export function UnifiedInboxTable({
         id: "date",
         accessorKey: "createdAt",
         header: t("column.date"),
+        meta: { size: "sm-fixed" },
         cell: ({ getValue }) => (
           <time dateTime={getValue<string>()}>
             {formatDate(getValue<string>(), "short")}
@@ -317,124 +274,30 @@ export function UnifiedInboxTable({
     )
 
     return cols
-  }, [selectionEnabled, selection, t])
+  }, [selectionEnabled, selection, t, pathname])
 
   const table = useReactTable({
     data: messages,
     columns,
+    enableSorting: false,
     getCoreRowModel: getCoreRowModel(),
     manualPagination: true,
     pageCount: totalPages,
   })
 
-  const columnSize = (id: string) =>
-    (
-      ({
-        select: "xs-fixed",
-        sender: "md-fixed",
-        details: "fluid",
-        attachment: "xs-fixed",
-        date: "sm-fixed",
-      }) as Record<
-        string,
-        "xs-fixed" | "sm-fixed" | "md-fixed" | "lg-flex" | "fluid"
-      >
-    )[id]
+  type ColumnSize = "xs-fixed" | "sm-fixed" | "md-fixed" | "lg-flex" | "fluid"
 
-  const showBulkActionBar = Boolean(bulkActionBar)
+  const columnSize = (columnDef: ColumnDef<Message>) =>
+    (columnDef.meta as { size?: ColumnSize } | undefined)?.size
+
   const mobileInSelectMode = Boolean(effectiveSelectMode && selection)
-  const isInitialLoading = isLoading && messages.length === 0
-
-  if (isInitialLoading) {
-    return (
-      <section className={`gi-w-full ${styles.tableRoot}`}>
-        <MessagesLoading />
-      </section>
-    )
-  }
+  const isListLoading = isLoading && messages.length === 0
 
   return (
-    <section
-      className={`gi-w-full ${styles.tableRoot} ${showBulkActionBar ? styles.containerWithBanner : ""}`}
-    >
+    <section className={`gi-w-full ${styles.tableRoot}`}>
       {/*
-       * Search row. Always mounted (desktop + mobile) so the URL-synced
-       * draft value, focus and in-flight input state survive a
-       * select → clear round-trip without being remounted. The mobile
-       * layout mirrors desktop — search input + trailing lens IconButton
-       * in a single row — instead of the old "hide the searchbar when a
-       * banner is active" trick.
+       * Mobile select header for bulk actions and folder/select controls.
        */}
-      <div className='gi-w-full'>
-        <DataTableHeader>
-          <DataTableHeaderSearch>
-            <div className={styles.searchRow}>
-              {/*
-               * Use the DS InputText's native `iconEnd` slot for the
-               * lens. DS reserves the right-edge padding internally
-               * (`data-icon-end` on the inner <input>), wraps the icon
-               * in `.gi-input-text-icon-end` and forwards clicks via
-               * `onIconEndClick`, so the icon always lines up inside
-               * the field on every breakpoint without a bespoke
-               * absolute-position wrapper. Enter on the input still
-               * submits via `onKeyDown` below; the click handler
-               * covers pointer users.
-               */}
-              <InputText
-                data-testid='search-input'
-                type='text'
-                placeholder={tSearch("input.placeholder")}
-                value={draftSearch}
-                aria-label={tSearch("button.search")}
-                /*
-                 * DS gap (small-size Material Symbols): routing the
-                 * lens through `inputActionButton` forced the inner
-                 * IconButton to `size: "small"` → `<Icon size="sm" />`
-                 * → 16px Material Symbols glyph. DS doesn't ship an
-                 * inline-SVG `search` atom (only `close` / `visibility`
-                 * / chevrons / etc.), and the Material Symbols web
-                 * font `LoadMaterialSymbols` preloads is only
-                 * variable in the `opsz 20..48` range — so at 16px
-                 * the browser clamped `opsz` out of range and the
-                 * glyph rendered too thin and too small to read.
-                 *
-                 * `iconEnd` sits in the same right-edge slot and
-                 * accepts a ReactNode directly, which lets us hand it
-                 * a proper inline SVG port of the same Material
-                 * Symbols outlined `search` glyph (see
-                 * `components/icons/search.tsx`). The SVG renders
-                 * crisply at any size, doesn't depend on the Material
-                 * Symbols font being loaded, and keeps DS's own
-                 * `.gi-input-text-icon-end` positioning + the
-                 * `data-icon-end` padding offset on the input. Click
-                 * is wired via `onIconEndClick`; Enter still submits
-                 * via `onKeyDown` for keyboard users.
-                 */
-                iconEnd={<SearchIcon size='md' />}
-                onIconEndClick={handleSearch}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  setDraftSearch(e.target.value)
-                }
-                onKeyDown={(e: React.KeyboardEvent) => {
-                  if (e.key === "Enter") handleSearch()
-                }}
-              />
-            </div>
-          </DataTableHeaderSearch>
-        </DataTableHeader>
-      </div>
-
-      {/*
-       * Desktop bulk-action banner. Rendered in the slot directly below
-       * the search row where the unread-count line normally sits. Hidden
-       * via CSS on mobile — mobile surfaces the same actions inside the
-       * select-mode header below so the banner and the row don't
-       * duplicate `bulk-delete-button`-style controls on small screens.
-       */}
-      {showBulkActionBar ? (
-        <div className={styles.bannerSlot}>{bulkActionBar}</div>
-      ) : null}
-
       {!isLoading && messages.length > 0 ? (
         <div
           className={`${styles.mobileSelectHeader} ${mobileInSelectMode ? styles.mobileSelectHeaderDark : ""}`}
@@ -513,63 +376,53 @@ export function UnifiedInboxTable({
               </span>
             </>
           ) : (
-            <>
-              {unreadCount > 0 ? (
-                <span className={styles.unreadCount}>
-                  {t("unreadCount", { count: unreadCount })}
-                </span>
-              ) : (
-                <span aria-hidden='true' />
-              )}
-              <span className='gi-inline-flex gi-items-center gi-gap-2'>
-                {onOpenFolders ? (
-                  <Button
-                    data-testid='mobile-folders-button'
-                    variant='secondary'
-                    appearance='default'
-                    size='small'
-                    onClick={onOpenFolders}
-                  >
-                    {tFolders("panel.open")}
-                  </Button>
-                ) : null}
-                {onEnterSelectMode ? (
-                  <Button
-                    data-testid='mobile-select-button'
-                    variant='secondary'
-                    appearance='default'
-                    size='small'
-                    onClick={onEnterSelectMode}
-                  >
-                    {t("select")}
-                  </Button>
-                ) : null}
-              </span>
-            </>
+            <span className='gi-inline-flex gi-items-center gi-gap-2 gi-ms-auto'>
+              {onOpenFolders ? (
+                <Button
+                  data-testid='mobile-folders-button'
+                  variant='secondary'
+                  appearance='default'
+                  size='small'
+                  onClick={onOpenFolders}
+                >
+                  {tFolders("panel.open")}
+                </Button>
+              ) : null}
+              {onEnterSelectMode ? (
+                <Button
+                  data-testid='mobile-select-button'
+                  variant='secondary'
+                  appearance='default'
+                  size='small'
+                  onClick={onEnterSelectMode}
+                >
+                  {t("select")}
+                </Button>
+              ) : null}
+            </span>
           )}
         </div>
       ) : null}
 
-      {/*
-       * Desktop-only unread count. Hidden on mobile via the module CSS
-       * (.unreadCountDesktop display:none at <768px) and suppressed
-       * entirely when the banner is showing, since the banner sits in
-       * this slot on desktop.
-       */}
-      {!isLoading && !showBulkActionBar && unreadCount > 0 ? (
-        <div className={styles.unreadCountDesktop}>
-          {t("unreadCount", { count: unreadCount })}
-        </div>
-      ) : null}
-
-      {isLoading ? (
+      {isListLoading ? (
         <MessagesLoading />
       ) : messages.length > 0 ? (
-        <>
+        <div
+          className={styles.listBody}
+          style={
+            {
+              "--inbox-list-page-size": pageSize,
+            } as React.CSSProperties
+          }
+        >
           <div className={styles.desktopTable}>
             <Table
               data-testid='unified-inbox-table'
               aria-label={t("aria.messageList")}
+              layout='auto'
+              rowSize='md'
+              stripped
+              className={styles.listChromeTable}
             >
               <TableHead>
                 {table.getHeaderGroups().map((headerGroup) => (
@@ -577,7 +430,8 @@ export function UnifiedInboxTable({
                     {headerGroup.headers.map((header) => (
                       <TableHeader
                         key={header.id}
-                        size={columnSize(header.id)}
+                        id={header.id}
+                        size={columnSize(header.column.columnDef)}
                         align={
                           header.id === "attachment" ? "center" : undefined
                         }
@@ -596,14 +450,13 @@ export function UnifiedInboxTable({
                   <TableRow
                     key={row.id}
                     className={`${styles.clickableRow} ${row.original.isSeen ? "" : styles.unreadRow} ${selection?.isSelected(row.original.id) ? styles.selectedRow : ""}`}
-                    onClick={() => onSelect(row.original.id)}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableData
                         key={cell.id}
-                        onClick={
+                        className={
                           cell.column.id === "select"
-                            ? (e: React.MouseEvent) => e.stopPropagation()
+                            ? styles.selectCell
                             : undefined
                         }
                       >
@@ -642,11 +495,7 @@ export function UnifiedInboxTable({
                     </div>
                   </DataTableFooterStart>
                   <DataTableFooterEnd>
-                    <TablePagination
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
-                    />
+                    <InboxPagination totalPages={totalPages} variant='inline' />
                   </DataTableFooterEnd>
                 </DataTableFooter>
               )}
@@ -664,24 +513,22 @@ export function UnifiedInboxTable({
               />
             ))}
           </div>
-        </>
+        </div>
       ) : (
         <div className={styles.emptyState}>
           <Paragraph>
-            {searchValue ? t("empty.search") : t("empty.all")}
+            {searchValue
+              ? t("empty.search")
+              : appliedFilters.selectedStatuses.includes("unread")
+                ? t("empty.unread")
+                : appliedFilters.selectedStatuses.includes("read")
+                  ? t("empty.read")
+                  : t("empty.all")}
           </Paragraph>
         </div>
       )}
 
-      {totalPages > 0 && (
-        <div className={styles.mobileFooter}>
-          <TablePagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
-        </div>
-      )}
+      <InboxPagination totalPages={totalPages} />
     </section>
   )
 }
@@ -712,43 +559,23 @@ function MobileMessageRow({
   }
 
   return (
-    <button
-      type='button'
+    <ListCard
+      title={<SenderName organisationId={message.organisationId} />}
+      date={<time dateTime={message.createdAt}>{shortDate}</time>}
+      preview={message.subject}
+      hasAttachment={Boolean(message.attachmentsCount)}
+      attachmentAriaLabel={
+        message.attachmentsCount
+          ? `${message.attachmentsCount} ${t("attachment", { count: message.attachmentsCount })}`
+          : undefined
+      }
+      statusLabel={message.isSeen ? t("filter.read") : t("filter.unread")}
+      isUnread={!message.isSeen}
+      isSelected={inSelectMode && isChecked}
+      showCheckbox={inSelectMode}
+      isChecked={isChecked}
       onClick={handleClick}
-      className={`${styles.mobileRow} ${message.isSeen ? "" : styles.unreadRow} ${inSelectMode && isChecked ? styles.mobileRowSelected : ""}`}
-      aria-pressed={inSelectMode ? isChecked : undefined}
-    >
-      <span className='gi-sr-only'>
-        {message.isSeen ? t("filter.read") : t("filter.unread")}
-      </span>
-      {inSelectMode ? (
-        <span
-          className={styles.mobileCheckbox}
-          aria-hidden='true'
-          data-testid={`mobile-select-indicator-${message.id}`}
-        >
-          <CheckboxIndicatorIcon checked={isChecked} size='md' />
-        </span>
-      ) : null}
-      <div className='gi-flex gi-flex-col gi-gap-1 gi-flex-1 gi-min-w-0'>
-        <div className={styles.mobileRowTop}>
-          <SenderName
-            organisationId={message.organisationId}
-            className={styles.mobileSender}
-          />
-          <time className={styles.mobileDate} dateTime={message.createdAt}>
-            {shortDate}
-          </time>
-        </div>
-        <div className='gi-flex gi-items-center gi-gap-2'>
-          <span className={styles.mobileSubject}>{message.subject}</span>
-          {message.attachmentsCount ? (
-            <span className='gi-inline-flex gi-items-center gi-shrink-0 gi-text-gray-700'>
-              <Icon icon='attach_file' ariaHidden />
-            </span>
-          ) : null}
-        </div>
-      </div>
-    </button>
+      checkboxTestId={`mobile-select-indicator-${message.id}`}
+    />
   )
 }

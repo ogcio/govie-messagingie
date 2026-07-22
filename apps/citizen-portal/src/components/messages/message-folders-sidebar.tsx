@@ -1,14 +1,16 @@
 "use client"
 
 import { Button, Icon, SideNav, SideNavItem } from "@ogcio/design-system-react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { mutate as swrMutate } from "swr"
+import { useUrlSearchParams } from "@/hooks/use-url-search-params"
 import type { Folder } from "@/types/folder"
 import { DeleteFolderModal } from "./delete-folder-modal"
 import { FolderFormModal, type FolderSaveOutcome } from "./folder-form-modal"
 import { showFolderToast } from "./folder-toast"
+import { InboxUnreadBadge } from "./inbox-unread-badge"
 import styles from "./message-folders-sidebar.module.css"
 import { useCreateFolder } from "./use-create-folder"
 import { useDeleteFolder } from "./use-delete-folder"
@@ -41,12 +43,13 @@ type FormState = { type: "create" } | { type: "rename"; folder: Folder } | null
 export function MessageFoldersSidebar() {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const searchParams = useUrlSearchParams()
   const t = useTranslations("home.folders")
   const tMove = useTranslations("home.move.modal")
 
   const selectedFolderId = searchParams.get("folder") ?? INBOX_FOLDER_ID
-  const unreadCount = useInboxUnreadCount()
+  const { count: unreadCount, isLoading: isUnreadLoading } =
+    useInboxUnreadCount()
 
   const { folders, refresh: refreshFolders } = useFolders()
   const { createFolder } = useCreateFolder()
@@ -131,15 +134,13 @@ export function MessageFoldersSidebar() {
   const inboxLabel = (
     <span className={styles.inboxLabel}>
       <span aria-hidden>{tMove("inbox")}</span>
-      {unreadCount > 0 ? (
-        <span className={styles.unreadBadge} aria-hidden>
-          {unreadCount}
-        </span>
-      ) : null}
+      <InboxUnreadBadge />
       <span className={styles.srOnly}>
-        {unreadCount > 0
-          ? `${tMove("inbox")}, ${t("unreadBadge", { count: unreadCount })}`
-          : tMove("inbox")}
+        {isUnreadLoading
+          ? tMove("inbox")
+          : unreadCount > 0
+            ? `${tMove("inbox")}, ${t("unreadBadge", { count: unreadCount })}`
+            : tMove("inbox")}
       </span>
     </span>
   )

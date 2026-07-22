@@ -34,6 +34,7 @@ const envHolder = vi.hoisted(() => ({
     NEXT_PUBLIC_DASHBOARD_ADMIN_URL: "https://dashboard-admin.uat.test",
     NEXT_PUBLIC_PAYMENTS_URL: "https://payments.uat.test",
     NEXT_PUBLIC_JOURNEY_URL: "https://journey.uat.test",
+    NEXT_PUBLIC_FORMS_URL: "https://forms.uat.test",
     NEXT_PUBLIC_PROFILE_ADMIN_URL: "https://profile-admin.uat.test",
     NEXT_PUBLIC_MESSAGING_ADMIN_URL: "https://messaging-admin.uat.test",
     NEXT_PUBLIC_MYGOVID_END_SESSION_URL: undefined as string | undefined,
@@ -42,6 +43,7 @@ const envHolder = vi.hoisted(() => ({
     // (Dedicated gating coverage lives in test/components/global-signout.test.tsx.)
     NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION: true,
     NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION: true,
+    NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION: true,
   },
 }))
 vi.mock("@/env/env.client", () => ({
@@ -160,12 +162,13 @@ describe("GlobalSignout (iframe fan-out)", () => {
     return srcs
   }
 
-  it("citizen: clears only independent apps (payments, journey) + SAG session", async () => {
+  it("citizen: clears only independent apps (payments, journey, forms) + SAG session", async () => {
     const srcs = await iframeSrcsForRole("citizen")
 
     // Apps with their own session cookies are still cleared per-origin.
     expect(srcs).toContain("https://payments.uat.test/application-signout")
     expect(srcs).toContain("https://journey.uat.test/application-signout")
+    expect(srcs).toContain("https://forms.uat.test/api/application-signout")
     // The single shared SAG session is wiped once.
     expect(srcs).toContain("https://sag.uat.test/auth/clear-session")
 
@@ -195,5 +198,6 @@ describe("GlobalSignout (iframe fan-out)", () => {
     // Independent apps are cleared for everyone.
     expect(srcs).toContain("https://payments.uat.test/application-signout")
     expect(srcs).toContain("https://journey.uat.test/application-signout")
+    expect(srcs).toContain("https://forms.uat.test/api/application-signout")
   })
 })

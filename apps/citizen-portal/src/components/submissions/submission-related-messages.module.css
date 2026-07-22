@@ -1,0 +1,42 @@
+/*
+ * Related messages on the submission detail page. Inherits
+ * `--submission-detail-gutter` from `.detailRoot` so the heading and card
+ * copy align with the back link and field labels above.
+ */
+.relatedSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gieds-space-5);
+  width: 100%;
+  min-width: 0;
+}
+
+.relatedHeading {
+  margin: 0;
+  padding-left: var(--submission-detail-gutter, var(--gieds-space-4));
+  padding-right: var(--submission-detail-gutter, var(--gieds-space-4));
+  box-sizing: border-box;
+}
+
+.relatedEmpty {
+  padding-left: var(--submission-detail-gutter, var(--gieds-space-4));
+  padding-right: var(--submission-detail-gutter, var(--gieds-space-4));
+  box-sizing: border-box;
+}
+
+.messageList {
+  width: 100%;
+  background-color: var(--gieds-color-white, #ffffff);
+}
+
+/*
+ * Match the shared gutter; row dividers still span the full bleed width.
+ */
+.messageCard {
+  min-width: 0;
+  max-width: none;
+  width: 100%;
+  padding-left: var(--submission-detail-gutter, var(--gieds-space-4));
+  padding-right: var(--submission-detail-gutter, var(--gieds-space-4));
+  box-sizing: border-box;
+}

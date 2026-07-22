@@ -1,10 +1,11 @@
 "use client"
 
 import { faro, LogLevel } from "@grafana/faro-web-sdk"
-import { Button, Spinner, toaster } from "@ogcio/design-system-react"
+import { Button, toaster } from "@ogcio/design-system-react"
 import { useGatewayMutation } from "@ogcio/sag-client/react"
 import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
+import { CssSpinner } from "@/components/css-spinner"
 import { TRACE_MESSAGES, TRACES } from "@/const/traces"
 import { withFaroSpan } from "@/util/trace-helpers"
 
@@ -74,7 +75,7 @@ export function ConfirmButton({
   return (
     <Button disabled={isLoading} onClick={handleConfirm}>
       {t("confirm")}
-      {isLoading && <Spinner />}
+      {isLoading && <CssSpinner />}
     </Button>
   )
 }

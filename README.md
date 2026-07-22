@@ -40,10 +40,13 @@ A comprehensive messaging platform for government services, built with modern we
 ```
 govie-services-messaging/
 ├── apps/
-│   ├── messaging/           # Next.js frontend application
-│   └── messaging-api/       # Fastify API server
-├── packages/                # Shared packages
-└── scripts/                 # Developer experience scripts
+│   ├── messaging-next/         # Next.js citizen frontend application
+│   ├── messaging-admin-next/   # Next.js admin frontend application
+│   ├── citizen-portal/         # Citizen portal application
+│   ├── messaging-support/      # Support application
+│   └── messaging-api/          # Fastify API server
+├── packages/                   # Shared packages
+└── scripts/                    # Developer experience scripts
 ```
 
 ## 🛠️ Development Scripts
@@ -73,7 +76,7 @@ Default ports are shown above. Database and MailDev ports are configurable via e
 
 - **[Scripts Documentation](./scripts/README.md)** - Developer experience scripts and utilities
 - **[API Documentation](./apps/messaging-api/README.md)** - Backend API documentation
-- **[Frontend Documentation](./apps/messaging/README.md)** - Frontend application documentation
+- **[Frontend Documentation](./apps/messaging-next/README.md)** - Frontend application documentation
 
 ## 🔧 Environment Configuration
 

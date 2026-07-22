@@ -1,7 +1,7 @@
 "use client"
 
 import { useCrossZoneLink } from "@citizen-portal/shared"
-import { Footer, Link } from "@ogcio/design-system-react"
+import { Footer, Link, Stack, Text } from "@ogcio/design-system-react"
 import { useLocale, useTranslations } from "next-intl"
 
 /**
@@ -16,14 +16,22 @@ import { useLocale, useTranslations } from "next-intl"
  * from `NEXT_PUBLIC_BASE_URL`, which was correct only because the
  * policy pages happened to live behind the same hostname there.)
  *
+ * Layout follows the DS "with utility slot only" / minimal footer pattern:
+ * https://ds.services.gov.ie/components/library/footer/react/#with-utility-slot-only
+ *
  * The `showContactSupport` toggle comes from the messages zone — used
  * by error pages where contacting support from a broken state is
  * ambiguous. Defaults true.
+ *
+ * The `showWhatsNew` toggle hides the messages-zone link on shells
+ * where it is not relevant (e.g. public policy pages).
  */
 export function ApplicationFooter({
   showContactSupport = true,
+  showWhatsNew = true,
 }: {
   showContactSupport?: boolean
+  showWhatsNew?: boolean
 }) {
   const t = useTranslations("navigation.footer")
   const locale = useLocale()
@@ -36,26 +44,41 @@ export function ApplicationFooter({
     <Footer
       style={{ marginTop: "auto" }}
       utilitySlot={
-        <div className='gi-flex gi-flex-row gi-gap-y-2 gi-gap-4 gi-justify-start gi-flex-wrap'>
-          <Link href={policyLink("privacy-policy")} external noColor>
+        <Stack
+          wrap
+          direction={{ base: "column", md: "row" }}
+          gap={4}
+          justify='center'
+          align='center'
+        >
+          {showWhatsNew ? (
+            <Link
+              href={crossZone("messages", `/${locale}/whats-new`)}
+              noColor
+              external
+            >
+              {t("link.whatsNew")}
+            </Link>
+          ) : null}
+          <Link href={policyLink("privacy-policy")} noColor external>
             {t("link.privacy")}
           </Link>
-          <Link href={policyLink("cookie-policy")} external noColor>
+          <Link href={policyLink("cookie-policy")} noColor external>
             {t("link.cookies")}
           </Link>
-          <Link href={policyLink("accessibility-statement")} external noColor>
+          <Link href={policyLink("accessibility-statement")} noColor external>
             {t("link.accessibilityStatement")}
           </Link>
-          <Link href={policyLink("terms-of-use")} external noColor>
+          <Link href={policyLink("terms-of-use")} noColor external>
             {t("link.termsOfUse")}
           </Link>
           {showContactSupport ? (
-            <Link href={policyLink("contact-support")} external noColor>
+            <Link href={policyLink("contact-support")} noColor external>
               {t("link.contactSupport")}
             </Link>
           ) : null}
-          <div className='gi-text-sm'>{t("text.trademark")}</div>
-        </div>
+          <Text className='gi-text-sm'>{t("text.trademark")}</Text>
+        </Stack>
       }
     />
   )

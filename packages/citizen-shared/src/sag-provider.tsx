@@ -1,7 +1,8 @@
 "use client"
 
-import { SagClientProvider } from "@ogcio/sag-client/react"
-import type { ReactNode } from "react"
+import { SagClientProvider, useSagClient } from "@ogcio/sag-client/react"
+import { type ReactNode, useMemo } from "react"
+import { coalesceAuthChecks } from "./auth-check-coalesce"
 import { getSharedParentDomain } from "./cross-zone"
 import { useEnv } from "./env/use-env"
 
@@ -76,7 +77,22 @@ export function CitizenSagProvider({
       appName={appName ?? sagAppName}
       onSessionExpired={onSessionExpired}
     >
-      {children}
+      <CoalesceAuthChecks>{children}</CoalesceAuthChecks>
     </SagClientProvider>
   )
+}
+
+/**
+ * Patches the SAG client's auth/health checks with request coalescing
+ * (AB#40680). Rendered directly under `SagClientProvider` so the very first
+ * consumer — the onboarding guard — already sees the coalesced methods.
+ *
+ * The patch runs in `useMemo` (before children render) rather than an effect,
+ * because parent effects fire *after* child effects; by the time a `useEffect`
+ * here ran, the guard would already have kicked off its un-coalesced fetches.
+ */
+function CoalesceAuthChecks({ children }: { children: ReactNode }) {
+  const client = useSagClient()
+  useMemo(() => coalesceAuthChecks(client), [client])
+  return <>{children}</>
 }

@@ -14,6 +14,26 @@ vi.mock("@/mock/messages", () => ({
   findMockMessageById: (id: string) => findMockMessageById(id),
 }))
 
+const findMockSubmissionIdForRelatedMessage = vi.fn<
+  (id: string) => string | null
+>()
+const findMockSubmissionById = vi.fn<
+  (id: string) => { id: string; title: { en: string; ga?: string } } | null
+>()
+
+vi.mock("@/mock/related-messages", () => ({
+  findMockSubmissionIdForRelatedMessage: (id: string) =>
+    findMockSubmissionIdForRelatedMessage(id),
+}))
+
+vi.mock("@/mock/submissions", () => ({
+  findMockSubmissionById: (id: string) => findMockSubmissionById(id),
+}))
+
+vi.mock("@citizen-portal/shared", () => ({
+  useCrossZoneLink: () => (_zone: string, path: string) => path,
+}))
+
 const MESSAGE = {
   id: "msg-1",
   subject: "Payslip for Mark Murphy",
@@ -47,22 +67,27 @@ const ORG_FIXTURES: Record<
 
 let fetchState: {
   message: typeof MESSAGE | null
+  metadataMessage: Pick<Message, "metadata"> | null
   isLoading: boolean
   error: { message: string } | null
 } = {
   message: MESSAGE,
+  metadataMessage: null,
   isLoading: false,
   error: null,
 }
 
+let searchParams = new URLSearchParams()
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
   usePathname: () => "/en/messages",
+  useSearchParams: () => searchParams,
 }))
 
 vi.mock("next-intl", () => ({
   useLocale: () => "en",
-  useTranslations: (namespace: string) => (key: string) => {
+  useTranslations: (namespace: string) => (key: string, values?: { title?: string }) => {
     const byNamespace: Record<string, Record<string, string>> = {
       "home.button": { back: "Back" },
       "home.move": { toolbar: "Move" },
@@ -87,13 +112,19 @@ vi.mock("next-intl", () => ({
         date: "Date",
         delete: "Delete",
         toolbarAriaLabel: "Message actions",
+        backToApplication: "Back to application",
+        backToApplicationNamed: "Back to {title}",
         attachmentOnlyFallback:
           "Please select the attachment(s) to preview your message content",
       },
       "home.table": { unknownSender: "Unknown sender" },
       "navigation.back": { ariaLabel: "Go back" },
     }
-    return byNamespace[namespace]?.[key] ?? key
+    const template = byNamespace[namespace]?.[key] ?? key
+    if (values?.title) {
+      return template.replace("{title}", values.title)
+    }
+    return template
   },
 }))
 
@@ -105,6 +136,14 @@ vi.mock("@ogcio/sag-client/react", () => ({
         data: fetchState.message,
         error: fetchState.error,
         isLoading: fetchState.isLoading,
+        refresh: vi.fn(),
+      }
+    }
+    if (path?.startsWith("/messaging-public-api/api/v1/citizens/messages/")) {
+      return {
+        data: fetchState.metadataMessage,
+        error: null,
+        isLoading: false,
         refresh: vi.fn(),
       }
     }
@@ -227,6 +266,7 @@ vi.mock("@ogcio/design-system-react", async (importOriginal) => {
 })
 
 import { MessageDetailView } from "@/components/messages/message-detail-view"
+import type { Message } from "@/types"
 
 describe("MessageDetailView", () => {
   beforeEach(() => {
@@ -235,9 +275,15 @@ describe("MessageDetailView", () => {
     moveIds.mockReset()
     findMockMessageById.mockReset()
     findMockMessageById.mockReturnValue(null)
+    findMockSubmissionIdForRelatedMessage.mockReset()
+    findMockSubmissionIdForRelatedMessage.mockReturnValue(null)
+    findMockSubmissionById.mockReset()
+    findMockSubmissionById.mockReturnValue(null)
+    searchParams = new URLSearchParams()
     sessionStorage.clear()
     fetchState = {
       message: MESSAGE,
+      metadataMessage: null,
       isLoading: false,
       error: null,
     }
@@ -342,5 +388,68 @@ describe("MessageDetailView", () => {
       folderId: "mock-folder-ehic",
     })
     expect(mockPush).toHaveBeenCalledWith("/en/messages")
+  })
+
+  it("shows a link back to the application when opened from a submission", () => {
+    searchParams = new URLSearchParams({
+      submissionId: "SCH-2025-073296",
+    })
+    findMockSubmissionById.mockReturnValue({
+      id: "SCH-2025-073296",
+      title: { en: "Birth registration" },
+    })
+
+    render(<MessageDetailView id='msg-1' />)
+
+    const applicationHref = "/en/my-applications?id=SCH-2025-073296"
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
+      "href",
+      "/en/messages",
+    )
+    expect(
+      screen.getByRole("link", { name: "Back to Birth registration" }),
+    ).toHaveAttribute("href", applicationHref)
+  })
+
+  it("resolves the application link from messaging-public-api metadata", () => {
+    fetchState.metadataMessage = {
+      metadata: { journey: { submissionId: "PPMG0004" } },
+    }
+
+    render(<MessageDetailView id='msg-1' />)
+
+    expect(
+      screen.getByRole("link", { name: "Back to application" }),
+    ).toHaveAttribute("href", "/en/my-applications?id=PPMG0004")
+  })
+
+  it("resolves the application link from a related mock message id", () => {
+    findMockSubmissionIdForRelatedMessage.mockReturnValue("SCH-2025-084321")
+    findMockSubmissionById.mockReturnValue({
+      id: "SCH-2025-084321",
+      title: { en: "School placement registration" },
+    })
+
+    render(<MessageDetailView id='rel-sch-084321-approved' />)
+
+    const applicationHref = "/en/my-applications?id=SCH-2025-084321"
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
+      "href",
+      "/en/messages",
+    )
+    expect(
+      screen.getByRole("link", {
+        name: "Back to School placement registration",
+      }),
+    ).toHaveAttribute("href", applicationHref)
+  })
+
+  it("links the toolbar Back action to the messages list by default", () => {
+    render(<MessageDetailView id='msg-1' />)
+
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
+      "href",
+      "/en/messages",
+    )
   })
 })

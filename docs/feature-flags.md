@@ -58,12 +58,13 @@ insensitive) and read through one helper module,
 | `NEXT_PUBLIC_ENABLE_MESSAGING` | `true` | MessagingIE drawer link hidden; the recent-messages (`MyMessages`) widget is omitted from the dashboard landing; messaging is no longer offered as a landing fallback. |
 | `NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION` | `true` | The Journey-Builder sign-out iframe is omitted from the global-signout fan-out (no reference to a Journey-Builder origin). |
 | `NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION` | `true` | The Payments sign-out iframe is omitted from the global-signout fan-out. |
+| `NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION` | `true` | The Forms sign-out iframe is omitted from the global-signout fan-out. |
 
 `feature-config.ts` exposes:
 
 - `isZoneEnabled(zone)` — `profile` always `true`; `messages` / `dashboard`
   follow their flags.
-- `isJourneyIntegrationEnabled()` / `isPaymentsIntegrationEnabled()`.
+- `isJourneyIntegrationEnabled()` / `isPaymentsIntegrationEnabled()` / `isFormsIntegrationEnabled`.
 - `isLeaEnabled()` — the LEA rollout flag (see below).
 - `getEnabledLandingZone(requestedZone)` — returns the requested zone if
   enabled, else the first enabled zone in the order

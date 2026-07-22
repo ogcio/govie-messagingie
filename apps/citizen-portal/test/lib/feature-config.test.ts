@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
     NEXT_PUBLIC_ENABLE_MESSAGING: true,
     NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION: true,
     NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION: true,
+    NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION: true,
     // LEA defaults off (prod keeps the default version); dev/uat turn it on.
     NEXT_PUBLIC_ENABLE_LEA: false,
   },
@@ -22,6 +23,7 @@ import {
   isJourneyIntegrationEnabled,
   isLeaEnabled,
   isPaymentsIntegrationEnabled,
+  isFormsIntegrationEnabled,
   isZoneEnabled,
 } from "@/lib/feature-config"
 
@@ -37,6 +39,7 @@ describe("feature-config", () => {
       NEXT_PUBLIC_ENABLE_MESSAGING: true,
       NEXT_PUBLIC_ENABLE_JOURNEY_INTEGRATION: true,
       NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION: true,
+      NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION: true,
       // LEA is env-specific, not a topology flag; reset to its default (off).
       NEXT_PUBLIC_ENABLE_LEA: false,
     })
@@ -82,6 +85,12 @@ describe("feature-config", () => {
       expect(isPaymentsIntegrationEnabled()).toBe(true)
       setTopology({ NEXT_PUBLIC_ENABLE_PAYMENTS_INTEGRATION: false })
       expect(isPaymentsIntegrationEnabled()).toBe(false)
+    })
+
+    it("reflects the forms flag", () => {
+      expect(isFormsIntegrationEnabled()).toBe(true)
+      setTopology({ NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION: false })
+      expect(isFormsIntegrationEnabled()).toBe(false)
     })
   })
 

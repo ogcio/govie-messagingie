@@ -2,8 +2,8 @@ import { expect, test } from "@playwright/test"
 import { createAuthenticatedPage } from "../helpers/user-auth.helper"
 import { navigateAndVerifySearch } from "../utils/navigation-helpers"
 
-// These tests exercise the soft-delete UX on the Unified Inbox
-// (feature flag `unified-inbox`). The list + delete APIs are stubbed so the
+// These tests exercise the soft-delete UX on the Unified Inbox.
+// The list + delete APIs are stubbed so the
 // spec is hermetic and runs against the local dev server regardless of the
 // backend state.
 //

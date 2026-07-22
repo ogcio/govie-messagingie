@@ -75,14 +75,22 @@ vi.mock("@/components/layout/containers", () => ({
   ),
 }))
 
-vi.mock("@/components/navigation/bold-link", () => ({
-  BoldLink: ({
-    href,
-    children,
+vi.mock("@/components/list-card/list-card", () => ({
+  ListCard: ({
+    preview,
+    onClick,
   }: {
-    href: string
-    children: React.ReactNode
-  }) => <a href={href}>{children}</a>,
+    preview: React.ReactNode
+    onClick?: () => void
+  }) => (
+    <button type='button' onClick={onClick}>
+      {preview}
+    </button>
+  ),
+}))
+
+vi.mock("@/components/messages/sender-name", () => ({
+  SenderName: () => <span>Sender</span>,
 }))
 
 import { MyMessages } from "@/components/dashboard/my-messages"
@@ -122,7 +130,7 @@ describe("MyMessages", () => {
     expect(screen.getByText("You have no messages")).toBeInTheDocument()
   })
 
-  it("renders each message as a BoldLink targeting the messaging hostname", () => {
+  it("navigates to each message on the messaging hostname when selected", () => {
     fetchState = {
       data: [
         {
@@ -142,18 +150,17 @@ describe("MyMessages", () => {
 
     render(<MyMessages />)
 
-    expect(
-      screen.getByRole("link", { name: "Annual statement" }),
-    ).toHaveAttribute(
-      "href",
-      "http://messaging.local.test:8080/en/messages?id=msg-1",
-    )
-    expect(
-      screen.getByRole("link", { name: "Payment confirmation" }),
-    ).toHaveAttribute(
-      "href",
-      "http://messaging.local.test:8080/en/messages?id=msg-2",
-    )
+    screen.getByRole("button", { name: "Annual statement" }).click()
+    expect(crossZoneCalls).toContainEqual([
+      "messages",
+      "/en/messages?id=msg-1",
+    ])
+
+    screen.getByRole("button", { name: "Payment confirmation" }).click()
+    expect(crossZoneCalls).toContainEqual([
+      "messages",
+      "/en/messages?id=msg-2",
+    ])
 
     // The "View all" CTA must also cross-zone to the messaging host.
     expect(

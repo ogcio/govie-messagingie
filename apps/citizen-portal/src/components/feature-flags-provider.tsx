@@ -26,10 +26,6 @@ import { useFlagsReadyWithFallback } from "@/hooks/use-flags-ready-with-fallback
  * `AvailableFeatureFlags` plus the bridge's `useMemo` payload.
  */
 const FeatureFlagNames = {
-  /** Messages zone — gates the unified inbox UI rollout. */
-  UnifiedInbox: "unified-inbox",
-  /** Profile zone — gates the "export my data" lifecycle action. */
-  ExportUser: "export-user",
   /**
    * Submission linking (AB#39580) — runtime toggle for messaging surfaces
    * that link a message to a Journey-Builder submission. Defaults ON so
@@ -44,15 +40,11 @@ const FeatureFlagNames = {
 
 interface AvailableFeatureFlags {
   isFlagsReady: boolean
-  isUnifiedInboxEnabled: boolean
-  isUserExportEnabled: boolean
   isSubmissionLinkingEnabled: boolean
 }
 
 const defaultFeatureFlags: AvailableFeatureFlags = {
   isFlagsReady: true,
-  isUnifiedInboxEnabled: false,
-  isUserExportEnabled: false,
   // Defaults ON: when Unleash is unconfigured (e.g. standalone deploy
   // without a flag server) submission linking stays enabled so behaviour
   // matches a fully-flagged deployment that has the flag turned on.
@@ -73,15 +65,11 @@ function FeatureFlagsBridge({ children }: { children: ReactNode }) {
     }
   }, [user?.sub, updateContext])
 
-  const isUnifiedInboxEnabled = useFlag(FeatureFlagNames.UnifiedInbox)
-  const isUserExportEnabled = useFlag(FeatureFlagNames.ExportUser)
   const isSubmissionLinkingEnabled = useFlag(FeatureFlagNames.SubmissionLinking)
 
   const value = useMemo<AvailableFeatureFlags>(
     () => ({
       isFlagsReady,
-      isUnifiedInboxEnabled: useFallbackValues ? false : isUnifiedInboxEnabled,
-      isUserExportEnabled: useFallbackValues ? false : isUserExportEnabled,
       // Submission linking defaults ON: while flags are loading or the
       // proxy is unreachable we keep it enabled so behaviour matches a
       // deployment whose `submission-linking` flag is turned on (the
@@ -90,13 +78,7 @@ function FeatureFlagsBridge({ children }: { children: ReactNode }) {
         ? true
         : isSubmissionLinkingEnabled,
     }),
-    [
-      isFlagsReady,
-      useFallbackValues,
-      isUnifiedInboxEnabled,
-      isUserExportEnabled,
-      isSubmissionLinkingEnabled,
-    ],
+    [isFlagsReady, useFallbackValues, isSubmissionLinkingEnabled],
   )
 
   return (

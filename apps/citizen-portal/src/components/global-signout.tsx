@@ -1,15 +1,19 @@
 "use client"
 
 import { getEnv } from "@citizen-portal/shared"
-import { Paragraph, Spinner, Stack } from "@ogcio/design-system-react"
+import { Paragraph, Stack } from "@ogcio/design-system-react"
 import { useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { Suspense, useEffect, useRef, useState } from "react"
+import { CssSpinner } from "@/components/css-spinner"
 import { env } from "@/env/env.client"
 import {
+  isFormsIntegrationEnabled,
   isJourneyIntegrationEnabled,
   isPaymentsIntegrationEnabled,
 } from "@/lib/feature-config"
+import { ZONE_CONFIG } from "@/lib/zone-config"
+import { getZoneFromOrigin } from "@/util/get-zone-from-origin"
 import { getValidReturnUrl } from "@/util/valid-return-url"
 
 const IFRAME_TIMEOUT_MS = 20_000
@@ -58,6 +62,42 @@ function clearConnectorsToShowCookie() {
   }
 }
 
+/** Consolidated citizen-portal env identifier — not registered in SAG. */
+const CONSOLIDATED_SAG_APP_NAME = "citizen-portal"
+
+/**
+ * Standalone zone apps (messaging-next, legacy profile-next, …) identify
+ * themselves via `NEXT_PUBLIC_SAG_APP_NAME`. The consolidated
+ * citizen-portal image uses the shared `citizen-portal` env marker instead;
+ * map that to a zone-specific SAG app.
+ *
+ * `?app=` is always required on the sign-out POST: the form is a
+ * cross-origin POST to the gateway and sameSite:"lax" cookies (including
+ * `logto_app`) are not sent, so SAG cannot resolve the app from cookies.
+ */
+function resolveConsolidatedSignOutAppName(): string {
+  const { hosts } = getEnv()
+  try {
+    const baseOrigin = new URL(env.NEXT_PUBLIC_BASE_URL).origin
+    for (const zone of ["messages", "profile", "dashboard"] as const) {
+      if (new URL(hosts[zone]).origin === baseOrigin) {
+        return ZONE_CONFIG[zone].sagAppName
+      }
+    }
+  } catch {
+    // Malformed env — fall through to hostname.
+  }
+  return ZONE_CONFIG[getZoneFromOrigin()].sagAppName
+}
+
+export function resolveGatewaySignOutAppName(): string {
+  const { sagAppName } = getEnv()
+  if (sagAppName === CONSOLIDATED_SAG_APP_NAME) {
+    return resolveConsolidatedSignOutAppName()
+  }
+  return sagAppName
+}
+
 function postGatewaySignOut(
   gatewayUrl: string,
   app: string,
@@ -99,6 +139,10 @@ export function buildIframeUrlList(role: string | null) {
   }
   if (isJourneyIntegrationEnabled()) {
     urls.push(buildLegacyApplicationSignoutUrl(env.NEXT_PUBLIC_JOURNEY_URL))
+  }
+
+  if (isFormsIntegrationEnabled()) {
+    urls.push(buildNewApplicationSignoutUrl(env.NEXT_PUBLIC_FORMS_URL))
   }
 
   // Admin apps also keep their own sessions, but only public servants ever
@@ -243,12 +287,12 @@ function GlobalSignoutInner() {
       env.NEXT_PUBLIC_BASE_URL,
     ).toString()
 
-    // SAG gateway URL + app name flow through the shared env so all
-    // three citizen-portal zones agree on the gateway URL and on the
-    // SAG app identifier used for the signout form. Same pattern as
-    // ClientShell#handleSessionExpired.
-    const { sagUrl, sagAppName } = getEnv()
-    postGatewaySignOut(sagUrl, sagAppName, postGlobalSignoutUrl)
+    const { sagUrl } = getEnv()
+    postGatewaySignOut(
+      sagUrl,
+      resolveGatewaySignOutAppName(),
+      postGlobalSignoutUrl,
+    )
   }, [iframesDone, minDelayDone, postRedirectUri, sagSignout, role])
 
   return (
@@ -257,7 +301,7 @@ function GlobalSignoutInner() {
       className='gi-flex gi-flex-col gi-items-center gi-justify-center gi-gap-6'
       style={{ minHeight: "50vh" }}
     >
-      <Spinner size='xl' />
+      <CssSpinner size='xl' />
       <Stack direction='column' gap={2} itemsAlignment='center'>
         <Paragraph>{t("loggingOut")}</Paragraph>
         <Paragraph>{t("pleaseWait")}</Paragraph>
@@ -275,7 +319,7 @@ export function GlobalSignout() {
           className='gi-flex gi-items-center gi-justify-center'
           style={{ minHeight: "50vh" }}
         >
-          <Spinner size='xl' />
+          <CssSpinner size='xl' />
         </output>
       }
     >

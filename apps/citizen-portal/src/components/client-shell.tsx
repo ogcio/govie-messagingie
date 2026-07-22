@@ -16,7 +16,6 @@ import {
   Button,
   Heading,
   Paragraph,
-  Spinner,
   Stack,
   ToastProvider,
 } from "@ogcio/design-system-react"
@@ -34,7 +33,6 @@ import {
   Suspense,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -47,8 +45,11 @@ import { ApplicationFooter } from "@/components/layout/application-footer"
 import { AppMainContent } from "@/components/layout/containers"
 import { LoadMaterialSymbols } from "@/components/load-material-symbols"
 import { PageHeader } from "@/components/navigation/page-header"
+import { PageLoading } from "@/components/page-loading"
+import { ShellLoadingChrome } from "@/components/shell-loading-chrome"
 import { TRACE_MESSAGES } from "@/const/traces"
 import { env } from "@/env/env.client"
+import { useIdleMount } from "@/hooks/use-idle-mount"
 import { useRouter } from "@/i18n/navigation"
 import { ZONE_CONFIG } from "@/lib/zone-config"
 import {
@@ -96,16 +97,33 @@ const LANGUAGE_SWITCHER = {
 // reliably land on after onboarding completes).
 const STALE_CLAIMS_REFRESH_KEY = "citizen_portal_stale_claims_refreshed"
 
-function LayoutLoading() {
-  return (
-    <output
-      aria-label='Loading'
-      className='gi-flex gi-items-center gi-justify-center'
-      style={{ minHeight: "50vh" }}
-    >
-      <Spinner size='xl' />
-    </output>
-  )
+function LayoutLoading({ zone }: { zone: Zone }) {
+  return <ShellLoadingChrome zone={zone} />
+}
+
+function MainLoading() {
+  return <PageLoading minHeight='50vh' />
+}
+
+function DeferredMaterialSymbols() {
+  const ready = useIdleMount()
+  return ready ? <LoadMaterialSymbols /> : null
+}
+
+function preloadZoneRouteChunk(zone: Zone) {
+  switch (zone) {
+    case "messages":
+      void import("@/components/messages/unified-inbox")
+      void import("@/components/secure-messages/secure-message-page")
+      break
+    case "dashboard":
+      void import("@/components/dashboard/my-dashboard")
+      void import("@/components/submissions/submissions")
+      break
+    case "profile":
+      void import("@/components/profile/my-profile")
+      break
+  }
 }
 
 function AuthTimeoutError() {
@@ -145,9 +163,10 @@ function useAuthTimeout(resolved: boolean) {
 function ShellContent({ zone, children }: { zone: Zone; children: ReactNode }) {
   const config = ZONE_CONFIG[zone]
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     persistForceConsentFromUrl()
-  }, [])
+    preloadZoneRouteChunk(zone)
+  }, [zone])
 
   const crossZone = useCrossZoneLink()
   const profileUrl = useMemo(() => crossZone("profile", "/"), [crossZone])
@@ -168,7 +187,7 @@ function ShellContent({ zone, children }: { zone: Zone; children: ReactNode }) {
   }
 
   if (!resolved) {
-    return <LayoutLoading />
+    return <LayoutLoading zone={zone} />
   }
 
   const authenticated = (
@@ -176,14 +195,20 @@ function ShellContent({ zone, children }: { zone: Zone; children: ReactNode }) {
   )
 
   return config.runsStaleClaimsGate ? (
-    <StaleClaimsRefreshGate>{authenticated}</StaleClaimsRefreshGate>
+    <StaleClaimsRefreshGate zone={zone}>{authenticated}</StaleClaimsRefreshGate>
   ) : (
     authenticated
   )
 }
 
-function StaleClaimsRefreshGate({ children }: { children: ReactNode }) {
-  const { user, claims, invalidateSession } = useAuth()
+function StaleClaimsRefreshGate({
+  zone,
+  children,
+}: {
+  zone: Zone
+  children: ReactNode
+}) {
+  const { user, claims, invalidateSession, signOut } = useAuth()
   const [refreshing, setRefreshing] = useState(false)
   const triggered = useRef(false)
 
@@ -265,7 +290,22 @@ function StaleClaimsRefreshGate({ children }: { children: ReactNode }) {
       })
   }, [user, claims, invalidateSession])
 
-  if (refreshing) return <LayoutLoading />
+  if (refreshing) {
+    return user ? (
+      <>
+        <PageHeader
+          publicName={user.name ?? user.email ?? user.sub}
+          onSignOut={signOut}
+        />
+        <AppMainContent>
+          <MainLoading />
+        </AppMainContent>
+        <ApplicationFooter />
+      </>
+    ) : (
+      <LayoutLoading zone={zone} />
+    )
+  }
   return <>{children}</>
 }
 
@@ -283,7 +323,7 @@ function AuthenticatedShell({
   const signInTriggered = useRef(false)
   const currentLocale = locale as ConsentStatementLanguages
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     persistForceConsentFromUrl()
   }, [])
 
@@ -321,18 +361,36 @@ function AuthenticatedShell({
   }
 
   if (loading || !user) {
-    return <LayoutLoading />
+    return <LayoutLoading zone={zone} />
   }
+
+  const header = (
+    <PageHeader
+      publicName={user.name ?? user.email ?? user.sub}
+      onSignOut={signOut}
+    />
+  )
+
+  // Static per-zone: keep it off any idle flag so the tree shape around
+  // `{children}` stays stable and the content subtree never remounts/refetches.
+  const showConsentChrome = config.showsConsentAndAnnouncements
 
   const shellBody = (
     <>
-      <Suspense fallback={<LayoutLoading />}>
-        <PageHeader
-          publicName={user.name ?? user.email ?? user.sub}
-          onSignOut={signOut}
-        />
+      <Suspense
+        fallback={
+          <>
+            {header}
+            <AppMainContent>
+              <MainLoading />
+            </AppMainContent>
+            <ApplicationFooter />
+          </>
+        }
+      >
+        {header}
         <AppMainContent>
-          {config.showsConsentAndAnnouncements ? <ConsentBanner /> : null}
+          {showConsentChrome ? <ConsentBanner /> : null}
           {children}
         </AppMainContent>
       </Suspense>
@@ -340,7 +398,7 @@ function AuthenticatedShell({
     </>
   )
 
-  const withConsent = config.showsConsentAndAnnouncements ? (
+  const withConsent = showConsentChrome ? (
     <ConsentProvider
       subject={MESSAGING_CONSENT_SUBJECT}
       locale={currentLocale}
@@ -377,12 +435,16 @@ function AuthenticatedShell({
     shellBody
   )
 
+  const chrome = (
+    <>
+      <ToastProvider />
+      {withConsent}
+    </>
+  )
+
   return (
     <AnalyticsProvider>
-      <FeatureFlagsProvider>
-        <ToastProvider />
-        {withConsent}
-      </FeatureFlagsProvider>
+      <FeatureFlagsProvider>{chrome}</FeatureFlagsProvider>
     </AnalyticsProvider>
   )
 }
@@ -416,7 +478,7 @@ export function ClientShell({ children }: { children: ReactNode }) {
        * The SSR'd <link> is hoisted by React 19 into <head>, so it's
        * safe to mount deep in the client tree.
        */}
-      <LoadMaterialSymbols />
+      <DeferredMaterialSymbols />
       <ShellContent zone={zone}>{children}</ShellContent>
     </CitizenSagProvider>
   )

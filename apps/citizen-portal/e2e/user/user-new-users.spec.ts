@@ -105,7 +105,9 @@ test.describe("User Messaging page", () => {
   }) => {
     await setSafeLevel(page, "2")
     await page.goto(`${DASHBOARD_URL}`)
-    await expect(page.getByText("Your messages")).toBeVisible()
+    await expect(page.getByText("Your recent messages")).toBeVisible()
+    // locator for dashboard when LEA is disabled  
+    //await expect(page.getByText("Your messages")).toBeVisible()
   })
 
   test("a user with safe level 1 cannot access the dashboard @regression", async ({

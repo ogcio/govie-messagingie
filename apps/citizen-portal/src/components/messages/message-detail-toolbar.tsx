@@ -2,10 +2,10 @@
 
 import { Icon, type IconProps, Link } from "@ogcio/design-system-react"
 import { useTranslations } from "next-intl"
-import { useCallback } from "react"
 import styles from "./message-detail.module.css"
 
 export interface MessageDetailToolbarProps {
+  backHref: string
   onMove: () => void
   onDelete: () => void
   isDeleting?: boolean
@@ -13,6 +13,7 @@ export interface MessageDetailToolbarProps {
 }
 
 export function MessageDetailToolbar({
+  backHref,
   onMove,
   onDelete,
   isDeleting = false,
@@ -22,23 +23,15 @@ export function MessageDetailToolbar({
   const tMove = useTranslations("home.move")
   const tDetail = useTranslations("home.detail")
 
-  const goBack = useCallback(() => {
-    window.history.back()
-  }, [])
-
   const actionDisabled = isDeleting || isMoving
 
   return (
     <nav className={styles.toolbar} aria-label={tDetail("toolbarAriaLabel")}>
       <Link
         noColor
-        href='#'
+        href={backHref}
         className={styles.toolbarAction}
         aria-label={tBack("back")}
-        onClick={(e: React.MouseEvent) => {
-          e.preventDefault()
-          goBack()
-        }}
       >
         <Icon
           icon='chevron_left'

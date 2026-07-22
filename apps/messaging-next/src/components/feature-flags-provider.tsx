@@ -4,7 +4,6 @@ import { useAuth } from "@ogcio/sag-client/react"
 import {
   FlagProvider,
   type IConfig,
-  useFlag,
   useUnleashContext,
 } from "@unleash/proxy-client-react"
 import {
@@ -17,17 +16,20 @@ import {
 import { env } from "@/env/env.client"
 import { useFlagsReadyWithFallback } from "@/hooks/use-flags-ready-with-fallback"
 
-const FeatureFlagNames = {
-  UnifiedInbox: "unified-inbox",
-} as const
+/**
+ * Runtime feature flags via Unleash.
+ *
+ * Add new flags to `FeatureFlagNames`, `AvailableFeatureFlags`, and the
+ * bridge's `useMemo` payload. Consumers read values via `useFeatureFlags()`.
+ */
+/** Register Unleash flag names here when adding new toggles. */
+export const FeatureFlagNames = {} as const
 
 interface AvailableFeatureFlags {
-  isUnifiedInboxEnabled: boolean
   isFlagsReady: boolean
 }
 
 const defaultFeatureFlags: AvailableFeatureFlags = {
-  isUnifiedInboxEnabled: false,
   isFlagsReady: true,
 }
 
@@ -37,7 +39,7 @@ const FeatureFlagsContext =
 function FeatureFlagsBridge({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const updateContext = useUnleashContext()
-  const { isFlagsReady, useFallbackValues } = useFlagsReadyWithFallback()
+  const { isFlagsReady } = useFlagsReadyWithFallback()
 
   useEffect(() => {
     if (user?.sub) {
@@ -45,14 +47,11 @@ function FeatureFlagsBridge({ children }: { children: ReactNode }) {
     }
   }, [user?.sub, updateContext])
 
-  const isUnifiedInboxEnabled = useFlag(FeatureFlagNames.UnifiedInbox)
-
   const value = useMemo<AvailableFeatureFlags>(
     () => ({
       isFlagsReady,
-      isUnifiedInboxEnabled: useFallbackValues ? false : isUnifiedInboxEnabled,
     }),
-    [isFlagsReady, useFallbackValues, isUnifiedInboxEnabled],
+    [isFlagsReady],
   )
 
   return (

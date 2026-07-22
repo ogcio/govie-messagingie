@@ -1,9 +1,10 @@
 "use client"
 
-import { Button, Paragraph, Spinner, Stack } from "@ogcio/design-system-react"
+import { Button, Paragraph, Stack } from "@ogcio/design-system-react"
 import { useAuth } from "@ogcio/sag-client/react"
 import { useTranslations } from "next-intl"
 import { useCallback, useState } from "react"
+import { CssSpinner } from "@/components/css-spinner"
 import { env } from "@/env/env.client"
 import { DEFAULT_STACK_GAP } from "./const"
 
@@ -30,7 +31,7 @@ export function ServiceError() {
       </Paragraph>
       <Button variant='secondary' disabled={isLoading} onClick={handleReport}>
         {t("report")}
-        {isLoading && <Spinner />}
+        {isLoading && <CssSpinner />}
       </Button>
     </Stack>
   )

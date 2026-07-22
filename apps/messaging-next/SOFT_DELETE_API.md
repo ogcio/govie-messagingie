@@ -2,8 +2,7 @@
 
 Authoritative reference for every HTTP request the Unified Inbox fires while
 soft-deleting one or more messages, and the contract each call must honour on
-the backend side. Scope is the citizen-facing flow introduced with the RFC —
-the "unified-inbox" feature flag. No public-servant / admin flow.
+the backend side. Scope is the citizen-facing Unified Inbox flow. No public-servant / admin flow.
 
 All requests leave the browser against the **Secure API Gateway** (SAG) at
 `<gatewayUrl>/messaging/api/v1/...`; SAG proxies them into **messaging-api**

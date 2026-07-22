@@ -4,7 +4,6 @@ import {
   Button,
   Chip,
   FormField,
-  FormFieldLabel,
   Heading,
   InputCheckbox,
   InputText,

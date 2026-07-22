@@ -53,19 +53,25 @@ class LocalPipelineRunner {
       {
         name: "🧪 Unit Tests",
         commands: [
-          "pnpm --filter messaging test",
+          "pnpm --filter messaging-next test",
+          "pnpm --filter messaging-admin-next test",
           "pnpm --filter messaging-api test",
         ],
         skipIf: this.skipTests,
       },
       {
         name: "🏗️ Build Services",
-        commands: ["pnpm build:api", "pnpm build:www"],
+        commands: [
+          "pnpm build:api",
+          "pnpm build:next",
+          "pnpm build:admin-next",
+        ],
       },
       {
         name: "🐳 Docker Builds",
         commands: [
-          "docker build -f apps/messaging/Dockerfile -t messaging .",
+          "docker build -f apps/messaging-next/Dockerfile -t messaging-next .",
+          "docker build -f apps/messaging-admin-next/Dockerfile -t messaging-admin-next .",
           "docker build -f apps/messaging-api/Dockerfile -t messaging-api .",
         ],
         skipIf: this.skipDocker,

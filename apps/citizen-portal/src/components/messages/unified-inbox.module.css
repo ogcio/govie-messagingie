@@ -35,6 +35,10 @@
   min-width: 0;
 }
 
+.inboxStack {
+  width: 100%;
+}
+
 /*
  * DS gap (no mobile full-bleed on Container): viewport-edge list on small
  * screens.
@@ -53,7 +57,29 @@
  * `gutter='none'` per breakpoint) prop.
  */
 @media (max-width: 767px) {
+  /*
+   * Stretch the inbox column to fill the viewport band below the page
+   * header so the mobile pagination footer can pin to the bottom even
+   * when the current page has fewer rows than a full page.
+   */
+  .listRoot {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100dvh - 16rem);
+  }
+
+  .inboxStack {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+  }
+
   .mobileFullBleed {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);

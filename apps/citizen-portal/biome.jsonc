@@ -1,6 +1,17 @@
 {
   "root": false,
   "extends": ["../../biome.jsonc"],
+  "linter": {
+    "rules": {
+      "suspicious": {
+        // This app manages auth (sign-out/session) and locale cookies via
+        // synchronous `document.cookie` writes. The suggested Cookie Store
+        // API is async and unsupported in the browsers we target, so the
+        // rule does not apply here.
+        "noDocumentCookie": "off"
+      }
+    }
+  },
   "files": {
     "includes": [
       "./src/**/*",
@@ -8,7 +19,12 @@
       "!**/public/**/*",
       "!**/out/**/*",
       "!**/coverage/**/*",
-      "!**/zones/**/*"
+      "!**/zones/**/*",
+      "!**/test/**/*",
+      "!**/e2e/**/*",
+      "!**/k6/**/*",
+      "!**/*.test.*",
+      "!**/*.spec.*"
     ]
   }
 }

@@ -9,19 +9,7 @@ let page: Page
 
 test.describe("User Messages page", () => {
   test.beforeAll(async ({ browser }) => {
-    page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
-    // Remove the modal element if it appears
-    await page.addLocatorHandler(
-      page.locator("body > div.gi-modal.gi-modal-open"),
-      async (modalLocator) => {
-        await modalLocator.evaluateAll((elements) =>
-          elements.forEach((el) => {
-            el.remove()
-          }),
-        )
-      },
-    )
-  })
+    page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")})
 
   test.afterAll(async () => {
     await page.close()
@@ -81,12 +69,7 @@ test.describe("User Messages page", () => {
     ).toBeVisible()
     //wait for no new messages to be removed
     await page.waitForSelector("text=No new messages", { state: "detached" })
-    await page
-      .locator(
-        "body > main > div > div > div > article > div:nth-child(1) > div > div > div:nth-child(1) > a",
-      )
-      .click()
+    await page.getByText("View all messages").click()
     await expect(page.url()).toContain(`${BASE_URL}`)
-    await expect(page.getByRole("link", { name: "Back" })).toBeVisible()
   })
 })

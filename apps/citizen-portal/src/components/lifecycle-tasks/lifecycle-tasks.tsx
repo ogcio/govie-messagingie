@@ -6,7 +6,6 @@ import {
   Heading,
   Paragraph,
   SectionBreak,
-  Spinner,
   Stack,
   toaster,
 } from "@ogcio/design-system-react"
@@ -17,6 +16,7 @@ import {
 } from "@ogcio/sag-client/react"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useState } from "react"
+import { CssSpinner } from "@/components/css-spinner"
 
 interface LifecycleTask {
   id: string
@@ -99,7 +99,7 @@ export function LifecycleTasks({
   if (loading) {
     return (
       <output aria-label='Loading export data' className='gi-py-4'>
-        <Spinner size='md' />
+        <CssSpinner size='md' />
       </output>
     )
   }
@@ -195,7 +195,7 @@ export function LifecycleTasks({
         )}
         {showRequestButton && (
           <Button onClick={() => void requestExport()} disabled={requesting}>
-            {requesting ? <Spinner size='sm' /> : t("button.request")}
+            {requesting ? <CssSpinner size='sm' /> : t("button.request")}
           </Button>
         )}
         {isPending && <Paragraph>{t("paragraph.pending")}</Paragraph>}
@@ -247,7 +247,7 @@ function DownloadButton({
 
   return (
     <Button onClick={() => void handleDownload()} disabled={isDownloading}>
-      {isDownloading ? <Spinner size='sm' /> : label}
+      {isDownloading ? <CssSpinner size='sm' /> : label}
     </Button>
   )
 }

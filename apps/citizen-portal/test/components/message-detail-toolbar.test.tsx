@@ -35,15 +35,21 @@ vi.mock("next-intl", () => ({
 describe("MessageDetailToolbar", () => {
   const onMove = vi.fn()
   const onDelete = vi.fn()
+  const backHref = "/en/messages"
 
   beforeEach(() => {
     onMove.mockReset()
     onDelete.mockReset()
-    vi.spyOn(window.history, "back").mockImplementation(() => {})
   })
 
   it("renders back, move, and delete actions", () => {
-    render(<MessageDetailToolbar onMove={onMove} onDelete={onDelete} />)
+    render(
+      <MessageDetailToolbar
+        backHref={backHref}
+        onMove={onMove}
+        onDelete={onDelete}
+      />,
+    )
 
     expect(
       screen.getByRole("navigation", { name: "Message actions" }),
@@ -56,7 +62,13 @@ describe("MessageDetailToolbar", () => {
   })
 
   it("calls onMove and onDelete when action buttons are clicked", () => {
-    render(<MessageDetailToolbar onMove={onMove} onDelete={onDelete} />)
+    render(
+      <MessageDetailToolbar
+        backHref={backHref}
+        onMove={onMove}
+        onDelete={onDelete}
+      />,
+    )
 
     fireEvent.click(screen.getByTestId("detail-move-button"))
     fireEvent.click(screen.getByTestId("detail-delete-button"))
@@ -67,7 +79,12 @@ describe("MessageDetailToolbar", () => {
 
   it("disables move and delete while an action is in progress", () => {
     render(
-      <MessageDetailToolbar onMove={onMove} onDelete={onDelete} isDeleting />,
+      <MessageDetailToolbar
+        backHref={backHref}
+        onMove={onMove}
+        onDelete={onDelete}
+        isDeleting
+      />,
     )
 
     expect(screen.getByTestId("detail-move-button")).toHaveAttribute(
@@ -80,10 +97,18 @@ describe("MessageDetailToolbar", () => {
     )
   })
 
-  it("navigates back via history when Back is clicked", () => {
-    render(<MessageDetailToolbar onMove={onMove} onDelete={onDelete} />)
+  it("links Back to the parent page href", () => {
+    render(
+      <MessageDetailToolbar
+        backHref='/en/my-applications?id=SCH-2025-073296'
+        onMove={onMove}
+        onDelete={onDelete}
+      />,
+    )
 
-    fireEvent.click(screen.getByRole("link", { name: "Back" }))
-    expect(window.history.back).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
+      "href",
+      "/en/my-applications?id=SCH-2025-073296",
+    )
   })
 })

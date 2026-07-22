@@ -83,6 +83,9 @@ describe("getZoneFromPath", () => {
       "/en/my-dashboard",
       "/ga/my-dashboard",
       "/en/my-dashboard/widgets",
+      "/en/my-applications",
+      "/ga/my-applications",
+      "/en/my-applications?id=SCH-2025-073296",
     ])("resolves %s to 'dashboard'", (path) => {
       expect(getZoneFromPath(path)).toBe("dashboard")
     })

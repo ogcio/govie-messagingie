@@ -74,8 +74,8 @@ vi.mock("@/components/messages/use-create-folder", () => ({
   useCreateFolder: () => ({ createFolder, isLoading: false }),
 }))
 
-vi.mock("@/components/messages/use-inbox-unread-count", () => ({
-  useInboxUnreadCount: () => 0,
+vi.mock("@/components/messages/inbox-unread-badge", () => ({
+  InboxUnreadBadge: () => null,
 }))
 
 vi.mock("@/components/messages/message-folders-sidebar", () => ({

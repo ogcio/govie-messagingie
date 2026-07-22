@@ -1,12 +1,9 @@
 packages:
   - "apps/messaging-api"
-  - "apps/messaging-admin"
   - "apps/messaging-admin-next"
-  - "apps/messaging"
   - "apps/messaging-support"
   - "apps/messaging-next"
   - "apps/citizen-portal"
-  - "packages/authorisation"
   - "packages/citizen-shared"
 syncInjectedDepsAfterScripts:
   - build

@@ -20,12 +20,14 @@ test.describe("User Features", () => {
 
   test("a user can view footer links @smoke @regression", async () => {
     await page.goto("/")
+    await expect(page.getByRole("link", { name: "What's new" })).toBeVisible()
     await expect(page.getByRole("link", { name: "Privacy" })).toBeVisible()
     await expect(page.getByRole("link", { name: "Cookies" })).toBeVisible()
     await expect(
       page.getByRole("link", { name: "Accessibility statement" }),
     ).toBeVisible()
     await expect(page.getByRole("link", { name: "Terms of use" })).toBeVisible()
+    await expect(page.getByRole("link", { name: "Contact Support" })).toBeVisible()
   })
 
   test("a user can switch language @smoke @regression", async () => {

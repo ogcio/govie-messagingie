@@ -1,20 +1,18 @@
 "use client"
 
-import { useCrossZoneLink } from "@citizen-portal/shared"
 import {
   Container,
-  Footer,
   HeaderLogo,
   HeaderMenuItemLink,
   HeaderNext,
   HeaderSecondaryMenu,
   HeaderTitle,
-  Link,
 } from "@ogcio/design-system-react"
 import { LogoHarpWhite, LogoWhite } from "@ogcio/design-system-react/logos"
 import { usePathname, useSearchParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { type ReactNode, Suspense } from "react"
+import { ApplicationFooter } from "@/components/layout/application-footer"
 import { MainContainer } from "@/components/layout/containers"
 import { LANG_EN, LANG_GA } from "@/const"
 import { useActiveLocale } from "@/hooks/use-active-locale"
@@ -74,8 +72,6 @@ export function PublicShell({
   const path = usePathname()
   const tNav = useTranslations("navigation.header")
   const titleT = useTranslations("navigation.title")
-  const tFooter = useTranslations("navigation.footer")
-  const crossZone = useCrossZoneLink()
 
   const zone = getZoneFromPath(path)
   const headerTitle = title ?? titleT(zone)
@@ -91,8 +87,6 @@ export function PublicShell({
     locale,
     oppositeLocale,
   )
-
-  const policyLink = (p: string) => crossZone("profile", `/${locale}/${p}`)
 
   return (
     <>
@@ -126,29 +120,9 @@ export function PublicShell({
           <div style={{ maxWidth: "720px" }}>{children}</div>
         </Container>
       </MainContainer>
-      <Footer
-        utilitySlot={
-          <div className='gi-flex gi-flex-row gi-gap-y-2 gi-gap-4 gi-justify-start gi-flex-wrap'>
-            <Link href={policyLink("privacy-policy")} external noColor>
-              {tFooter("link.privacy")}
-            </Link>
-            <Link href={policyLink("cookie-policy")} external noColor>
-              {tFooter("link.cookies")}
-            </Link>
-            <Link href={policyLink("accessibility-statement")} external noColor>
-              {tFooter("link.accessibilityStatement")}
-            </Link>
-            <Link href={policyLink("terms-of-use")} external noColor>
-              {tFooter("link.termsOfUse")}
-            </Link>
-            {showContactSupport ? (
-              <Link href={policyLink("contact-support")} external noColor>
-                {tFooter("link.contactSupport")}
-              </Link>
-            ) : null}
-            <div className='gi-text-sm'>{tFooter("text.trademark")}</div>
-          </div>
-        }
+      <ApplicationFooter
+        showContactSupport={showContactSupport}
+        showWhatsNew={false}
       />
     </>
   )

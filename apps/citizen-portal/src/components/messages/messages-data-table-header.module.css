@@ -1,0 +1,9 @@
+/*
+ * Inbox headers always mount the DS filter-list row (empty when no filters
+ * are active), which adds a flex gap below the search row. Applications omit
+ * the filter button so search stays full width; pad the bottom to preserve
+ * the same search-to-table rhythm.
+ */
+.searchOnlyChrome {
+  padding-bottom: var(--gieds-space-4);
+}

@@ -446,5 +446,5 @@ When adding new scripts:
 
 - [Project README](../README.md)
 - [API Documentation](../apps/messaging-api/README.md)
-- [Frontend Documentation](../apps/messaging/README.md)
+- [Frontend Documentation](../apps/messaging-next/README.md)
 - [Database Migrations](../apps/messaging-api/src/migrations/)

@@ -102,7 +102,7 @@ RUN find /app/apps/messaging-next/out -type f \( -name '*.html' -o -name '*.css'
 RUN envsubst '${OTEL_ENABLE} ${OTEL_SERVICE_NAME} ${OTEL_COLLECTOR_URL} ${PORT} ${TRUSTED_PROXY_CIDR} ${CSP_CONNECT_SRC} ${ANALYTICS_MANAGEMENT_API_ORIGIN} ${ANALYTICS_MANAGEMENT_API_HOST} ${ANALYTICS_TRACKER_ORIGIN}' <"/app/apps/messaging-next/docker/nginx.conf.template" > "/app/apps/messaging-next/docker/nginx.conf"
 
 # Production stage — nginx serves the static export
-FROM nginxinc/nginx-unprivileged:1.30-alpine-otel AS runner
+FROM nginxinc/nginx-unprivileged:1.31-alpine-otel AS runner
 
 USER root
 

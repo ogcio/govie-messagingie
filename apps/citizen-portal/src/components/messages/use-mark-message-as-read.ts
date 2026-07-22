@@ -10,7 +10,7 @@ import { mutate as swrMutate } from "swr"
  * the inbox row's `isSeen` flips on navigate-back instead of waiting on
  * SWR's focus / reconnect heuristics.
  *
- * Shared by `MessagesPage` (legacy) and `UnifiedInboxPage` (unified inbox)
+ * Shared by the unified inbox list and detail views when a message is opened.
  * so the two detail views can't drift on the mark-as-read contract — see
  * AB#37866 for the regression that motivated extracting this. The detail
  * endpoint key (`/messages/<id>`, no `?`) is intentionally left alone:

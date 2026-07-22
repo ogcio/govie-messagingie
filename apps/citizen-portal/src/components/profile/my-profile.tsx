@@ -4,7 +4,6 @@ import { useEnv } from "@citizen-portal/shared"
 import {
   Heading,
   Paragraph,
-  Spinner,
   Stack,
   SummaryList,
   SummaryListAction,
@@ -16,10 +15,11 @@ import { useAuth, useGatewayFetch } from "@ogcio/sag-client/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 import { ConsentSection } from "@/components/consent/consent-section"
-import { useFeatureFlags } from "@/components/feature-flags-provider"
 import { TwoColumnLayout } from "@/components/layout/containers"
 import { LifecycleTasks } from "@/components/lifecycle-tasks/lifecycle-tasks"
+import { PageLoading } from "@/components/page-loading"
 import { PublicNameForm } from "@/components/profile/public-name-form"
+import { useIdleMount } from "@/hooks/use-idle-mount"
 import { stringToAsterisk } from "@/util/strings"
 
 interface ProfileDetails {
@@ -48,7 +48,6 @@ export function MyProfile() {
   const tErrors = useTranslations("errors")
   const [showPpsn, setShowPpsn] = useState(false)
   const { user, loading: authLoading } = useAuth()
-  const { isUserExportEnabled } = useFeatureFlags()
   const locale = useLocale()
   // `ConsentSection` concatenates `${messagingUrl}/${locale}/messages?...`,
   // so we hand it the bare messages host (no trailing path). The shared
@@ -56,10 +55,12 @@ export function MyProfile() {
   // reads — keeping the value source-of-truth single across the portal.
   const { hosts } = useEnv()
   const messagingUrl = hosts.messages
+  const idleReady = useIdleMount()
 
-  const profilePath = user?.sub
-    ? `/profile/api/v1/profiles/${user.sub}?consentSubjects=messaging`
-    : null
+  const profilePath =
+    user?.sub && idleReady
+      ? `/profile/api/v1/profiles/${user.sub}?consentSubjects=messaging`
+      : null
 
   const {
     data: profile,
@@ -85,13 +86,14 @@ export function MyProfile() {
 
   if (isWaitingForProfile) {
     return (
-      <output
-        aria-label='Loading profile'
-        className='gi-flex gi-items-center gi-justify-center'
-        style={{ minHeight: "30vh" }}
-      >
-        <Spinner size='lg' />
-      </output>
+      <TwoColumnLayout>
+        <Stack direction='column' gap={8} data-testid='profile-page'>
+          <Heading as='h1' size='xl' data-testid='profile-heading'>
+            {t("title")}
+          </Heading>
+          <PageLoading minHeight='20vh' ariaLabel='Loading profile' size='lg' />
+        </Stack>
+      </TwoColumnLayout>
     )
   }
 
@@ -200,9 +202,7 @@ export function MyProfile() {
           consentStatuses={profile.consentStatuses}
         />
 
-        {isUserExportEnabled && (
-          <LifecycleTasks profileId={profile.id} locale={locale} />
-        )}
+        <LifecycleTasks profileId={profile.id} locale={locale} />
       </Stack>
     </TwoColumnLayout>
   )

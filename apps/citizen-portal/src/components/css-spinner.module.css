@@ -1,0 +1,54 @@
+/*
+ * Compositor-driven loading spinner.
+ *
+ * Unlike the Design System `Spinner` (which animates via SVG SMIL on the main
+ * thread and visibly stutters during hydration/route work), this animates a
+ * `transform` on the compositor thread, so it keeps spinning smoothly even
+ * while the main thread is momentarily busy.
+ */
+.spinner {
+  display: inline-block;
+  box-sizing: border-box;
+  border-radius: 9999px;
+  border-style: solid;
+  border-color: color-mix(in srgb, currentColor 22%, transparent);
+  border-top-color: currentColor;
+  animation: gi-css-spin 0.9s linear infinite;
+  will-change: transform;
+}
+
+@keyframes gi-css-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.xl {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-width: 4px;
+}
+
+.lg {
+  width: 2rem;
+  height: 2rem;
+  border-width: 3px;
+}
+
+.md {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-width: 3px;
+}
+
+.sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}

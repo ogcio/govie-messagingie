@@ -2,15 +2,17 @@
 
 import { Button, Stack } from "@ogcio/design-system-react"
 import { useGatewayFetch } from "@ogcio/sag-client/react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { getMockMessagesPage, getMockMessagesTotalCount } from "@/mock/messages"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useUrlSearchParams } from "@/hooks/use-url-search-params"
+import { getMockMessagesTotalCount } from "@/mock/messages"
 import type { Message } from "@/types"
 import { BulkActionToolbar } from "./bulk-action-toolbar"
 import { DeleteConfirmationModal } from "./delete-confirmation-modal"
 import { DeleteResultToast } from "./delete-result-toast"
 import { InboxLayout } from "./inbox-layout"
+import { InboxListChromeHeader } from "./inbox-list-chrome-header"
 import { DELETE_FLASH_KEY, MOVE_FLASH_KEY } from "./message-action-flash-keys"
 import { MessageDetailView } from "./message-detail-view"
 import {
@@ -22,8 +24,13 @@ import { MobileFolderPanel } from "./mobile-folder-panel"
 import { MoveMessageModal } from "./move-message-modal"
 import { MoveResultToast } from "./move-result-toast"
 import { DEFAULT_PAGE_SIZE, parsePageSize } from "./page-size"
+import {
+  hasActiveInboxListFilters,
+  resolveInboxMessages,
+} from "./resolve-inbox-messages"
 import styles from "./unified-inbox.module.css"
 import { UnifiedInboxTable } from "./unified-inbox-table"
+import tableStyles from "./unified-inbox-table.module.css"
 import {
   type DeleteMessagesResult,
   useDeleteMessages,
@@ -69,7 +76,7 @@ function buildMessagesUrl(params: {
 export function UnifiedInboxPage() {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const searchParams = useUrlSearchParams()
   const selectedId = searchParams.get("id")
 
   const selectMessage = useCallback(
@@ -101,7 +108,7 @@ function UnifiedInboxListView({
 }) {
   const router = useRouter()
   const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const searchParams = useUrlSearchParams()
   const tMove = useTranslations("home.move")
   const search = searchParams.get("search")
   const status = searchParams.get("status") || "all"
@@ -138,21 +145,53 @@ function UnifiedInboxListView({
     refresh,
   } = useGatewayFetch<Message[], { totalCount?: number }>(apiUrl)
 
+  const hasActiveListFilters = hasActiveInboxListFilters({ search, status })
+
+  const previousMessagesRef = useRef<Message[]>([])
+
   const messages = useMemo(() => {
-    if (isLoading && apiMessages.length === 0) return []
-    if (apiMessages.length > 0) return apiMessages
-    // Mock fixtures back the Inbox view only; folder/Deleted views always
-    // reflect real API data so an empty folder reads as empty, not as the
-    // inbox fixtures.
-    if (!isInboxView) return []
-    return getMockMessagesPage({ search, page, pageSize })
-  }, [apiMessages, isLoading, search, page, pageSize, isInboxView])
+    const resolved = resolveInboxMessages({
+      apiMessages,
+      isLoading,
+      isInboxView,
+      search,
+      status,
+      page,
+      pageSize,
+    })
+
+    if (!isLoading) {
+      previousMessagesRef.current = resolved
+      return resolved
+    }
+
+    if (resolved.length > 0) {
+      previousMessagesRef.current = resolved
+      return resolved
+    }
+
+    if (previousMessagesRef.current.length > 0) {
+      return previousMessagesRef.current
+    }
+
+    return resolved
+  }, [apiMessages, isLoading, isInboxView, search, status, page, pageSize])
 
   const totalCount = useMemo(() => {
-    if (metadata?.totalCount) return metadata.totalCount
+    if (metadata?.totalCount != null) return metadata.totalCount
+    if (apiMessages.length > 0) return apiMessages.length
+    if (!isLoading && hasActiveListFilters) return 0
     if (!isInboxView) return 0
-    return getMockMessagesTotalCount(search)
-  }, [metadata?.totalCount, search, isInboxView])
+    return getMockMessagesTotalCount(search, status === "all" ? null : status)
+  }, [
+    metadata?.totalCount,
+    apiMessages.length,
+    isLoading,
+    hasActiveListFilters,
+    search,
+    status,
+    isInboxView,
+  ])
 
   const selection = useMessageSelection(messages)
   const {
@@ -263,6 +302,10 @@ function UnifiedInboxListView({
           onDelete={() =>
             openDeleteConfirmation(Array.from(selection.selectedIds))
           }
+          onClearSelection={() => {
+            selection.clear()
+            setSelectMode(false)
+          }}
           extraActions={
             canMove ? (
               <Button
@@ -289,7 +332,12 @@ function UnifiedInboxListView({
 
   return (
     <div className={styles.listRoot}>
-      <Stack direction='column' gap={6} itemsAlignment='stretch'>
+      <Stack
+        direction='column'
+        gap={6}
+        itemsAlignment='stretch'
+        className={styles.inboxStack}
+      >
         <DeleteResultToast
           result={activeDeleteResult}
           onDismiss={handleDismissDeleteResult}
@@ -299,25 +347,30 @@ function UnifiedInboxListView({
           onDismiss={handleDismissMoveResult}
         />
         <div className={styles.mobileFullBleed}>
-          <UnifiedInboxTable
-            messages={messages}
-            isLoading={isLoading}
-            totalCount={totalCount}
-            onSelect={onSelect}
-            pageSize={pageSize}
-            onPageSizeChange={handlePageSizeChange}
-            selection={selection}
-            selectMode={selectMode}
-            onEnterSelectMode={() => setSelectMode(true)}
-            onExitSelectMode={() => setSelectMode(false)}
-            bulkActionBar={bulkActionBar}
-            onBulkDelete={() =>
-              openDeleteConfirmation(Array.from(selection.selectedIds))
-            }
-            onOpenFolders={() => setFolderPanelOpen(true)}
-            onBulkMove={() => setMoveModalOpen(true)}
-            canMove={canMove}
-          />
+          <div className={tableStyles.listChrome}>
+            <InboxListChromeHeader
+              showToolbar={selection.selectedCount > 0}
+              bulkActionBar={bulkActionBar}
+            />
+            <UnifiedInboxTable
+              messages={messages}
+              isLoading={isLoading}
+              totalCount={totalCount}
+              onSelect={onSelect}
+              pageSize={pageSize}
+              onPageSizeChange={handlePageSizeChange}
+              selection={selection}
+              selectMode={selectMode}
+              onEnterSelectMode={() => setSelectMode(true)}
+              onExitSelectMode={() => setSelectMode(false)}
+              onBulkDelete={() =>
+                openDeleteConfirmation(Array.from(selection.selectedIds))
+              }
+              onOpenFolders={() => setFolderPanelOpen(true)}
+              onBulkMove={() => setMoveModalOpen(true)}
+              canMove={canMove}
+            />
+          </div>
         </div>
         <DeleteConfirmationModal
           isOpen={pendingIds !== null}

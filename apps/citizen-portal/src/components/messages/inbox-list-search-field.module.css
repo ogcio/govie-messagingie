@@ -1,0 +1,15 @@
+.searchInput {
+  width: 100%;
+  min-width: 0;
+}
+
+.searchPendingSpinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  /* Align with the DS clear-button glyph, which renders in a different slot
+   * (measured 4px left / 2px lower than this icon-end slot). */
+  transform: translate(-4px, 2px);
+}

@@ -62,6 +62,13 @@ export function isPaymentsIntegrationEnabled(): boolean {
 }
 
 /**
+ * Whether the Forms integration is part of this deployment.
+ */
+export function isFormsIntegrationEnabled(): boolean {
+  return env.NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION
+}
+
+/**
  * Whether the Life Events Accelerator (LEA) experience is enabled for this
  * build (AB#40267).
  *
