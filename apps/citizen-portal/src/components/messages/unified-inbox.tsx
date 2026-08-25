@@ -1,13 +1,13 @@
 "use client"
 
 import { Button, Stack } from "@ogcio/design-system-react"
-import { useGatewayFetch } from "@ogcio/sag-client/react"
+import { useAnalytics } from "@ogcio/nextjs-analytics"
 import { usePathname, useRouter } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { ANALYTICS } from "@/const/analytics"
+import { useIsMobile } from "@/hooks/use-is-mobile"
 import { useUrlSearchParams } from "@/hooks/use-url-search-params"
-import { getMockMessagesTotalCount } from "@/mock/messages"
-import type { Message } from "@/types"
 import { BulkActionToolbar } from "./bulk-action-toolbar"
 import { DeleteConfirmationModal } from "./delete-confirmation-modal"
 import { DeleteResultToast } from "./delete-result-toast"
@@ -24,10 +24,6 @@ import { MobileFolderPanel } from "./mobile-folder-panel"
 import { MoveMessageModal } from "./move-message-modal"
 import { MoveResultToast } from "./move-result-toast"
 import { DEFAULT_PAGE_SIZE, parsePageSize } from "./page-size"
-import {
-  hasActiveInboxListFilters,
-  resolveInboxMessages,
-} from "./resolve-inbox-messages"
 import styles from "./unified-inbox.module.css"
 import { UnifiedInboxTable } from "./unified-inbox-table"
 import tableStyles from "./unified-inbox-table.module.css"
@@ -35,43 +31,10 @@ import {
   type DeleteMessagesResult,
   useDeleteMessages,
 } from "./use-delete-messages"
+import { useInboxMessages } from "./use-inbox-messages"
 import { useMessageFolders } from "./use-message-folders"
 import { useMessageSelection } from "./use-message-selection"
 import { type MoveMessagesResult, useMoveMessages } from "./use-move-messages"
-
-function buildMessagesUrl(params: {
-  search: string | null
-  page: number
-  pageSize: number
-  status?: string
-  /** Active folder: `null`/`inbox` = untagged, `deleted` = trash, else a tag id. */
-  folderId?: string | null
-}) {
-  const url = new URLSearchParams()
-  url.set("limit", String(params.pageSize))
-  url.set("offset", String((params.page - 1) * params.pageSize))
-
-  if (params.status === "unread") {
-    url.set("isSeen", "false")
-  } else if (params.status === "read") {
-    url.set("isSeen", "true")
-  }
-
-  if (params.search) {
-    url.set("search", params.search)
-  }
-
-  // Folder scoping: Inbox shows only untagged messages, a user folder filters
-  // by its tag id, and Deleted is handled by its own soft-delete view (not a
-  // tag) so it is intentionally left untouched here.
-  if (!params.folderId || params.folderId === INBOX_FOLDER_ID) {
-    url.set("untagged", "true")
-  } else if (params.folderId !== DELETED_FOLDER_ID) {
-    url.set("tagId", params.folderId)
-  }
-
-  return `/messaging/api/v1/messages?${url.toString()}`
-}
 
 export function UnifiedInboxPage() {
   const router = useRouter()
@@ -110,6 +73,22 @@ function UnifiedInboxListView({
   const pathname = usePathname()
   const searchParams = useUrlSearchParams()
   const tMove = useTranslations("home.move")
+
+  const analyticsClient = useAnalytics()
+  const trackedListView = useRef(false)
+  useEffect(() => {
+    if (trackedListView.current) return
+    trackedListView.current = true
+    analyticsClient.trackEvent({
+      event: {
+        name: ANALYTICS.message.listView.name,
+        category: ANALYTICS.message.category,
+        action: ANALYTICS.message.listView.action,
+      },
+    })
+  }, [analyticsClient])
+
+  const isMobile = useIsMobile()
   const search = searchParams.get("search")
   const status = searchParams.get("status") || "all"
   const page = Number(searchParams.get("page")) || 1
@@ -133,65 +112,17 @@ function UnifiedInboxListView({
     [router, pathname, searchParams],
   )
 
-  const apiUrl = useMemo(
-    () => buildMessagesUrl({ search, page, pageSize, status, folderId }),
-    [search, page, pageSize, status, folderId],
-  )
-
+  // Desktop keeps `?page=`-based pagination; mobile switches to infinite
+  // scroll, accumulating pages as the user reaches the end of the card list.
   const {
-    data: apiMessages = [],
-    metadata,
+    messages,
+    totalCount,
     isLoading,
+    isLoadingMore,
+    hasMore,
+    loadMore,
     refresh,
-  } = useGatewayFetch<Message[], { totalCount?: number }>(apiUrl)
-
-  const hasActiveListFilters = hasActiveInboxListFilters({ search, status })
-
-  const previousMessagesRef = useRef<Message[]>([])
-
-  const messages = useMemo(() => {
-    const resolved = resolveInboxMessages({
-      apiMessages,
-      isLoading,
-      isInboxView,
-      search,
-      status,
-      page,
-      pageSize,
-    })
-
-    if (!isLoading) {
-      previousMessagesRef.current = resolved
-      return resolved
-    }
-
-    if (resolved.length > 0) {
-      previousMessagesRef.current = resolved
-      return resolved
-    }
-
-    if (previousMessagesRef.current.length > 0) {
-      return previousMessagesRef.current
-    }
-
-    return resolved
-  }, [apiMessages, isLoading, isInboxView, search, status, page, pageSize])
-
-  const totalCount = useMemo(() => {
-    if (metadata?.totalCount != null) return metadata.totalCount
-    if (apiMessages.length > 0) return apiMessages.length
-    if (!isLoading && hasActiveListFilters) return 0
-    if (!isInboxView) return 0
-    return getMockMessagesTotalCount(search, status === "all" ? null : status)
-  }, [
-    metadata?.totalCount,
-    apiMessages.length,
-    isLoading,
-    hasActiveListFilters,
-    search,
-    status,
-    isInboxView,
-  ])
+  } = useInboxMessages({ isMobile, search, status, folderId, page, pageSize })
 
   const selection = useMessageSelection(messages)
   const {
@@ -359,6 +290,9 @@ function UnifiedInboxListView({
               onSelect={onSelect}
               pageSize={pageSize}
               onPageSizeChange={handlePageSizeChange}
+              hasMore={hasMore}
+              isLoadingMore={isLoadingMore}
+              onLoadMore={loadMore}
               selection={selection}
               selectMode={selectMode}
               onEnterSelectMode={() => setSelectMode(true)}

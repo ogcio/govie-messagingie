@@ -1,0 +1,23 @@
+meta {
+  name: Can Get Current Consent Statement
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organisations/consent-statements/current?subject=messaging
+  body: none
+  auth: bearer
+}
+
+params:query {
+  subject: messaging
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+settings {
+  encodeUrl: true
+}

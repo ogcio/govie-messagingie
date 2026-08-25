@@ -4,6 +4,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { updateMessageAction } from "../../../services/message-actions/message-action-service.js";
 import { MessagingEventType } from "../../../services/messages/event-logger.js";
 import type { PutMessageActionBody } from "../../../types/message-actions.js";
+import { messagesReadCounter } from "../../../utils/metrics.js";
 import {
   DATABASE_TEST_URL_KEY,
   getPoolFromConnectionString,
@@ -23,6 +24,17 @@ vi.mock("../../../utils/authentication-factory.js", () => ({
       },
     }),
   }),
+}));
+
+vi.mock("../../../utils/metrics.js", () => ({
+  messagesSentCounter: { add: vi.fn() },
+  messagesReadCounter: { add: vi.fn() },
+  messagesCreatedCounter: { add: vi.fn() },
+  messagesQueueGauge: { record: vi.fn() },
+  messagesScheduledCounter: { add: vi.fn() },
+  messagesFailedCounter: { add: vi.fn() },
+  messageDeliveryDurationHistogram: { record: vi.fn() },
+  setupAsyncMetrics: vi.fn(),
 }));
 
 let pool: Pool;
@@ -317,6 +329,32 @@ describe("Update Message Action works for delivered messages", () => {
     );
 
     expect(eventLog.rowCount).toBe(0);
+  });
+
+  it("emits messages_read tagged with the message's organisation", async () => {
+    const message = await insertMockMessage({
+      userId: userId,
+      isSeen: false,
+      isDelivered: true,
+    });
+    const body: PutMessageActionBody = {
+      messageId: message.id,
+      isSeen: true,
+    };
+
+    await updateMessageAction({
+      loggedInUser: {
+        userId: message.user_id,
+        accessToken: "accessToken",
+      },
+      body,
+      pool,
+      logger: getMockBaseLogger(),
+    });
+
+    expect(messagesReadCounter.add).toHaveBeenCalledWith(1, {
+      organizationId,
+    });
   });
 });
 

@@ -4,7 +4,11 @@ packages:
   - "apps/messaging-support"
   - "apps/messaging-next"
   - "apps/citizen-portal"
+  - "apps/upload-api"
+  - "apps/scheduler-api"
+  - "apps/profile-api"
   - "packages/citizen-shared"
+  - "packages/blacklist-profiles"
 syncInjectedDepsAfterScripts:
   - build
 injectWorkspacePackages: true
@@ -12,8 +16,19 @@ minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
   - "@ogcio/*"
 overrides:
-  protobufjs: 8.6.3
   '@grafana/faro-react': 2.7.1
+  protobufjs: 8.6.6 # GHSA-jfj6-75fj-8934, GHSA-j3f2-48v5-ccww
+  postcss: 8.5.23 # CVE-2026-45623, GHSA-6g55-p6wh-862q, GHSA-r28c-9q8g-f849
+  '@fastify/static': 10.1.2 # CVE-2026-15074, GHSA-83w8-p2f5-377r, GHSA-8pvw-jcv7-9cmj
+  find-my-way: 9.7.0 # CVE-2026-47219, GHSA-c96f-x56v-gq3h
+  fast-uri: 3.1.5 # GHSA-v2hh-gcrm-f6hx, GHSA-4c8g-83qw-93j6, CVE-2026-18446
+  js-yaml: 4.3.0 # GHSA-52cp-r559-cp3m, GHSA-h67p-54hq-rp68
+  sharp: 0.35.3 # GHSA-f88m-g3jw-g9cj
+  '@opentelemetry/core': 2.9.0 # GHSA-8988-4f7v-96qf
+  '@opentelemetry/propagator-jaeger': 2.9.0 # GHSA-45rx-2jwx-cxfr
+  brace-expansion: 5.0.9 # CVE-2026-14257, GHSA-mh99-v99m-4gvg, GHSA-3jxr-9vmj-r5cp, CVE-2026-69152
+  ip-address: 10.3.1 # CVE-2026-69192
+  nanoid: 3.3.18 # CVE-2026-67213, GHSA-2v37-7h3g-55p8
 patchedDependencies:
   '@ogcio/design-system-react@1.34.0': patches/@ogcio__design-system-react@1.34.0.patch
   '@ogcio/design-system-react@1.41.0': patches/@ogcio__design-system-react@1.41.0.patch

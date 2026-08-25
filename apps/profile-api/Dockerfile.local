@@ -1,0 +1,56 @@
+# Local-development variant of ./Dockerfile.
+#
+# Identical to the production Dockerfile except for the runner base image: this
+# one uses the public `node:24-alpine3.23` instead of the hardened
+# `dhi.io/node:24-alpine3.23` mirror in ECR, which needs AWS credentials most
+# developers do not have locally.
+#
+# Keep this file in sync with ./Dockerfile. The ONLY line that should ever
+# differ is the runner `FROM`. Anything else means local builds have stopped
+# being a faithful proxy for what the pipeline produces.
+#
+#   docker build -f apps/profile-api/Dockerfile.local -t profile-api:local .
+#
+# Requires the `base-deps` stage to exist first: `pnpm docker:build:base`.
+
+FROM base-deps AS profile-api-base-deps
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack enable
+
+FROM profile-api-base-deps AS builder
+WORKDIR /app
+
+COPY ./pnpm*.yaml /app/
+COPY ./package.json /app/
+COPY ./patches/ /app/patches/
+COPY ./packages/blacklist-profiles/ /app/packages/blacklist-profiles/
+COPY ./apps/profile-api/ /app/apps/profile-api/
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
+
+RUN pnpm --filter blacklist-profiles build
+RUN pnpm --filter @govie-services/profile-api run build
+
+RUN pnpm deploy --filter=@govie-services/profile-api --prod /app/deploy
+
+FROM node:24-alpine3.23 AS runner
+WORKDIR /app
+
+USER node
+
+ARG PORT=8003
+
+ENV NODE_ENV=production
+ENV PORT=$PORT
+ENV LOG_LEVEL=INFO
+
+COPY --from=builder --chown=node:node /app/deploy/dist /app/apps/profile-api/dist
+COPY --from=builder --chown=node:node /app/deploy/node_modules /app/apps/profile-api/node_modules
+COPY --from=builder --chown=node:node /app/deploy/package.json /app/apps/profile-api/
+
+EXPOSE ${PORT}
+
+WORKDIR /app/apps/profile-api
+
+CMD [ "node", "--import", "./dist/instrumentation.js", "dist/index.js" ]

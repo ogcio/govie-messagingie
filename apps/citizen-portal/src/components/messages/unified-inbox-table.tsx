@@ -34,6 +34,7 @@ import { ListCard } from "@/components/list-card/list-card"
 import { useUrlSearchParams } from "@/hooks/use-url-search-params"
 import type { Message } from "@/types"
 import { formatDate } from "@/util/datetime"
+import { InboxInfiniteScrollFooter } from "./inbox-infinite-scroll-footer"
 import { InboxPagination } from "./inbox-pagination"
 import { messageFiltersFromStatusParam } from "./messages-data-table-filters"
 import { MessagesLoading } from "./messages-loading"
@@ -97,6 +98,21 @@ export interface UnifiedInboxTableProps {
    */
   onBulkMove?: () => void
   canMove?: boolean
+  /**
+   * Mobile infinite scroll (desktop keeps its tfoot pagination):
+   * `hasMore` = more pages remain, `isLoadingMore` = a page is in flight,
+   * `onLoadMore` = append the next page when the bottom sentinel is reached.
+   */
+  hasMore?: boolean
+  isLoadingMore?: boolean
+  onLoadMore?: () => void
+  /**
+   * Overrides the desktop Details cell link target. Defaults to same-route
+   * `?id=<id>` navigation used by the messages inbox. The submission detail
+   * page injects a cross-zone URL here so it can reuse this grid without
+   * changing the inbox's own navigation.
+   */
+  buildDetailHref?: (id: string) => string
 }
 
 export function UnifiedInboxTable({
@@ -114,6 +130,10 @@ export function UnifiedInboxTable({
   onOpenFolders,
   onBulkMove,
   canMove = false,
+  hasMore = false,
+  isLoadingMore = false,
+  onLoadMore,
+  buildDetailHref,
 }: UnifiedInboxTableProps) {
   const t = useTranslations("home.table")
   const tToolbar = useTranslations("home.delete.toolbar")
@@ -235,7 +255,11 @@ export function UnifiedInboxTable({
          */
         cell: ({ row }) => (
           <Link
-            href={`${pathname}?id=${row.original.id}`}
+            href={
+              buildDetailHref
+                ? buildDetailHref(row.original.id)
+                : `${pathname}?id=${row.original.id}`
+            }
             scroll={false}
             prefetch={false}
             className={styles.rowLink}
@@ -274,7 +298,7 @@ export function UnifiedInboxTable({
     )
 
     return cols
-  }, [selectionEnabled, selection, t, pathname])
+  }, [selectionEnabled, selection, t, pathname, buildDetailHref])
 
   const table = useReactTable({
     data: messages,
@@ -421,7 +445,6 @@ export function UnifiedInboxTable({
               aria-label={t("aria.messageList")}
               layout='auto'
               rowSize='md'
-              stripped
               className={styles.listChromeTable}
             >
               <TableHead>
@@ -469,7 +492,7 @@ export function UnifiedInboxTable({
                   </TableRow>
                 ))}
               </TableBody>
-              {totalPages > 0 && (
+              {totalPages > 1 && (
                 <DataTableFooter>
                   <DataTableFooterStart>
                     <div
@@ -487,7 +510,6 @@ export function UnifiedInboxTable({
                           onPageSizeChange(Number(e.target.value))
                         }
                       >
-                        <SelectItem value='6'>6</SelectItem>
                         <SelectItem value='10'>10</SelectItem>
                         <SelectItem value='20'>20</SelectItem>
                         <SelectItem value='50'>50</SelectItem>
@@ -528,7 +550,16 @@ export function UnifiedInboxTable({
         </div>
       )}
 
-      <InboxPagination totalPages={totalPages} />
+      {/*
+       * Mobile replaces the old sticky pagination footer with infinite scroll
+       * (this footer is mobile-only via CSS). Desktop pagination lives in the
+       * table tfoot above and is unaffected.
+       */}
+      <InboxInfiniteScrollFooter
+        hasMore={hasMore}
+        isLoadingMore={isLoadingMore}
+        onLoadMore={onLoadMore}
+      />
     </section>
   )
 }

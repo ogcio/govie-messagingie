@@ -154,7 +154,7 @@ export async function listMessageEvents(params: {
         COALESCE($3::DATE, (NOW() AT TIME ZONE 'UTC')::DATE - INTERVAL '30 days')
         AND COALESCE($4::DATE, (NOW() AT TIME ZONE 'UTC')::DATE)
     ${eventsStatusFilter ?? ""}
-  ORDER BY mes.scheduled_at DESC, mes.message_id
+  ORDER BY mes.updated_at DESC, mes.message_id
   LIMIT $5
   OFFSET $6
   `,

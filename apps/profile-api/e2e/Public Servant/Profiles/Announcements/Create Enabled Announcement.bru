@@ -1,0 +1,50 @@
+meta {
+  name: Create Enabled Announcement
+  type: http
+  seq: 3
+  tags: [
+    announcements
+  ]
+}
+
+post {
+  url: {{baseUrl}}/api/v1/support/announcements
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{supportAccessToken}}
+}
+
+body:json {
+  {
+    "applicationId": "messaging",
+    "isEnabled": "false",
+    "publishDate": "{{publishDate}}",
+    "translations": {
+      "en": {
+        "title": "{{$randomWord}}",
+        "description": "{{$randomWords}}"
+      },
+      "ga": {
+        "title": "{{$randomWord}}",
+        "description": "{{$randomWords}}"
+      }
+    }
+  }
+}
+
+vars:pre-request {
+  publishDate: 
+}
+
+vars:post-response {
+  publishedAnnouncementId: res.body.data && res.body.data ?  res.body.data.id : undefined
+}
+
+script:pre-request {
+  const publishDate = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+  
+  bru.setVar("publishDate",publishDate);
+}

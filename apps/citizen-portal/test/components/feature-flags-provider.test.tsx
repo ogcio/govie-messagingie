@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest"
 // even while flags are loading or Unleash is unreachable.
 const unleash = vi.hoisted(() => ({
   flags: {
+    "export-user": false,
     "submission-linking": true,
   } as Record<string, boolean>,
 }))
@@ -47,9 +48,12 @@ import {
 function Probe() {
   const flags = useFeatureFlags()
   return (
-    <div data-testid='submission'>
-      {String(flags.isSubmissionLinkingEnabled)}
-    </div>
+    <>
+      <div data-testid='submission'>
+        {String(flags.isSubmissionLinkingEnabled)}
+      </div>
+      <div data-testid='export'>{String(flags.isUserExportEnabled)}</div>
+    </>
   )
 }
 
@@ -95,5 +99,44 @@ describe("FeatureFlagsProvider — submission-linking", () => {
     fallback.useFallbackValues = true
     renderProbe()
     expect(screen.getByTestId("submission")).toHaveTextContent("true")
+  })
+})
+
+describe("FeatureFlagsProvider — export-user (data export)", () => {
+  beforeEach(() => {
+    unleash.flags = {
+      "export-user": false,
+      "submission-linking": true,
+    }
+    fallback.isFlagsReady = true
+    fallback.useFallbackValues = false
+    env.NEXT_PUBLIC_UNLEASH_URL = "http://unleash.test/api/frontend"
+    env.NEXT_PUBLIC_UNLEASH_CLIENT_KEY = "client-key"
+  })
+
+  it("defaults OFF when Unleash is unconfigured (e.g. standalone deploy)", () => {
+    env.NEXT_PUBLIC_UNLEASH_URL = undefined
+    env.NEXT_PUBLIC_UNLEASH_CLIENT_KEY = undefined
+    renderProbe()
+    expect(screen.getByTestId("export")).toHaveTextContent("false")
+  })
+
+  it("is OFF when the flag is disabled and flags are ready", () => {
+    unleash.flags["export-user"] = false
+    renderProbe()
+    expect(screen.getByTestId("export")).toHaveTextContent("false")
+  })
+
+  it("is ON when the flag is explicitly turned on and flags are ready", () => {
+    unleash.flags["export-user"] = true
+    renderProbe()
+    expect(screen.getByTestId("export")).toHaveTextContent("true")
+  })
+
+  it("stays OFF while falling back (flags not ready / proxy unreachable)", () => {
+    unleash.flags["export-user"] = true
+    fallback.useFallbackValues = true
+    renderProbe()
+    expect(screen.getByTestId("export")).toHaveTextContent("false")
   })
 })

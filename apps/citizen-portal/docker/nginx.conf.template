@@ -371,6 +371,14 @@ http {
       return 302 /$1/secure-messages?id=$2;
     }
 
+    # Backward-compat redirect for the submissions route rename (AB#41485):
+    # /{locale}/my-applications[?id=…] → /{locale}/my-submissions[?id=…].
+    # Existing deep links (message-view submission links, bookmarks) must keep
+    # working. Query string is preserved via $is_args$args.
+    location ~ "^/([a-z]{2}(?:-[A-Z]{2})?)/my-applications/?$" {
+      return 302 /$1/my-submissions$is_args$args;
+    }
+
     # Legacy compatibility redirects for the privacy policy and terms of use.
     # apps/profile defined these as Next.js `redirects()`; profile-next mirrors
     # them in nginx. Dev routes 100% of profile.* traffic to citizen-portal

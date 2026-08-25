@@ -27,6 +27,13 @@ import { useFlagsReadyWithFallback } from "@/hooks/use-flags-ready-with-fallback
  */
 const FeatureFlagNames = {
   /**
+   * Profile zone — gates the "export my data" lifecycle action. Restored
+   * after a privacy incident so the data-export feature can be turned off
+   * at runtime. Defaults OFF (safe default): the export UI stays hidden
+   * unless Unleash explicitly enables `export-user`.
+   */
+  ExportUser: "export-user",
+  /**
    * Submission linking (AB#39580) — runtime toggle for messaging surfaces
    * that link a message to a Journey-Builder submission. Defaults ON so
    * current deployments are unchanged; can be turned off without a
@@ -40,11 +47,17 @@ const FeatureFlagNames = {
 
 interface AvailableFeatureFlags {
   isFlagsReady: boolean
+  isUserExportEnabled: boolean
   isSubmissionLinkingEnabled: boolean
 }
 
 const defaultFeatureFlags: AvailableFeatureFlags = {
   isFlagsReady: true,
+  // Defaults OFF: the data-export feature stays hidden unless Unleash
+  // explicitly turns `export-user` on. This is the safe default following
+  // the privacy incident — an unconfigured or unreachable flag server
+  // never exposes the export UI.
+  isUserExportEnabled: false,
   // Defaults ON: when Unleash is unconfigured (e.g. standalone deploy
   // without a flag server) submission linking stays enabled so behaviour
   // matches a fully-flagged deployment that has the flag turned on.
@@ -65,11 +78,16 @@ function FeatureFlagsBridge({ children }: { children: ReactNode }) {
     }
   }, [user?.sub, updateContext])
 
+  const isUserExportEnabled = useFlag(FeatureFlagNames.ExportUser)
   const isSubmissionLinkingEnabled = useFlag(FeatureFlagNames.SubmissionLinking)
 
   const value = useMemo<AvailableFeatureFlags>(
     () => ({
       isFlagsReady,
+      // Data export defaults OFF: while flags are loading or the proxy is
+      // unreachable we keep it disabled so the export UI is never exposed
+      // without an explicit `export-user` opt-in (safe default post-incident).
+      isUserExportEnabled: useFallbackValues ? false : isUserExportEnabled,
       // Submission linking defaults ON: while flags are loading or the
       // proxy is unreachable we keep it enabled so behaviour matches a
       // deployment whose `submission-linking` flag is turned on (the
@@ -78,7 +96,12 @@ function FeatureFlagsBridge({ children }: { children: ReactNode }) {
         ? true
         : isSubmissionLinkingEnabled,
     }),
-    [isFlagsReady, useFallbackValues, isSubmissionLinkingEnabled],
+    [
+      isFlagsReady,
+      useFallbackValues,
+      isUserExportEnabled,
+      isSubmissionLinkingEnabled,
+    ],
   )
 
   return (

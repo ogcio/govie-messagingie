@@ -30,8 +30,15 @@
   border-bottom-color: transparent;
 }
 
+/*
+ * Selected tint uses neutral-100 (lighter than the previous gray-200) so a
+ * selected row reads as highlighted without looking as dark as an unread row.
+ * `.cardUnread` and `.cardSelected` are mutually exclusive in the DOM (a
+ * selected row never carries `.cardUnread`), so their hover/active states can
+ * be tuned independently.
+ */
 .cardSelected {
-  background-color: var(--gieds-color-gray-200, #d8dadf);
+  background-color: var(--gieds-color-neutral-100, #e9eaed);
   border-bottom-color: transparent;
 }
 
@@ -39,18 +46,24 @@
   background-color: var(--gieds-color-gray-50, #f7f7f8);
 }
 
-.cardUnread:hover,
-.cardSelected:hover {
+.cardUnread:hover {
   background-color: var(--gieds-color-gray-300, #c9ccd1);
+}
+
+.cardSelected:hover {
+  background-color: var(--gieds-color-neutral-200, #d8dadf);
 }
 
 .card:active {
   background-color: var(--gieds-color-gray-100, #eeeff0);
 }
 
-.cardUnread:active,
-.cardSelected:active {
+.cardUnread:active {
   background-color: var(--gieds-color-gray-400, #b9bcc3);
+}
+
+.cardSelected:active {
+  background-color: var(--gieds-color-neutral-300, #c9ccd1);
 }
 
 .card:focus-visible {
@@ -90,7 +103,7 @@
 }
 
 .title {
-  font-size: var(--gieds-font-size-200, 0.875rem);
+  font-size: var(--gieds-font-size-300, 1rem);
   line-height: 1.25;
   color: var(--gieds-color-gray-900, #252526);
   overflow: hidden;
@@ -114,11 +127,18 @@
   min-width: 0;
 }
 
+/*
+ * Sender + preview sit on the 16px body tier, matching the desktop table
+ * rows that show the same content. Budget inside the 96px card: 12px
+ * padding x2 leaves 72px, spent as 20px title + 4px gap + two clamped
+ * preview lines at 1.4 (44.8px) = 68.8px. Raising either size or the
+ * line-clamp needs `.card` to grow first.
+ */
 .preview {
   flex: 1;
   min-width: 0;
-  font-size: var(--gieds-font-size-200, 0.875rem);
-  line-height: 1.35;
+  font-size: var(--gieds-font-size-300, 1rem);
+  line-height: 1.4;
   color: var(--gieds-color-text-tone-convention-default, #2c55a2);
   text-decoration: underline;
   text-underline-offset: 0.125rem;

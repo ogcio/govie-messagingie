@@ -484,6 +484,50 @@ describe("Message Event Service - listEvents", () => {
     );
   });
 
+  it("should order events by most recent activity, not by scheduled date", async () => {
+    const orgId = randomUUID().substring(1, 8);
+    // Message A has the latest scheduled_at but no activity after scheduling
+    const messageA = await insertMockMessage(
+      "order-stale-scheduled",
+      new Date().toISOString(),
+      undefined,
+      orgId,
+    );
+    messagingEventLogger.log(MessagingEventType.scheduleMessage, {
+      messageId: messageA.id,
+    });
+
+    // Message B was scheduled earlier but has more recent activity
+    const messageB = await insertMockMessage(
+      "order-recent-activity",
+      new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+      undefined,
+      orgId,
+    );
+    messagingEventLogger.log(MessagingEventType.createRawMessage, {
+      messageId: messageB.id,
+      organisationName: messageB.organisation_id,
+      receiverFullName: messageB.user_id,
+    });
+    messagingEventLogger.log(MessagingEventType.deliverMessage, {
+      messageId: messageB.id,
+    });
+
+    await messagingEventLogger.commit();
+
+    const listed = await listMessageEvents({
+      pagination: { offset: "0", limit: "100" },
+      pool,
+      organizationId: orgId,
+    });
+
+    expect(listed.totalCount).toBe(2);
+    expect(listed.data.map((d) => d.messageId)).toStrictEqual([
+      messageB.id,
+      messageA.id,
+    ]);
+  });
+
   it("should filter by date range correctly", async () => {
     const oldDate = new Date();
     oldDate.setFullYear(new Date().getFullYear() - 2);

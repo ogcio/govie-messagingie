@@ -2,7 +2,7 @@ import { expect, type Page, test } from "@playwright/test"
 import { authenticateUser } from "../helpers/auth"
 import { createPageWithVideo } from "../helpers/browser-context"
 import { loginAsCitizen } from "../helpers/user-auth.helper"
-import { logout, sendMessageToDevCitizen } from "../utils/functions"
+import { logout, searchByText, sendMessageToDevCitizen } from "../utils/functions"
 import { previewRecentMessageEmail } from "../utils/gmail-reader"
 
 const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
@@ -26,6 +26,8 @@ test.describe("Admin Message Sending > Citizen Viewing", () => {
     await authenticatedPage
       .getByRole("link", { name: "View Event log" })
       .click()
+
+    await searchByText(authenticatedPage, "messaging ie2", "Search")
     await authenticatedPage.getByRole("link", { name: "View" }).first().click()
 
     // Verify message content details
@@ -73,6 +75,7 @@ test.describe("Admin Message Sending > Citizen Viewing", () => {
     await authenticatedPage
       .getByRole("link", { name: "View Event log" })
       .click()
+    await searchByText(authenticatedPage, "messaging ie2", "Search")
     await authenticatedPage.getByRole("link", { name: "View" }).first().click()
 
     // Verify message content details
@@ -120,6 +123,7 @@ test.describe("Admin Message Sending > Citizen Viewing", () => {
     await authenticatedPage
       .getByRole("link", { name: "View Event log" })
       .click()
+    await searchByText(authenticatedPage, "messaging ie2", "Search")
     await authenticatedPage.getByRole("link", { name: "View" }).first().click()
 
     // Verify message content details

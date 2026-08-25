@@ -9,6 +9,7 @@ import {
   Stack,
   toaster,
 } from "@ogcio/design-system-react"
+import { useAnalytics } from "@ogcio/nextjs-analytics"
 import {
   SagFetchError,
   useGatewayDownload,
@@ -17,6 +18,7 @@ import {
 import { useTranslations } from "next-intl"
 import { useCallback, useEffect, useState } from "react"
 import { CssSpinner } from "@/components/css-spinner"
+import { ANALYTICS } from "@/const/analytics"
 
 interface LifecycleTask {
   id: string
@@ -47,6 +49,7 @@ export function LifecycleTasks({
   locale: string
 }) {
   const t = useTranslations("exportUserData")
+  const analyticsClient = useAnalytics()
   const [requesting, setRequesting] = useState(false)
   const [loading, setLoading] = useState(true)
   const [tasks, setTasks] = useState<LifecycleTask[]>([])
@@ -77,6 +80,13 @@ export function LifecycleTasks({
     setRequesting(true)
     try {
       await createExportTask({ profileId, type: "export_user_data" })
+      analyticsClient.trackEvent({
+        event: {
+          name: ANALYTICS.profile.exportRequested.name,
+          category: ANALYTICS.profile.category,
+          action: ANALYTICS.profile.exportRequested.action,
+        },
+      })
       toaster.create({
         title: t("toast.title.requestSuccess"),
         description: t("toast.description.requestSuccess"),
@@ -85,6 +95,13 @@ export function LifecycleTasks({
       })
       await fetchTasks()
     } catch {
+      analyticsClient.trackEvent({
+        event: {
+          name: ANALYTICS.profile.exportRequestError.name,
+          category: ANALYTICS.profile.category,
+          action: ANALYTICS.profile.exportRequestError.action,
+        },
+      })
       toaster.create({
         title: t("toast.title.requestError"),
         description: t("toast.description.requestError"),
@@ -94,7 +111,7 @@ export function LifecycleTasks({
     } finally {
       setRequesting(false)
     }
-  }, [createExportTask, profileId, fetchTasks, t])
+  }, [createExportTask, profileId, fetchTasks, t, analyticsClient])
 
   if (loading) {
     return (
@@ -221,11 +238,19 @@ function DownloadButton({
   label: string
 }) {
   const t = useTranslations("exportUserData")
+  const analyticsClient = useAnalytics()
   const { download, isDownloading } = useGatewayDownload()
 
   const handleDownload = async () => {
     try {
       await download(downloadPath, "export.zip")
+      analyticsClient.trackEvent({
+        event: {
+          name: ANALYTICS.profile.exportDownloaded.name,
+          category: ANALYTICS.profile.category,
+          action: ANALYTICS.profile.exportDownloaded.action,
+        },
+      })
     } catch (err) {
       const isServerError = err instanceof SagFetchError && err.status >= 500
       toaster.create({

@@ -1,5 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+
+const trackEvent = vi.hoisted(() => vi.fn())
+
+vi.mock("@ogcio/nextjs-analytics", () => ({
+  useAnalytics: () => ({ trackEvent }),
+}))
+
 import { MessageDetailToolbar } from "@/components/messages/message-detail-toolbar"
 
 vi.mock("@ogcio/design-system-react", () => ({
@@ -40,6 +47,27 @@ describe("MessageDetailToolbar", () => {
   beforeEach(() => {
     onMove.mockReset()
     onDelete.mockReset()
+    trackEvent.mockClear()
+  })
+
+  it("fires message-back-click when the back link is clicked", () => {
+    render(
+      <MessageDetailToolbar
+        backHref={backHref}
+        onMove={onMove}
+        onDelete={onDelete}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole("link", { name: "Back" }))
+
+    expect(trackEvent).toHaveBeenCalledWith({
+      event: {
+        name: "message-back-click",
+        category: "Message",
+        action: "Return to List",
+      },
+    })
   })
 
   it("renders back, move, and delete actions", () => {
@@ -100,7 +128,7 @@ describe("MessageDetailToolbar", () => {
   it("links Back to the parent page href", () => {
     render(
       <MessageDetailToolbar
-        backHref='/en/my-applications?id=SCH-2025-073296'
+        backHref='/en/my-submissions?id=SCH-2025-073296'
         onMove={onMove}
         onDelete={onDelete}
       />,
@@ -108,7 +136,7 @@ describe("MessageDetailToolbar", () => {
 
     expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
       "href",
-      "/en/my-applications?id=SCH-2025-073296",
+      "/en/my-submissions?id=SCH-2025-073296",
     )
   })
 })

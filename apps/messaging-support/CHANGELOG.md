@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/ogcio/govie-services-messaging/compare/messaging-support-v0.1.1...messaging-support-v0.1.2) (2026-08-04)
+
+
+### Bug Fixes
+
+* **deps:** patch high-severity image-scan CVEs in api/support images AB[#40683](https://github.com/ogcio/govie-services-messaging/issues/40683) ([#758](https://github.com/ogcio/govie-services-messaging/issues/758)) ([b35e897](https://github.com/ogcio/govie-services-messaging/commit/b35e897a7e15877030853ea3bd73100cfe2a03bf))
+* **messaging-support:** inconsistent message status between refresh AB[#41162](https://github.com/ogcio/govie-services-messaging/issues/41162) ([#769](https://github.com/ogcio/govie-services-messaging/issues/769)) ([eb2dea6](https://github.com/ogcio/govie-services-messaging/commit/eb2dea6d25761fc595485d72dc74104a95e5f78e))
+
 ## [0.1.1](https://github.com/ogcio/govie-services-messaging/compare/messaging-support-v0.1.0...messaging-support-v0.1.1) (2026-07-22)
 
 

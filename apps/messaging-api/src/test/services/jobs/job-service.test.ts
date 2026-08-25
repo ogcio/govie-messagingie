@@ -27,6 +27,10 @@ import { ProviderTypes } from "../../../types/providers.js";
 import CryptographyService from "../../../utils/cryptography-service.js";
 import { Translator } from "../../../utils/i18n.js";
 import {
+  messageDeliveryDurationHistogram,
+  messagesFailedCounter,
+} from "../../../utils/metrics.js";
+import {
   DATABASE_TEST_URL_KEY,
   getPoolFromConnectionString,
 } from "../../build-testcontainer-pg.js";
@@ -38,6 +42,17 @@ import {
   insertMockJob,
   insertMockMessage,
 } from "./job-service-utils.js";
+
+vi.mock("../../../utils/metrics.js", () => ({
+  messagesSentCounter: { add: vi.fn() },
+  messagesReadCounter: { add: vi.fn() },
+  messagesCreatedCounter: { add: vi.fn() },
+  messagesQueueGauge: { record: vi.fn() },
+  messagesScheduledCounter: { add: vi.fn() },
+  messagesFailedCounter: { add: vi.fn() },
+  messageDeliveryDurationHistogram: { record: vi.fn() },
+  setupAsyncMetrics: vi.fn(),
+}));
 
 const organizationId = "job-service-org";
 const mockLogger = getMockBaseLogger();
@@ -374,6 +389,94 @@ describe("Execute job", () => {
     }
   });
 
+  it("emits messages_failed{stage:deliver} when profile fetch fails during delivery", async () => {
+    hoisted.state.doesProfileExist = false;
+    const insertedMessage = await insertMockMessage({
+      pool,
+      organizationId,
+      transports: [AvailableTransports.EMAIL],
+    });
+
+    const insertedJob = await insertMockJob({
+      pool,
+      organizationId,
+      entityId: insertedMessage.id,
+      userId: insertedMessage.user_id,
+    });
+
+    await executeJob({
+      pool,
+      logger: mockLogger,
+      jobId: insertedJob.jobId,
+      token: insertedJob.token,
+      eventLogger,
+      i18n: new Translator(),
+      config: {} as EnvConfig,
+      cache,
+    });
+
+    expect(messagesFailedCounter.add).toHaveBeenCalledWith(1, {
+      organizationId: expect.any(String),
+      stage: "deliver",
+    });
+  });
+
+  it("emits messages_failed{stage:email} when email sending fails", async () => {
+    hoisted.state.mustEmailSendingFail = true;
+    const encryptionKey = randomBytes(32).toString("base64");
+    const provider = new EmailSpecificProvider(
+      pool,
+      organizationId,
+      new CryptographyService({
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
+      }),
+    );
+    await provider.create({
+      inputBody: {
+        fromAddress: "mock@mail.com",
+        providerName: "MockName",
+        isPrimary: true,
+        type: ProviderTypes.Email,
+        smtpHost: "host",
+        smtpPort: 123,
+        username: "user",
+        password: "supersecret",
+        ssl: true,
+        headers: null,
+      },
+    });
+    const insertedMessage = await insertMockMessage({
+      pool,
+      organizationId,
+      transports: [AvailableTransports.LIFE_EVENT, AvailableTransports.EMAIL],
+    });
+
+    const insertedJob = await insertMockJob({
+      pool,
+      organizationId,
+      entityId: insertedMessage.id,
+      userId: insertedMessage.user_id,
+    });
+
+    await executeJob({
+      pool,
+      logger: mockLogger,
+      jobId: insertedJob.jobId,
+      token: insertedJob.token,
+      eventLogger,
+      i18n: new Translator(),
+      config: {
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
+      } as EnvConfig,
+      cache,
+    });
+
+    expect(messagesFailedCounter.add).toHaveBeenCalledWith(1, {
+      organizationId: expect.any(String),
+      stage: "email",
+    });
+  });
+
   it("should set jobs as succesful if email succeeds", async () => {
     const encryptionKey = randomBytes(32).toString("base64");
     const provider = new EmailSpecificProvider(
@@ -440,6 +543,64 @@ describe("Execute job", () => {
       (e) => e.type === MessagingEventType.deliverMessage,
     );
     expect(deliverEvent).toBeDefined();
+  });
+
+  it("records message_delivery_duration on successful delivery", async () => {
+    const encryptionKey = randomBytes(32).toString("base64");
+    const provider = new EmailSpecificProvider(
+      pool,
+      organizationId,
+      new CryptographyService({
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
+      }),
+    );
+    await provider.create({
+      inputBody: {
+        fromAddress: "mock@mail.com",
+        providerName: "MockName",
+        isPrimary: true,
+        type: ProviderTypes.Email,
+        smtpHost: "host",
+        smtpPort: 123,
+        username: "user",
+        password: "supersecret",
+        ssl: true,
+        headers: null,
+      },
+    });
+    const insertedMessage = await insertMockMessage({
+      pool,
+      organizationId,
+      transports: [AvailableTransports.EMAIL],
+    });
+
+    const insertedJob = await insertMockJob({
+      pool,
+      organizationId,
+      entityId: insertedMessage.id,
+      userId: insertedMessage.user_id,
+    });
+
+    await executeJob({
+      pool,
+      logger: mockLogger,
+      jobId: insertedJob.jobId,
+      token: insertedJob.token,
+      eventLogger,
+      i18n: new Translator(),
+      config: {
+        EMAIL_PROVIDER_SMTP_ENCRYPTION_KEY: encryptionKey,
+      } as EnvConfig,
+      cache,
+    });
+
+    expect(messageDeliveryDurationHistogram.record).toHaveBeenCalledWith(
+      expect.any(Number),
+      { organizationId: expect.any(String) },
+    );
+    const [seconds] = vi.mocked(messageDeliveryDurationHistogram.record).mock
+      .calls[0];
+    expect(seconds).toBeGreaterThanOrEqual(0);
   });
 
   it("should set jobs as failed if email sending fails", async () => {

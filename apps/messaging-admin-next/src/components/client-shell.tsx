@@ -26,6 +26,10 @@ import { NotAuthorized } from "@/components/not-authorized"
 import SideNav from "@/components/SideNav"
 import { UserProvider } from "@/components/UserContext"
 import { env } from "@/env/env.client"
+import {
+  persistLastSelectedOrganization,
+  readLastSelectedOrganization,
+} from "@/util/last-selected-org"
 
 // Logto's sign-in chooser reads this cookie to filter which connector buttons
 // to render. We set it to the admin app's connector id (`ogcio-entraid`) so
@@ -203,16 +207,29 @@ function AuthenticatedShell({
     const orgs = claims?.organizations
     if (!orgs || orgs.length === 0) return
     organizationSelectionStarted.current = true
+    const userSub = user?.sub
     void (async () => {
       try {
         const current = await readSelectedOrganization(env.NEXT_PUBLIC_SAG_URL)
-        if (current && orgs.includes(current)) return
-        await selectOrganization(env.NEXT_PUBLIC_SAG_URL, orgs[0])
+        if (current && orgs.includes(current)) {
+          // The gateway already has a valid selection (e.g. an in-app org
+          // switch just hard-reloaded). Mirror it to local storage so it
+          // survives the next logout/login (AB#28623).
+          persistLastSelectedOrganization(userSub, current)
+          return
+        }
+        // No valid gateway selection — a fresh login. Restore the user's last
+        // choice when they still belong to that org; only fall back to the
+        // first org when there is no valid saved selection (AB#28623).
+        const saved = readLastSelectedOrganization(userSub)
+        const target = saved && orgs.includes(saved) ? saved : orgs[0]
+        await selectOrganization(env.NEXT_PUBLIC_SAG_URL, target)
+        persistLastSelectedOrganization(userSub, target)
       } finally {
         setOrganizationSelected(true)
       }
     })()
-  }, [claims, forbidden])
+  }, [claims, forbidden, user])
 
   if (
     loading ||

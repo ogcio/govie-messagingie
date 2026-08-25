@@ -1,0 +1,24 @@
+meta {
+  name: Citizen can get their consent history
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/citizens/consents?subject=messaging
+  body: json
+  auth: bearer
+}
+
+params:query {
+  subject: messaging
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data[0].profileId: eq {{process.env.CITIZEN_USER_PROFILE_ID}}
+}

@@ -50,7 +50,7 @@ test.describe("User Messages page", () => {
     await page.goto("/en/secure-messages/becb3e86-6a5c-48e1-8bf7-c1cb884df69c")
 
     const downloadPromise = page.waitForEvent("download")
-    page.getByTestId("attachment-download-action").click()
+    page.getByTestId("download").click()
     const download = await downloadPromise
 
     await download.saveAs(`downloads/${download.suggestedFilename()}`)

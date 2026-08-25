@@ -1,0 +1,31 @@
+meta {
+  name: Citizen can get latest consent
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/citizens/consents/latest?subject=messaging
+  body: none
+  auth: bearer
+}
+
+params:query {
+  subject: messaging
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "subject": "messaging",
+    "status": "pending"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.profileId: eq {{process.env.CITIZEN_USER_PROFILE_ID}}
+}

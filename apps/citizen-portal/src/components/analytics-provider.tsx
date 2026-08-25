@@ -1,22 +1,41 @@
 "use client"
 
-import { AnalyticsProvider as MatomoAnalyticsProvider } from "@ogcio/nextjs-analytics"
-import type { ReactNode } from "react"
+import { Analytics, ConsoleLogger } from "@ogcio/analytics-sdk"
+import { AnalyticsContext } from "@ogcio/nextjs-analytics"
+import { usePathname, useSearchParams } from "next/navigation"
+import { type ReactNode, useEffect, useMemo } from "react"
 import { env } from "@/env/env.client"
+import { useIdleMount } from "@/hooks/use-idle-mount"
 
 /**
- * Matomo / @ogcio/nextjs-analytics wrapper used by every zone.
+ * Matomo / @ogcio/analytics-sdk wrapper used by every zone.
  *
- * Unified from messages' `MessagingAnalyticsProvider` and profile's
- * `AnalyticsProviderWrapper` in Phase B2. The messages version owned
- * the only non-trivial logic — the `NEXT_PUBLIC_ANALYTICS_URL` ||
- * `(NEXT_PUBLIC_MATOMO_URL + same-origin proxy)` fallback — so it
- * stays; profile's simpler config was a strict subset.
+ * Same config fallback as before (`NEXT_PUBLIC_ANALYTICS_URL` ||
+ * Matomo same-origin proxy). Tracker script (`tr4ck3rj`) is injected only
+ * after the main thread is idle so it stays off the Lighthouse TBT path;
+ * `useAnalytics()` still works immediately (events no-op or queue until init).
  *
- * No-ops when URL or website id are unset (e.g. local dev without
- * analytics env), so it's safe to mount unconditionally from the
- * shared `ClientShell`.
+ * No-ops when URL or website id are unset (e.g. local without analytics env).
  */
+
+type ClientAnalyticsConfig = {
+  baseUrl: string
+  trackingWebsiteId: string
+  organizationId?: string
+  dryRun?: boolean
+}
+
+let analytics: Analytics | undefined
+
+function getAnalytics(analyticsConfig: ClientAnalyticsConfig): Analytics {
+  if (analytics) return analytics
+  analytics = new Analytics({
+    ...analyticsConfig,
+    logger: new ConsoleLogger({ level: "warn" }),
+  })
+  return analytics
+}
+
 function getAnalyticsBaseUrl(): string | undefined {
   if (env.NEXT_PUBLIC_ANALYTICS_URL) {
     return env.NEXT_PUBLIC_ANALYTICS_URL
@@ -36,24 +55,61 @@ function getAnalyticsBaseUrl(): string | undefined {
 }
 
 export function AnalyticsProvider({ children }: { children: ReactNode }) {
+  const idleReady = useIdleMount()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
   const baseUrl = getAnalyticsBaseUrl()
   const websiteId = env.NEXT_PUBLIC_ANALYTICS_WEBSITE_ID
+
+  const context = useMemo(() => {
+    if (!baseUrl || !websiteId) {
+      return { analyticsInstance: undefined }
+    }
+    return {
+      analyticsInstance: getAnalytics({
+        baseUrl,
+        trackingWebsiteId: websiteId,
+        organizationId: env.NEXT_PUBLIC_ANALYTICS_ORGANIZATION_ID,
+        dryRun: env.NEXT_PUBLIC_ANALYTICS_DRY_RUN,
+      }),
+    }
+  }, [baseUrl, websiteId])
+
+  useEffect(() => {
+    if (!idleReady || !context.analyticsInstance) return
+
+    const initializeAnalytics = async () => {
+      try {
+        await context.analyticsInstance?.initClientTracker({
+          trackPageView: false,
+        })
+      } catch (e) {
+        console.error("Analytics: Error during init", e)
+      }
+    }
+    void initializeAnalytics()
+  }, [idleReady, context.analyticsInstance])
+
+  useEffect(() => {
+    if (!idleReady || !context.analyticsInstance?.isInitialized()) return
+    try {
+      context.analyticsInstance.track.pageView({
+        event: {
+          title: window.document.title,
+        },
+      })
+    } catch (e) {
+      console.error("Analytics: Error during route change", e)
+    }
+  }, [idleReady, context.analyticsInstance, pathname, searchParams])
 
   if (!baseUrl || !websiteId) {
     return <>{children}</>
   }
 
   return (
-    <MatomoAnalyticsProvider
-      config={{
-        baseUrl,
-        trackingWebsiteId: websiteId,
-        organizationId: env.NEXT_PUBLIC_ANALYTICS_ORGANIZATION_ID,
-        dryRun: env.NEXT_PUBLIC_ANALYTICS_DRY_RUN,
-      }}
-    >
-      {/* @ogcio/nextjs-analytics types target React 18; React 19 children are compatible at runtime */}
-      {children as never}
-    </MatomoAnalyticsProvider>
+    <AnalyticsContext.Provider value={context}>
+      {children}
+    </AnalyticsContext.Provider>
   )
 }

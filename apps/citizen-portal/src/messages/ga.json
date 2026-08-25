@@ -1,6 +1,7 @@
 {
   "metadata": {
-    "title": "MessagingIE"
+    "title": "MessagingIE",
+    "description": "Teachtaireachtaí slána agus seirbhísí poiblí ó Rialtas na hÉireann."
   },
   "scaffold": {
     "heading": "Tairseach Saoránach",
@@ -30,23 +31,23 @@
     }
   },
   "submissions": {
-    "heading": "D'iarratais",
+    "heading": "D'aighneachtaí",
     "backToDashboard": "Ar ais go dtí an painéal",
-    "loading": "Ag lódáil iarratais",
-    "error": "Earráid agus iarratais á lódáil: {message}",
+    "loading": "Ag lódáil aighneachtaí",
+    "error": "Earráid agus aighneachtaí á lódáil: {message}",
     "empty": {
-      "all": "Níl aon iarratas agat go fóill.",
-      "search": "Níl aon iarratas a mheaitseálann do chuardach."
+      "all": "Níl aon aighneacht agat go fóill.",
+      "search": "Níl aon aighneacht a mheaitseálann do chuardach."
     },
     "table": {
       "column": {
         "id": "Aitheantas",
-        "application": "Iarratas",
+        "submission": "Aighneacht",
         "status": "Stádas",
         "date": "Dáta"
       },
       "aria": {
-        "applicationList": "Liosta iarratas"
+        "submissionList": "Liosta aighneachtaí"
       }
     },
     "status": {
@@ -57,18 +58,18 @@
       "cancelled": "Cealaithe"
     },
     "recent": {
-      "title": "D'iarratais le déanaí",
-      "loading": "Ag lódáil iarratais",
-      "empty": "Níl aon iarratas agat go fóill.",
-      "error": "Earráid agus iarratais á lódáil: {message}",
-      "link": "Féach ar gach iarratas"
+      "title": "D'aighneachtaí le déanaí",
+      "loading": "Ag lódáil aighneachtaí",
+      "empty": "Níl aon aighneacht agat go fóill.",
+      "error": "Earráid agus aighneachtaí á lódáil: {message}",
+      "link": "Féach ar gach aighneacht"
     },
     "detail": {
-      "heading": "Sonraí an iarratais",
-      "loading": "Ag lódáil iarratais",
-      "notFound": "Iarratas gan aimsiú",
-      "toolbarAriaLabel": "Gníomhartha iarratais",
-      "applicationFor": "Iarratas ar",
+      "heading": "Sonraí na haighneachta",
+      "loading": "Ag lódáil aighneachta",
+      "notFound": "Aighneacht gan aimsiú",
+      "toolbarAriaLabel": "Gníomhartha aighneachta",
+      "submissionFor": "Aighneacht le haghaidh",
       "description": "Cur síos",
       "id": "Aitheantas",
       "startDate": "Dáta tosaithe",
@@ -76,7 +77,7 @@
       "status": "Stádas",
       "related": {
         "title": "Teachtaireachtaí gaolmhara",
-        "empty": "Níl aon teachtaireacht a bhaineann leis an iarratas seo.",
+        "empty": "Níl aon teachtaireacht a bhaineann leis an aighneacht seo.",
         "attachment": "Tá ceangaltán ann",
         "read": "Léite",
         "unread": "Gan léamh"
@@ -103,6 +104,7 @@
         "attachment": "Ceangaltán"
       },
       "rowsPerPage": "Sraitheanna in aghaidh an leathanaigh",
+      "loadingMore": "Ag lódáil tuilleadh teachtaireachtaí",
       "aria": {
         "messageList": "Liosta teachtaireachtaí"
       },
@@ -219,8 +221,7 @@
       "delete": "Scrios",
       "noSubject": "(gan ábhar)",
       "toolbarAriaLabel": "Gníomhartha teachtaireachta",
-      "backToApplication": "Ar ais chuig an iarratas",
-      "backToApplicationNamed": "Ar ais chuig {title}",
+      "relatesToSubmission": "Baineann an teachtaireacht le haighneacht <link>{submissionId}</link>",
       "attachmentOnlyFallback": "Roghnaigh an ceanglán/na ceangláin chun ábhar do theachtaireachta a réamhamharc",
       "attachment": {
         "open": "Oscail",
@@ -249,14 +250,14 @@
       "messages": "MessagingIE",
       "profile": "Mo Próifíl",
       "dashboard": "Painéal Rialaithe",
-      "applications": "Iarratais"
+      "submissions": "Aighneachtaí"
     },
     "header": {
       "title": "MessagingIE",
       "onboarding": "Ionduchtú",
       "drawer": {
         "dashboard": "Painéal Rialaithe",
-        "applications": "Iarratais",
+        "submissions": "Aighneachtaí",
         "messaging": "MessagingIE",
         "whatsNew": "Cad atá nua",
         "close": "Dún"

@@ -109,11 +109,40 @@ function withSecureMessagesLegacyRedirect(config: NextConfig): NextConfig {
   }
 }
 
+/**
+ * The submissions route was renamed `/[locale]/my-applications` →
+ * `/[locale]/my-submissions` (AB#41485). Existing deep links (e.g. the
+ * `?id=` submission links from the message view) must keep working, so the
+ * old path 302s to the new one. Production handles this in nginx (see
+ * docker/nginx.conf.template); dev applies the same redirect here because
+ * static export does not emit redirect files. Query strings (`?id=…`) are
+ * forwarded automatically by Next.js.
+ */
+function withApplicationsToSubmissionsRedirect(config: NextConfig): NextConfig {
+  const existing = config.redirects
+  return {
+    ...config,
+    async redirects() {
+      const previous = existing ? await existing() : []
+      return [
+        ...previous,
+        {
+          source: "/:locale/my-applications",
+          destination: "/:locale/my-submissions",
+          permanent: false,
+        },
+      ]
+    },
+  }
+}
+
 export default function citizenPortalConfig(phase: string): NextConfig {
   return withBundleAnalyzerIfEnabled(
     withNextIntl(
-      withSecureMessagesLegacyRedirect(
-        withAnalyticsApiDevProxy(nextConfig, phase),
+      withApplicationsToSubmissionsRedirect(
+        withSecureMessagesLegacyRedirect(
+          withAnalyticsApiDevProxy(nextConfig, phase),
+        ),
       ),
     ),
   )

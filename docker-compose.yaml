@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      - ${POSTGRES_PORT:-2345}:5432
+      - ${POSTGRES_PORT:-5432}:5432
     volumes:
       - ./init.sql:/docker-entrypoint-initdb.d/01_init.sql
       - db:/var/lib/postgresql
@@ -38,10 +38,52 @@ services:
       timeout: 5s
       retries: 5
 
+  clamav:
+    image: clamav/clamav:1.5
+    platform: linux/amd64
+    restart: always
+    ports:
+      - 3310:3310
+    volumes:
+      - clamav_data:/var/lib/clamav
+    healthcheck:
+      test: ["CMD", "clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # S3 emulation for upload-api. Listens on the same port as localstack, so
+  # upload-api's existing S3_ENDPOINT=http://localhost:4566 needs no change.
+  #
+  # upload-api will not start without this: its s3Client plugin does a
+  # HeadBucket during Fastify plugin registration and throws fatally if S3 is
+  # unreachable. The bucket itself needs no seeding — the plugin calls
+  # createBucketIfNotExists once it can connect.
+  #
+  # Not persisted: a restart drops uploaded objects, and the bucket is
+  # recreated automatically on the next boot. Set S3_PERSIST=1 with a volume
+  # if you need objects to survive.
+  ministack:
+    image: ministackorg/ministack
+    restart: always
+    ports:
+      - 4566:4566
+    healthcheck:
+      # BusyBox nc, so 127.0.0.1 rather than localhost — the latter does not
+      # resolve in this image and the check would never pass.
+      test: ["CMD", "nc", "-z", "127.0.0.1", "4566"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
 volumes:
   db:
     driver: local
   redis_data:
+    driver: local
+  clamav_data:
     driver: local
 
 # custom network to be able to reach Logto running on same network with another Docker Compose file

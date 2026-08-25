@@ -7,27 +7,33 @@ import fs from "fs"
 const PROFILE_URL = process.env.PROFILE_URL || "http://localhost:3004"
 const DASHBOARD_URL = process.env.DASHBOARD_URL || "http://localhost:3003"
 
-const citizenUrls = [
-  "/en/messages",
-  "/en/secure-messages/05bcc336-5b19-4717-9223-16a68fc08a2e",
+/** Fixture from `e2e/user/user-messaging.spec.ts` (owned by peter.parker on dev). */
+const SECURE_MESSAGE_ID = "becb3e86-6a5c-48e1-8bf7-c1cb884df69c"
+
+const citizenPages = [
+  { url: "/en/messages", citizen: "e2e_citizen_1@user.com" },
+  {
+    // Canonical `?id=` avoids the legacy path redirect in next.config.
+    url: `/en/secure-messages?id=${SECURE_MESSAGE_ID}`,
+    citizen: "peter.parker@mail.ie",
+  },
 ]
 
 test.describe("Accessibility (a11y) checks @regression", () => {
-  for (const url of citizenUrls) {
+  for (const { url, citizen } of citizenPages) {
     test(`citizen - should have no SERIOUS a11y violations on ${url}`, async ({
       browser,
-      baseURL,
     }) => {
-      const page = await createAuthenticatedPage(
-        browser,
-        "e2e_citizen_1@user.com",
-      )
-      //await page.goto(baseURL + url, { waitUntil: "networkidle" })
+      const page = await createAuthenticatedPage(browser, citizen)
+      await page.goto(url, { waitUntil: "networkidle" })
       const accessibilityScanResults = await new AxeBuilder({ page })
         .exclude('iframe[title="reCAPTCHA"]')
         .analyze()
 
-      const pageName = url.replace(/\//g, "-").replace(/-en-/g, "")
+      const pageName = url
+        .replace(/\?.*$/, "")
+        .replace(/\//g, "-")
+        .replace(/-en-/g, "")
 
       const reportHTML = createHtmlReport({
       results: accessibilityScanResults,
@@ -52,6 +58,7 @@ test.describe("Accessibility (a11y) checks @regression", () => {
       await page.close()
     })
   }
+  
   test(`citizen - should have no SERIOUS a11y violations on consent`, async ({
     browser,
   }) => {
@@ -80,7 +87,7 @@ test.describe("Accessibility (a11y) checks @regression", () => {
     const seriousViolations = accessibilityScanResults.violations.filter(
       (v) => v.impact === "serious" || v.impact === "critical",
     )
-    expect(seriousViolations, `SERIOUS Violations on dashboard`).toEqual([])
+    expect(seriousViolations, `SERIOUS Violations on consent`).toEqual([])
     await page.close()
   })
 
@@ -120,6 +127,45 @@ test.describe("Accessibility (a11y) checks @regression", () => {
       (v) => v.impact === "serious" || v.impact === "critical",
     )
     expect(seriousViolations, `SERIOUS Violations on dashboard`).toEqual([])
+    await page.close()
+  })
+
+  test(`citizen - should have no SERIOUS a11y violations on submissions`, async ({
+    browser,
+  }) => {
+    const page = await createAuthenticatedPage(
+      browser,
+      "e2e_citizen_1@user.com",
+    )
+    //await page.waitForLoadState("networkidle")
+
+    await page.goto(`${DASHBOARD_URL}/en/my-submissions`, {
+      waitUntil: "networkidle",
+    })
+    const accessibilityScanResults = await new AxeBuilder({ page })
+      .exclude('iframe[title="reCAPTCHA"]')
+      .analyze()
+
+    const reportHTML = createHtmlReport({
+      results: accessibilityScanResults,
+      options: {
+        projectKey: "citizen-portal",
+        outputDir: "./e2e/test-results/a11y-report",
+        reportFileName: "accessibility-report-submissions.html",
+      },
+    })
+
+    if (!fs.existsSync("./e2e/test-results/a11y-report/accessibility-report-submissions.html")) {
+      fs.mkdirSync("./e2e/test-results/a11y-report", {
+        recursive: true,
+      })
+    }
+    fs.writeFileSync("./e2e/test-results/a11y-report/accessibility-report-submissions.html", reportHTML)
+
+    const seriousViolations = accessibilityScanResults.violations.filter(
+      (v) => v.impact === "serious" || v.impact === "critical",
+    )
+    expect(seriousViolations, `SERIOUS Violations on submissions`).toEqual([])
     await page.close()
   })
 

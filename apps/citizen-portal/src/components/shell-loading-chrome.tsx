@@ -33,14 +33,14 @@ export function ShellLoadingChrome({ zone }: { zone: Zone }) {
   const t = useTranslations("navigation.header")
   const titleT = useTranslations("navigation.title")
   const zoneRootPath = ZONE_CONFIG[zone].rootPath
-  const isApplicationsSurface = path.includes("/my-applications")
+  const isApplicationsSurface = path.includes("/my-submissions")
 
   const headerTitle =
     isApplicationsSurface && isLeaEnabled()
-      ? titleT("applications")
+      ? titleT("submissions")
       : titleT(zone)
   const headerLogoHref = isApplicationsSurface
-    ? `/${locale}/my-applications`
+    ? `/${locale}/my-submissions`
     : `/${locale}${zoneRootPath}`
 
   const isEnglish = locale === LANG_EN

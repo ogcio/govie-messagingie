@@ -142,6 +142,7 @@ vi.mock("@/components/UserContext", () => ({
 }))
 
 import { ClientShell } from "@/components/client-shell"
+import { persistLastSelectedOrganization } from "@/util/last-selected-org"
 
 const defaultAuth = {
   user: undefined as { sub?: string; email?: string; name?: string } | undefined,
@@ -166,11 +167,15 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock)
   selectOrganizationMock.mockResolvedValue(undefined)
   clearAllCookies()
+  // The last-selected-org restore reads localStorage keyed by user sub; wipe
+  // it so each test starts from a clean, deterministic state (AB#28623).
+  window.localStorage.clear()
 })
 
 afterEach(() => {
   vi.unstubAllGlobals()
   clearAllCookies()
+  window.localStorage.clear()
 })
 
 function selectedOrganizationReadCount(): number {
@@ -366,6 +371,60 @@ describe("ClientShell — organization selection race guard", () => {
     await waitFor(() => expect(selectedOrganizationReadCount()).toBe(1))
     await screen.findByTestId("child")
     expect(selectOrganizationMock).not.toHaveBeenCalled()
+  })
+
+  // AB#28623: the gateway clears `sag_selected_org` on sign-out, so on a fresh
+  // login the gateway read returns null. Without a durable memory the shell
+  // defaulted to orgs[0], reverting the user's choice. We now restore the last
+  // selection from localStorage when the user still belongs to that org.
+  it("restores the last-selected org from localStorage on fresh login when still a member", async () => {
+    const user = { sub: "u1", name: "Alice" }
+    const claims = { organizations: ["org-1", "org-2"] }
+    useAuthMock.mockReturnValue({ ...defaultAuth, user, claims })
+    // Fresh login: gateway cookie was cleared at sign-out.
+    selectedOrgValue = null
+    // The user previously chose org-2 (persisted before logout).
+    persistLastSelectedOrganization("u1", "org-2")
+
+    render(
+      <ClientShell>
+        <span data-testid='child'>protected</span>
+      </ClientShell>,
+    )
+
+    await waitFor(() =>
+      expect(selectOrganizationMock).toHaveBeenCalledWith(
+        process.env.NEXT_PUBLIC_SAG_URL,
+        "org-2",
+      ),
+    )
+    expect(selectOrganizationMock).not.toHaveBeenCalledWith(
+      process.env.NEXT_PUBLIC_SAG_URL,
+      "org-1",
+    )
+  })
+
+  // A saved org the user no longer belongs to must not be restored — we fall
+  // back to the first org rather than persisting an inaccessible selection.
+  it("ignores a saved org the user no longer has access to and falls back to the first org", async () => {
+    const user = { sub: "u1", name: "Alice" }
+    const claims = { organizations: ["org-1", "org-2"] }
+    useAuthMock.mockReturnValue({ ...defaultAuth, user, claims })
+    selectedOrgValue = null
+    persistLastSelectedOrganization("u1", "org-stale")
+
+    render(
+      <ClientShell>
+        <span data-testid='child'>protected</span>
+      </ClientShell>,
+    )
+
+    await waitFor(() =>
+      expect(selectOrganizationMock).toHaveBeenCalledWith(
+        process.env.NEXT_PUBLIC_SAG_URL,
+        "org-1",
+      ),
+    )
   })
 
   it("reads the selected organization with cache:no-store so a switched org is not reverted (AB#38950)", async () => {

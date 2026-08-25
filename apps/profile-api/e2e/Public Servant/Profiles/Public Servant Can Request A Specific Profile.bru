@@ -1,0 +1,27 @@
+meta {
+  name: Public Servant Can Request A Specific Profile
+  type: http
+  seq: 14
+}
+
+get {
+  url: {{baseUrl}}/api/v1/profiles/{{profileId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:post-response {
+  profileId: res.body.data && res.body.data[0] ?  res.body.data[0].id : undefined
+  anotherProfileId: res.body.data && res.body.data[1] ?  res.body.data[1].id : undefined
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data: isDefined
+  res.body.data.id: isDefined
+}

@@ -11,6 +11,7 @@ import {
   HeaderPrimaryMenu,
   HeaderSecondaryMenu,
   HeaderTitle,
+  ListItem,
 } from "@ogcio/design-system-react"
 import { LogoHarpWhite, LogoWhite } from "@ogcio/design-system-react/logos"
 import { usePathname } from "next/navigation"
@@ -22,7 +23,6 @@ import { useShowApplicationLinks } from "@/hooks/use-show-application-links"
 import { isLeaEnabled, isZoneEnabled } from "@/lib/feature-config"
 import { ZONE_CONFIG } from "@/lib/zone-config"
 import { getZoneFromPath } from "@/util/get-zone-from-path"
-import { DrawerLink } from "./drawer-link"
 import { UserMenuDrawer } from "./user-menu-drawer"
 
 /**
@@ -76,20 +76,20 @@ export function PageHeader({
   // LEA applications list/detail live under the dashboard zone but get their
   // own chrome title and logo target — same pattern as messages owning
   // "MessagingIE" + /messages while profile pages own "My Profile".
-  const isApplicationsSurface = path.includes("/my-applications")
+  const isApplicationsSurface = path.includes("/my-submissions")
 
   const headerTitle =
-    title ?? (isApplicationsSurface ? titleT("applications") : titleT(zone))
+    title ?? (isApplicationsSurface ? titleT("submissions") : titleT(zone))
   const headerLogoHref =
     logoHref ??
     (isApplicationsSurface
-      ? `/${locale}/my-applications`
+      ? `/${locale}/my-submissions`
       : `/${locale}${zoneRootPath}`)
 
   const crossZone = useCrossZoneLink()
   const profileHref = crossZone("profile", `/${locale}/my-profile`)
   const dashboardHref = crossZone("dashboard", `/${locale}/my-dashboard`)
-  const applicationsHref = crossZone("dashboard", `/${locale}/my-applications`)
+  const applicationsHref = crossZone("dashboard", `/${locale}/my-submissions`)
   const messagingHref = crossZone("messages", `/${locale}/messages`)
 
   const isEnglish = locale === LANG_EN
@@ -144,28 +144,36 @@ export function PageHeader({
             showProfileLink={showApplicationLinks}
           >
             {showApplicationLinks && isZoneEnabled("dashboard") ? (
-              <DrawerLink bold href={dashboardHref}>
-                {t("drawer.dashboard")}
-              </DrawerLink>
+              <li>
+                <ListItem href={dashboardHref} label={t("drawer.dashboard")} />
+              </li>
             ) : null}
             {showApplicationLinks &&
             isZoneEnabled("dashboard") &&
             isLeaEnabled() ? (
-              <DrawerLink bold href={applicationsHref}>
-                {t("drawer.applications")}
-              </DrawerLink>
+              <li>
+                <ListItem
+                  href={applicationsHref}
+                  label={t("drawer.submissions")}
+                />
+              </li>
             ) : null}
             {showApplicationLinks && isZoneEnabled("messages") ? (
-              <DrawerLink bold href={messagingHref}>
-                {t("drawer.messaging")}
-              </DrawerLink>
+              <li>
+                <ListItem href={messagingHref} label={t("drawer.messaging")} />
+              </li>
             ) : null}
             {zone === "messages" ? (
-              <DrawerLink href={`/${locale}/whats-new`}>
-                {t("drawer.whatsNew")}
-              </DrawerLink>
+              <li>
+                <ListItem
+                  href={`/${locale}/whats-new`}
+                  label={t("drawer.whatsNew")}
+                />
+              </li>
             ) : null}
-            <DrawerLink href={languageHref}>{oppositeLabel}</DrawerLink>
+            <li>
+              <ListItem href={languageHref} label={oppositeLabel} />
+            </li>
           </UserMenuDrawer>
         </DrawerBody>
       </DrawerWrapper>

@@ -3,8 +3,9 @@ import { expect, type Page, test } from "@playwright/test"
 import { authenticateUser } from "../helpers/auth"
 import { createPageWithVideo } from "../helpers/browser-context"
 
-const SERVICE_USERS_URL =
-  "https://profile-admin.dev.services.gov.ie/en/service-users"
+const PROFILE_ADMIN_URL =
+  process.env.PROFILE_ADMIN_URL || "http://localhost:3004"
+const SERVICE_USERS_URL = `${PROFILE_ADMIN_URL}/en/service-users`
 const TEST_CSV_FILENAME = "service-users-template.csv"
 const TEST_CSV_PARTIAL_FILENAME = "service-users-partial.csv"
 const TEST_CSV_BLANK_FILENAME = "service-users-blank.csv"

@@ -1,0 +1,2 @@
+ALTER TABLE profile_consents
+DROP column consent_statement_id;

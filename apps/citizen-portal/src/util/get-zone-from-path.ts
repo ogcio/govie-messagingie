@@ -27,7 +27,7 @@ const ZONE_BY_FIRST_SEGMENT: Record<string, Zone> = {
   "wrong-login-method-error": "profile",
   "global-signout": "profile",
   "my-dashboard": "dashboard",
-  "my-applications": "dashboard",
+  "my-submissions": "dashboard",
 }
 
 /**

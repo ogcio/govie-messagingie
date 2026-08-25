@@ -1,0 +1,76 @@
+openapi: 3.0.3
+info:
+  title: OGCIO Scheduler API
+  description: API for OGCIO Scheduler
+  version: 0.1.0
+components:
+  schemas: {}
+paths:
+  /api/v1/tasks/:
+    post:
+      tags:
+        - Tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                required:
+                  - webhookUrl
+                  - webhookAuth
+                  - executeAt
+                properties:
+                  webhookUrl:
+                    type: string
+                    format: uri
+                  webhookAuth:
+                    type: string
+                  executeAt:
+                    type: string
+                    format: date-time
+      responses:
+        "202":
+          description: Default Response
+        "500":
+          description: Default Response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - code
+                  - detail
+                  - requestId
+                  - name
+                properties:
+                  code:
+                    type: string
+                    description: Code used to categorize the error
+                  detail:
+                    type: string
+                    description: Description of the error
+                  requestId:
+                    type: string
+                    description: Unique request id. This one will be used to troubleshoot the
+                      problems
+                  name:
+                    type: string
+                    description: Name of the error type
+                  validation:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                        - fieldName
+                        - message
+                      properties:
+                        fieldName:
+                          type: string
+                        message:
+                          type: string
+                    description: List of the validation errors
+                  validationContext:
+                    type: string

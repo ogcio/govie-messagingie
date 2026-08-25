@@ -1,0 +1,4 @@
+DROP INDEX CONCURRENTLY IF EXISTS idx_data_lifecycle_tasks_task_type;
+DROP INDEX CONCURRENTLY IF EXISTS idx_data_lifecycle_tasks_pending_scheduled;
+
+DROP TABLE data_lifecycle_tasks;

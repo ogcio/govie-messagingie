@@ -12,8 +12,11 @@ export const messagesSentCounter = getMetric<
   metricName: "messages_sent",
 });
 
-/// Metric to track the number of messages read.
-export const messagesReadCounter = getMetric<"counter">("counter", {
+/// Metric to track the number of messages read, tagged by organization ID.
+export const messagesReadCounter = getMetric<
+  "counter",
+  { organizationId: string }
+>("counter", {
   meterName: "message_delivery",
   metricName: "messages_read",
 });
@@ -33,6 +36,37 @@ export const messagesQueueGauge = getMetric<
 >("gauge", {
   meterName: "message_delivery",
   metricName: "messages_queued",
+});
+
+/// Metric to track the number of messages scheduled, tagged by organization ID.
+export const messagesScheduledCounter = getMetric<
+  "counter",
+  { organizationId: string }
+>("counter", {
+  meterName: "message_delivery",
+  metricName: "messages_scheduled",
+});
+
+/// Metric to track message lifecycle failures, tagged by organization ID and
+/// pipeline stage. Stage is a fixed enum — never put error detail here
+/// (details live in messaging_event_logs).
+export const messagesFailedCounter = getMetric<
+  "counter",
+  { organizationId: string; stage: "schedule" | "deliver" | "email" }
+>("counter", {
+  meterName: "message_delivery",
+  metricName: "messages_failed",
+});
+
+/// Histogram of seconds from message creation to successful delivery,
+/// tagged by organization ID.
+export const messageDeliveryDurationHistogram = getMetric<
+  "histogram",
+  { organizationId: string }
+>("histogram", {
+  meterName: "message_delivery",
+  metricName: "message_delivery_duration",
+  options: { unit: "s" },
 });
 
 /// Metric to track the number of messages queued, tagged by organization ID.

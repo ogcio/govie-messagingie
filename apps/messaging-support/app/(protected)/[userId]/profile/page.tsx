@@ -16,6 +16,7 @@ import { getIdentity } from "@/utils/session"
 import { getFullName, toURLSearchParams } from "@/utils/utils"
 import { AlreadyDeletedAccountSection } from "./AlreadyDeleteAccountSection"
 import { ConsentTables } from "./ConsentTables"
+import { DataExportSection } from "./DataExportSection"
 import { DeleteAccountSection } from "./DeleteAccountSection"
 import { ConsentManagement } from "./ConsentManagement"
 import "./overrides.css"
@@ -32,11 +33,13 @@ export default async function Profile(props: {
   const searchParams = await props.searchParams
 
   const { userId } = await props.params
-  const [consentsResult, profileResult, consentData] = await Promise.all([
-    ProfileDataService.getConsents(userId),
-    ProfileDataService.getMainProfile(userId),
-    ProfileDataService.getLatestConsentData(userId),
-  ])
+  const [consentsResult, profileResult, consentData, exportTaskResult] =
+    await Promise.all([
+      ProfileDataService.getConsents(userId),
+      ProfileDataService.getMainProfile(userId),
+      ProfileDataService.getLatestConsentData(userId),
+      ProfileDataService.getExportTask(userId),
+    ])
 
   if (!consentsResult.success || !profileResult.success) {
     return null
@@ -46,6 +49,8 @@ export default async function Profile(props: {
   const profile = profileResult.value
   const isProfileActive = profile.status === "active"
   const searchParamsString = toURLSearchParams(searchParams).toString()
+  const exportTask = exportTaskResult.success ? exportTaskResult.value : null
+  const exportLoadFailed = !exportTaskResult.success
 
   return (
     <AuthWrapper>
@@ -74,15 +79,32 @@ export default async function Profile(props: {
           <SectionBreak size='md' />
 
           <Stack direction='column' gap={3}>
+            <Heading as='h4'>Data Export</Heading>
+            <Paragraph size='sm'>
+              Requests an export of the profile data, messages and shared files
+              for this account. The citizen is not notified when support
+              requests the export.
+            </Paragraph>
+
+            {isProfileActive && (
+              <DataExportSection
+                profile={profile}
+                exportTask={exportTask}
+                loadFailed={exportLoadFailed}
+              />
+            )}
+          </Stack>
+
+          <SectionBreak size='md' />
+
+          <Stack direction='column' gap={3}>
             <Heading as='h4'>Delete Account</Heading>
             <Paragraph size='sm'>
               All account profile data and sessions will be deleted along with
               any links to organisations or data stored separately by PSBs.
             </Paragraph>
 
-            {isProfileActive && (
-              <DeleteAccountSection profile={profile} user={sessionUser} />
-            )}
+            {isProfileActive && <DeleteAccountSection profile={profile} />}
 
             {!isProfileActive && (
               <AlreadyDeletedAccountSection profile={profile} />

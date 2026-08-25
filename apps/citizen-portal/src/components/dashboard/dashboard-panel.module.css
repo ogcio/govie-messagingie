@@ -2,11 +2,11 @@
  * Bordered, padded panel wrapping a dashboard preview list (recent
  * applications / recent messages). Panels are grid items in the dashboard
  * `.two-columns` layout, so `height: 100%` makes both columns stretch to
- * the taller of the two on desktop. The list body is full-bleed (no
- * horizontal padding) so the `ListCard` rows' dividers and hover/unread
- * backgrounds run edge to edge; `overflow: hidden` clips them to the
- * rounded corners. The heading and CTA are inset to line up with the rows'
- * text (which carries the ListCard's own `space-3` inset).
+ * the taller of the two on desktop. The panel carries 32px internal padding
+ * (per design) so the `ListCard` rows sit within the padded space rather than
+ * flush to the frame edge. The heading and CTA keep their own inline inset so
+ * their text still lines up with the rows' text (which carries the ListCard's
+ * own `space-3` inset).
  */
 .panel {
   display: flex;
@@ -15,7 +15,7 @@
   width: 100%;
   height: 100%;
   box-sizing: border-box;
-  padding: var(--gieds-space-6) 0;
+  padding: var(--gieds-space-8);
   overflow: hidden;
   border: var(--gieds-border-width-100, 1px) solid
     var(--gieds-color-gray-200, #d8dadf);

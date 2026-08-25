@@ -40,8 +40,9 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(0)}MB`
 }
 
-const MAX_TOTAL_SIZE_MB = 10
-const MAX_TOTAL_SIZE_BYTES = MAX_TOTAL_SIZE_MB * 1024 * 1024
+const MAX_ATTACHMENT_SIZE_MB = 5
+const MAX_ATTACHMENT_SIZE_BYTES = MAX_ATTACHMENT_SIZE_MB * 1024 * 1024
+const MAX_ATTACHMENT_COUNT = 3
 const ALLOWED_FORMATS = ".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
 
 export default function AttachmentsForm() {
@@ -70,15 +71,23 @@ export default function AttachmentsForm() {
     })
   }, [])
 
-  const totalSize = attachments.reduce((sum, a) => sum + a.fileSize, 0)
-
   const handleFileChange = async (
     e: React.ChangeEvent<Pick<HTMLInputElement, "files" | "value">>,
   ) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    if (totalSize + file.size > MAX_TOTAL_SIZE_BYTES) {
+    if (attachments.length >= MAX_ATTACHMENT_COUNT) {
+      toaster.create({
+        title: t("toast.error.maxCount"),
+        position: { x: "right", y: "top" },
+        variant: "danger",
+      })
+      if (inputFileRef.current) inputFileRef.current.value = ""
+      return
+    }
+
+    if (file.size > MAX_ATTACHMENT_SIZE_BYTES) {
       toaster.create({
         title: t("toast.error.maxSize"),
         position: { x: "right", y: "top" },
@@ -178,7 +187,10 @@ export default function AttachmentsForm() {
       <Stack direction='column' gap={4}>
         <Heading as='h3'>{t("heading.upload")}</Heading>
         <Paragraph>
-          {t("paragraph.maxSize", { size: MAX_TOTAL_SIZE_MB })}
+          {t("paragraph.maxSize", {
+            count: MAX_ATTACHMENT_COUNT,
+            size: MAX_ATTACHMENT_SIZE_MB,
+          })}
         </Paragraph>
 
         <InputFile

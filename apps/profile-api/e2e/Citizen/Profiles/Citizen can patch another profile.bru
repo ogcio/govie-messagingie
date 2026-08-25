@@ -1,0 +1,43 @@
+meta {
+  name: Citizen can patch another profile
+  type: http
+  seq: 5
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/profiles/:profileId
+  body: json
+  auth: bearer
+}
+
+params:path {
+  profileId: {{userProfileId}}
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "publicName": "E2E Citizen User",
+    "email": "e2e_citizen_1@user.com",
+    "phone": "11223344",
+    "address": "",
+    "city": "Dublin",
+    "firstName": "E2E",
+    "lastName": "Citizen",
+    "dateOfBirth": "2025-11-05",
+    "preferredLanguage": "en",
+    "primaryUserId": "e2e-user-1"
+  }
+}
+
+vars:pre-request {
+  userProfileId: {{process.env.CITIZEN_USER_PROFILE_ID}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.id: eq {{userProfileId}}
+}

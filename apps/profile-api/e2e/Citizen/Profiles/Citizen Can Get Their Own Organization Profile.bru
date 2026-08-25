@@ -1,0 +1,32 @@
+meta {
+  name: Citizen can get their own organization profile
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/v1/profiles/:profileId?organizationId=first-testing
+  body: none
+  auth: bearer
+}
+
+params:query {
+  organizationId: first-testing
+}
+
+params:path {
+  profileId: {{userProfileId}}
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+vars:pre-request {
+  userProfileId: {{process.env.CITIZEN_USER_PROFILE_ID}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.id: eq {{userProfileId}}
+}

@@ -1,18 +1,18 @@
 "use client"
 
 import { useCrossZoneLink } from "@citizen-portal/shared"
-import { Icon, Link, Paragraph, Stack } from "@ogcio/design-system-react"
+import { Link, Paragraph, Stack } from "@ogcio/design-system-react"
+import { useAnalytics } from "@ogcio/nextjs-analytics"
 import { useAuth, useGatewayFetch } from "@ogcio/sag-client/react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { useLocale, useTranslations } from "next-intl"
-import { useCallback, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { BackButton } from "@/components/button/back-button"
 import { CssSpinner } from "@/components/css-spinner"
-import { pickLocalized } from "@/components/submissions/localized"
+import { ANALYTICS } from "@/const/analytics"
 import { getMockAttachmentIds } from "@/mock/attachments"
 import { findMockMessageById } from "@/mock/messages"
 import { findMockSubmissionIdForRelatedMessage } from "@/mock/related-messages"
-import { findMockSubmissionById } from "@/mock/submissions"
 import type { Message } from "@/types"
 import { AttachmentCard } from "./attachment-card"
 import { DeleteConfirmationModal } from "./delete-confirmation-modal"
@@ -74,20 +74,13 @@ export function MessageDetailView({ id }: MessageDetailViewProps) {
     id,
   ])
 
-  const submissionTitleFromUrl = searchParams.get("submissionTitle")
-
-  const applicationLink = useMemo(() => {
+  const submissionHref = useMemo(() => {
     if (!submissionId) return null
-    const mockSubmission = findMockSubmissionById(submissionId)
-    const title =
-      submissionTitleFromUrl ??
-      (mockSubmission ? pickLocalized(mockSubmission.title, locale) : undefined)
-    const href = crossZone(
+    return crossZone(
       "dashboard",
-      `/${locale}/my-applications?id=${encodeURIComponent(submissionId)}`,
+      `/${locale}/my-submissions?id=${encodeURIComponent(submissionId)}`,
     )
-    return { href, title }
-  }, [crossZone, locale, submissionId, submissionTitleFromUrl])
+  }, [crossZone, locale, submissionId])
 
   const attachments = useMemo(
     () => (data ? getMockAttachmentIds(data) : []),
@@ -95,6 +88,20 @@ export function MessageDetailView({ id }: MessageDetailViewProps) {
   )
 
   useMarkMessageAsRead(id, Boolean(data))
+
+  const analyticsClient = useAnalytics()
+  const trackedDetail = useRef(false)
+  useEffect(() => {
+    if (!data || trackedDetail.current) return
+    trackedDetail.current = true
+    analyticsClient.trackEvent({
+      event: {
+        name: ANALYTICS.message.detail.name,
+        category: ANALYTICS.message.category,
+        action: ANALYTICS.message.detail.action,
+      },
+    })
+  }, [data, analyticsClient])
 
   const { deleteIds, isLoading: isDeleting } = useDeleteMessages()
   const { moveIds, isLoading: isMoving } = useMoveMessages()
@@ -184,32 +191,18 @@ export function MessageDetailView({ id }: MessageDetailViewProps) {
           <AttachmentList attachmentIds={attachments} />
         )}
 
-        {applicationLink ? (
+        {submissionId && submissionHref ? (
           <div className={styles.applicationLink}>
-            <Link
-              href={applicationLink.href}
-              noColor
-              className={styles.toolbarAction}
-              aria-label={
-                applicationLink.title
-                  ? tDetail("backToApplicationNamed", {
-                      title: applicationLink.title,
-                    })
-                  : tDetail("backToApplication")
-              }
-            >
-              <Icon
-                icon='chevron_left'
-                size='md'
-                className={styles.toolbarIcon}
-                ariaHidden
-              />
-              {applicationLink.title
-                ? tDetail("backToApplicationNamed", {
-                    title: applicationLink.title,
-                  })
-                : tDetail("backToApplication")}
-            </Link>
+            <Paragraph size='sm'>
+              {tDetail.rich("relatesToSubmission", {
+                submissionId,
+                link: (chunks) => (
+                  <Link href={submissionHref} noColor>
+                    {chunks}
+                  </Link>
+                ),
+              })}
+            </Paragraph>
           </div>
         ) : null}
       </div>

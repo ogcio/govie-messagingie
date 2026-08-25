@@ -1,0 +1,44 @@
+{
+  "ogcio": { "name": "OGCIO Seeded Org", "shortName": "OGCIO" },
+  "abp": { "name": "An Bord Pleanála", "shortName": "ABP" },
+  "acp": { "name": "An Coimisiún Pleanála", "shortName": "ACP" },
+  "inactive-ps-org": {
+    "name": "Inactive Public Servants Org",
+    "shortName": "Inactive PS"
+  },
+  "first-testing": {
+    "name": "First Testing Organisation",
+    "shortName": "First Test"
+  },
+  "second-testing": {
+    "name": "Second Testing Organisation",
+    "shortName": "Second Test"
+  },
+  "hse": { "name": "Health Service Executive", "shortName": "HSE" },
+  "dsp": { "name": "Department of Social Protection", "shortName": "DSP" },
+  "doe": { "name": "Department of Education and Youth", "shortName": "DEY" },
+  "dss": { "name": "Department of Social Services", "shortName": "DSS" },
+  "lcc": { "name": "Limerick City and County Council", "shortName": "LCC" },
+  "msg-dp": { "name": "Messaging Test", "shortName": "MSG DP" },
+  "nearform-testing": { "name": "Nearform Testing", "shortName": "NF" },
+  "support": {
+    "name": "GovIE Support",
+    "shortName": "GovIE Support"
+  },
+  "digital-wallet-pilot": {
+    "name": "Digital Wallet Pilot",
+    "shortName": "DWP"
+  },
+  "groct": {
+    "name": "General Register Office - Certificates",
+    "shortName": "GROCT"
+  },
+  "dhlgh": {
+    "name": "Department of Housing, Local Government and Heritage - Social Housing Support",
+    "shortName": "DHLGH"
+  },
+  "deysp": {
+    "name": "Department of Education and Youth - Schools Applications",
+    "shortName": "DEYSP"
+  }
+}

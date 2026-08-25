@@ -25,3 +25,22 @@ export function extractMessageMeta(
   }
   return { recipient: "", subject: "" }
 }
+
+/**
+ * The date the message was scheduled to be delivered, carried in the
+ * `message_create` event's data. The events list view shows this date
+ * (`message_event_summary.scheduled_at`), so the detail timeline must render
+ * the same date on its `message_schedule` row — the event's own `createdAt`
+ * is when scheduling was requested, which can be an earlier day.
+ */
+export function extractScheduledAt(
+  events: MessageEventDetailItem[] | undefined,
+): string | undefined {
+  for (const event of events ?? []) {
+    const scheduledAt = event.data.scheduledAt
+    if (typeof scheduledAt === "string" && scheduledAt) {
+      return scheduledAt
+    }
+  }
+  return undefined
+}

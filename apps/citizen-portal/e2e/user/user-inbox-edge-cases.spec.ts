@@ -252,9 +252,9 @@ test.describe("Unified Inbox edge cases @regression", () => {
     browser,
   }) => {
     const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
-    // 14 messages over a page size of 6 → 3 pages. Zero-padded subjects
+    // 42 messages over a page size of 20 → 3 pages. Zero-padded subjects
     // keep regex row lookups unambiguous (e.g. /item 07/ won't match 17).
-    const many: Message[] = Array.from({ length: 14 }, (_, i) =>
+    const many: Message[] = Array.from({ length: 42 }, (_, i) =>
       buildMessage({
         id: `edge-page-${i + 1}`,
         subject: `Inbox item ${String(i + 1).padStart(2, "0")}`,
@@ -262,17 +262,17 @@ test.describe("Unified Inbox edge cases @regression", () => {
     )
     await stubMessagingApis(page, { messages: many })
 
-    // Page 1: first six items present, the seventh is not.
+    // Page 1: first 20 items present, the 21st is not.
     await page.goto("/en/messages")
     await expect(page.getByRole("row", { name: /item 01/i })).toBeVisible()
     await expect(page.getByRole("row", { name: /item 06/i })).toBeVisible()
-    await expect(page.getByRole("row", { name: /item 07/i })).toHaveCount(0)
+    await expect(page.getByRole("row", { name: /item 21/i })).toHaveCount(0)
 
     // Page 2: the next slice is served and the first-page items are gone.
     await page.goto("/en/messages?page=2")
-    await expect(page.getByRole("row", { name: /item 07/i })).toBeVisible()
-    await expect(page.getByRole("row", { name: /item 12/i })).toBeVisible()
     await expect(page.getByRole("row", { name: /item 01/i })).toHaveCount(0)
+    await expect(page.getByRole("row", { name: /item 21/i })).toBeVisible()
+    await expect(page.getByRole("row", { name: /item 40/i })).toBeVisible()
 
     await page.close()
   })

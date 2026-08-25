@@ -1,105 +1,67 @@
-# Gov-IE MessagingIE Services
+# Gov-IE Services Messaging
 
-A comprehensive messaging platform for government services, built with modern web technologies and following best practices for security, scalability, and developer experience.
+pnpm monorepo consolidating the messaging platform's backend APIs and citizen/admin frontends for Gov-IE government services.
 
-## 🚀 Quick Start
+## Apps
 
-### Prerequisites
-- Node.js 22+
-- pnpm
-- Docker (optional, for local development)
-- Git
+| App (`apps/`) | Type | Port | Purpose |
+|---|---|---|---|
+| `messaging-api` | Fastify API | 8002 | Core messaging: messages, providers, templates, email/SMS delivery |
+| `profile-api` | Fastify API | 8003 | Citizen profiles, consents, PII handling |
+| `scheduler-api` | Fastify API | 8005 | Task queue: webhook callbacks scheduled/retried via Postgres polling |
+| `upload-api` | Fastify API | 8008 | File uploads to S3 with ClamAV virus scanning |
+| `citizen-portal` | Next.js | 4001 | Unified citizen portal (messages + profile + dashboard zones, one deploy) |
+| `messaging-next` | Next.js | 3002 | Legacy citizen-facing messaging frontend |
+| `messaging-admin-next` | Next.js | 3022 | Public-servant admin frontend for messaging |
+| `messaging-support` | Next.js | 1337 | Internal support/superadmin app |
 
-### Development Setup
+## Packages
 
-1. **Clone the repository**
+| Package (`packages/`) | Purpose |
+|---|---|
+| `citizen-shared` (`@citizen-portal/shared`) | Cross-zone helpers for citizen-portal: SAG provider, `useCrossZoneLink`, env schema, theme/i18n/faro/analytics |
+| `blacklist-profiles` | Blacklisted profile data + loader used by profile-api |
 
-2. **Complete development setup**
-   ```bash
-   pnpm dev:setup
-   ```
-   This will:
-   - Validate prerequisites
-   - Initialize environment files
-   - Install dependencies
-   - Set up database (detects existing PostgreSQL or starts Docker containers)
-   - Run migrations and sync event summaries
+## Prerequisites
 
-3. **Check service health**
-   ```bash
-   pnpm dev:health
-   ```
+- Node.js `>=24` (see `.nvmrc`)
+- pnpm `11.10.0` (enforced; `npx only-allow pnpm`)
+- Docker (for Postgres, Redis, MailDev, ClamAV, S3)
 
-4. **Start development servers**
-   ```bash
-   pnpm dev
-   ```
+## Quick start
 
-## 📁 Project Structure
-
-```
-govie-services-messaging/
-├── apps/
-│   ├── messaging-next/         # Next.js citizen frontend application
-│   ├── messaging-admin-next/   # Next.js admin frontend application
-│   ├── citizen-portal/         # Citizen portal application
-│   ├── messaging-support/      # Support application
-│   └── messaging-api/          # Fastify API server
-├── packages/                   # Shared packages
-└── scripts/                    # Developer experience scripts
+```bash
+pnpm install
+pnpm dev:setup      # init .env files, start Docker services, create + migrate DB
+pnpm dev            # run all four APIs + citizen-portal + admin-next concurrently
+pnpm dev:health     # check services are up
 ```
 
-## 🛠️ Development Scripts
+Docker services (via `docker-compose.yaml`):
 
-For comprehensive information about all available scripts, see **[Scripts Documentation](./scripts/README.md)**.
+```bash
+pnpm db:up          # postgresql, redis, maildev (1080 UI), clamav, ministack (S3 :4566)
+```
 
-Key scripts include:
-- `pnpm dev:setup` - Complete development environment setup
-- `pnpm dev:health` - Health check all services
-- `pnpm env:update` - Sync environment files with templates
-- `pnpm pipeline:local` - Run Azure Pipeline steps locally
-- `pnpm db:reset` - Database management
-- `pnpm db:seed` - Database seeding
+## Top-level commands
 
-## 🔧 Services
+| Command | What it does |
+|---|---|
+| `pnpm dev` | messaging-api (:8002), profile-api (:8003), scheduler-api (:8005), upload-api (:8008), citizen-portal (:4001), admin-next (:3022) |
+| `pnpm build` | `pnpm -r build` (all workspaces) |
+| `pnpm test` | `pnpm -r test` (all workspaces) |
+| `pnpm lint` / `pnpm format` | Biome across all workspaces |
+| `pnpm db:prepare` | compose up + create + migrate + sync event summary |
+| `pnpm db:reset` / `pnpm db:seed` | reset (with confirmation) / seed test data |
+| `pnpm env:init` / `pnpm env:update` | create / sync `.env` files from `.env.sample` |
 
-| Service | Default Port | Description |
-|---------|-------------|-------------|
-| Frontend | 3002 | Next.js development server |
-| API | 8002 | Fastify API server |
-| Database | 5432 | PostgreSQL database (via Docker Compose env) |
-| MailDev | 1080 | Email testing interface |
+Per-app variants exist (e.g. `pnpm dev:api`, `pnpm dev:api:upload`, `pnpm build:next`). Run every API on its own with `pnpm dev:apis`, or run an app directly with a filter: `pnpm --filter <app> <script>`.
 
-Default ports are shown above. Database and MailDev ports are configurable via environment variables; app ports are set in their respective dev/start commands.
+`pnpm dev` covers the surfaces under active development. The two apps outside that set have their own scripts: `pnpm dev:messaging-next` (:3002, superseded by citizen-portal but still deployed) and `pnpm dev:support` (superadmin, :1337).
 
-## 📚 Documentation
+## Documentation
 
-- **[Scripts Documentation](./scripts/README.md)** - Developer experience scripts and utilities
-- **[API Documentation](./apps/messaging-api/README.md)** - Backend API documentation
-- **[Frontend Documentation](./apps/messaging-next/README.md)** - Frontend application documentation
-
-## 🔧 Environment Configuration
-
-The project uses environment variables for configuration. For detailed information about all environment variables and their defaults, see **[Scripts Documentation](./scripts/README.md)**.
-
-Environment files are automatically initialized during setup.
-
-## 🚨 Troubleshooting
-
-For comprehensive troubleshooting information, see **[Scripts Documentation](./scripts/README.md)**.
-
-Common solutions:
-- `pnpm dev:health` - Check service health
-- `pnpm db:reset` - Reset database
-- `pnpm dev:reset` - Complete environment reset
-
-## 🤝 Contributing
-
-1. Follow the existing code patterns
-2. Use the provided development scripts
-3. Ensure all tests pass
-4. Update documentation as needed
-
-## 📄 License
-
-[MIT](./LICENSE)
+- [`scripts/README.md`](./scripts/README.md) — dev/DB/env helper scripts
+- [`docs/testing.md`](./docs/testing.md) — citizen-portal test layers
+- [`docs/`](./docs/) — feature flags, trunk-based flow, metrics, observability
+- Each app has its own `README.md` with getting-started + testing.

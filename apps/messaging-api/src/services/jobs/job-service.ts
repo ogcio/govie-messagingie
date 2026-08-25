@@ -18,7 +18,11 @@ import type {
 import type { EmailProvider } from "../../types/providers.js";
 import CryptographyService from "../../utils/cryptography-service.js";
 import type { I18n } from "../../utils/i18n.js";
-import { messagesSentCounter } from "../../utils/metrics.js";
+import {
+  messageDeliveryDurationHistogram,
+  messagesFailedCounter,
+  messagesSentCounter,
+} from "../../utils/metrics.js";
 import type { ServiceError } from "../../utils/utils.js";
 import {
   type EventType,
@@ -102,6 +106,13 @@ async function setJobAsRunning(params: {
 }): Promise<RunningJob> {
   const { pool, job, eventLogger } = params;
   let runningJob: RunningJob | undefined;
+  let jobResult:
+    | {
+        status: ScheduledMessageStatus;
+        entityId: string;
+        organizationId: string;
+      }
+    | undefined;
   try {
     const jobStatusResult = await pool.query<{
       status: ScheduledMessageStatus;
@@ -120,7 +131,7 @@ async function setJobAsRunning(params: {
       [job.id, JobStatus.Delivered, job.token],
     );
 
-    const jobResult = jobStatusResult.rows.at(0);
+    jobResult = jobStatusResult.rows.at(0);
 
     if (!jobResult) {
       throw httpErrors.notFound("job doesn't exist");
@@ -157,6 +168,10 @@ async function setJobAsRunning(params: {
     eventLogger.log(MessagingEventType.deliverMessageError, {
       messageId: job.id,
     });
+    messagesFailedCounter.add(1, {
+      organizationId: jobResult?.organizationId ?? "unknown",
+      stage: "deliver",
+    });
     if (isHttpError(err)) {
       throw err;
     }
@@ -169,6 +184,10 @@ async function setJobAsRunning(params: {
   if (!runningJob.userId || !runningJob.type) {
     eventLogger.log(MessagingEventType.deliverMessageError, {
       messageId: runningJob?.jobId || job.id,
+    });
+    messagesFailedCounter.add(1, {
+      organizationId: runningJob.organizationId ?? "unknown",
+      stage: "deliver",
     });
     throw httpErrors.internalServerError(
       `job row with id ${runningJob.jobId} missing critical fields`,
@@ -424,7 +443,8 @@ async function getMessageToDeliver(params: {
     m.plain_text as "body",
     m.rich_text as "richText",
     aid.attachment_id AS "attachmentId",
-    m.external_id as "externalId"
+    m.external_id as "externalId",
+    m.created_at as "createdAt"
     FROM messages m
     LEFT JOIN (
         SELECT attachment_id, message_id 
@@ -452,6 +472,7 @@ async function getMessageToDeliver(params: {
         id: row.id,
         richText: row.richText || undefined,
         externalId: row.externalId || undefined,
+        createdAt: row.createdAt || undefined,
       };
     }
   }
@@ -468,7 +489,7 @@ async function getMessageToDeliver(params: {
 async function updateJobStatus(params: {
   deliveryError: LoggingError | undefined;
   pool: Pool;
-  job: { jobId: string; userId: string };
+  job: { jobId: string; userId: string; organizationId?: string };
   eventLogger: MessagingEventLogger;
   eventToLog?: { type: EventType; eventData: MessageEventData };
 }): Promise<void> {
@@ -491,6 +512,18 @@ async function updateJobStatus(params: {
   }
   if (params.eventToLog) {
     params.eventLogger.log(params.eventToLog.type, params.eventToLog.eventData);
+    if (
+      params.eventToLog.type === MessagingEventType.deliverMessageError ||
+      params.eventToLog.type === MessagingEventType.emailError
+    ) {
+      messagesFailedCounter.add(1, {
+        organizationId: params.job.organizationId ?? "unknown",
+        stage:
+          params.eventToLog.type === MessagingEventType.emailError
+            ? "email"
+            : "deliver",
+      });
+    }
   }
 }
 
@@ -625,6 +658,16 @@ async function sendMessageToTransports(params: {
   messagesSentCounter.add(1, {
     organizationId: params.organizationId,
   });
+  if (params.messageData.createdAt) {
+    const seconds =
+      (Date.now() - new Date(params.messageData.createdAt).getTime()) / 1000;
+    // guard: never record garbage from an unparsable timestamp
+    if (Number.isFinite(seconds) && seconds >= 0) {
+      messageDeliveryDurationHistogram.record(seconds, {
+        organizationId: params.organizationId,
+      });
+    }
+  }
 
   return { errors: [] };
 }

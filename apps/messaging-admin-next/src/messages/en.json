@@ -344,7 +344,7 @@
           },
           "paragraph": {
             "main": "If you wish to include files with your message you can use the tool below.\nThis step is optional - click 'Next' after adding your attachments or 'Skip' to continue without attaching files.",
-            "maxSize": "Maximum total size: {size}MB (pdf, doc, docx, xls, xlsx, png, jpg, jpeg).",
+            "maxSize": "Maximum {count} files, {size}MB each (pdf, doc, docx, xls, xlsx, png, jpg, jpeg).",
             "permission": "Your account does not have permission to upload attachments."
           },
           "label": {
@@ -370,7 +370,8 @@
           "toast": {
             "error": {
               "upload": "An error occurred while uploading the file. Please try again.",
-              "maxSize": "The total file size exceeds the maximum allowed limit."
+              "maxSize": "The file size exceeds the maximum allowed limit.",
+              "maxCount": "The number of files exceeds the maximum allowed limit."
             }
           }
         },

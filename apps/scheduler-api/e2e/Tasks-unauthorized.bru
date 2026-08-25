@@ -1,0 +1,40 @@
+meta {
+  name: Tasks-unauthorized
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/tasks
+  body: none
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  Authorization: Bearer {{accessToken}}
+}
+
+assert {
+  res.status: eq 403
+  res.body.detail: eq "Forbidden"
+}
+
+script:pre-request {
+  //Placeholder for any setup before making the request
+  const date = new Date().toISOString();
+  
+  req.setBody([{
+    "executeAt": date,
+    "webhookUrl": "webhook",
+    "webhookAuth": "..."
+  }]);
+}
+
+script:post-response {
+  //Placeholder for any post response logic
+}
+
+tests {
+  // Allows for more complex tests on the response beyond the basic inbuilt assert library
+}

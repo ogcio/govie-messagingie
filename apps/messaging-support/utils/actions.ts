@@ -117,3 +117,25 @@ export async function deleteAccountAction(params: {
   )
   return result
 }
+
+export async function requestDataExportAction(params: { profileId: string }) {
+  const user = await getIdentity()
+  if (!user) {
+    return failure(new Error("no user"), "unauthorized")
+  }
+
+  const result = await ProfileDataService.requestDataExport({
+    profileId: params.profileId,
+    requesterUserId: user.sub,
+  })
+  void emitAuditOnce(
+    {
+      actionName: "requestDataExport",
+      actionType: "create",
+      user,
+      args: params,
+    },
+    result.success ? undefined : result.error.message,
+  )
+  return result
+}

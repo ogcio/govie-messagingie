@@ -5,6 +5,12 @@ import {
   MOVE_FLASH_KEY,
 } from "@/components/messages/message-action-flash-keys"
 
+const trackEvent = vi.hoisted(() => vi.fn())
+
+vi.mock("@ogcio/nextjs-analytics", () => ({
+  useAnalytics: () => ({ trackEvent }),
+}))
+
 const mockPush = vi.fn()
 const deleteIds = vi.fn()
 const moveIds = vi.fn()
@@ -87,7 +93,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next-intl", () => ({
   useLocale: () => "en",
-  useTranslations: (namespace: string) => (key: string, values?: { title?: string }) => {
+  useTranslations: (namespace: string) => {
     const byNamespace: Record<string, Record<string, string>> = {
       "home.button": { back: "Back" },
       "home.move": { toolbar: "Move" },
@@ -112,19 +118,46 @@ vi.mock("next-intl", () => ({
         date: "Date",
         delete: "Delete",
         toolbarAriaLabel: "Message actions",
-        backToApplication: "Back to application",
-        backToApplicationNamed: "Back to {title}",
+        relatesToSubmission:
+          "Message relates to submission <link>{submissionId}</link>",
         attachmentOnlyFallback:
           "Please select the attachment(s) to preview your message content",
       },
       "home.table": { unknownSender: "Unknown sender" },
       "navigation.back": { ariaLabel: "Go back" },
     }
-    const template = byNamespace[namespace]?.[key] ?? key
-    if (values?.title) {
-      return template.replace("{title}", values.title)
-    }
-    return template
+    const resolve = (key: string) => byNamespace[namespace]?.[key] ?? key
+    return Object.assign(
+      (key: string, values?: { title?: string }) => {
+        const template = resolve(key)
+        return values?.title
+          ? template.replace("{title}", values.title)
+          : template
+      },
+      {
+        rich: (
+          key: string,
+          values: Record<string, unknown> & {
+            link: (chunks: React.ReactNode) => React.ReactNode
+          },
+        ) => {
+          const template = resolve(key)
+          const match = template.match(/^(.*)<link>(.*)<\/link>(.*)$/)
+          if (!match) return template
+          const [, before, inner, after] = match
+          const interpolated = inner.replace(/\{(\w+)\}/g, (_, k) =>
+            String(values[k] ?? ""),
+          )
+          return (
+            <>
+              {before}
+              {values.link(interpolated)}
+              {after}
+            </>
+          )
+        },
+      },
+    )
   },
 }))
 
@@ -294,6 +327,32 @@ describe("MessageDetailView", () => {
       folderId: "mock-folder-ehic",
     })
     vi.spyOn(window.history, "back").mockImplementation(() => {})
+    trackEvent.mockClear()
+  })
+
+  it("fires message-detail once message data is loaded", () => {
+    render(<MessageDetailView id='msg-1' />)
+
+    expect(trackEvent).toHaveBeenCalledWith({
+      event: {
+        name: "message-detail",
+        category: "Message",
+        action: "Message Opened",
+      },
+    })
+  })
+
+  it("does not fire message-detail while the message is still loading", () => {
+    fetchState = { message: null, isLoading: true, error: null }
+    render(<MessageDetailView id='msg-1' />)
+
+    expect(trackEvent).not.toHaveBeenCalledWith({
+      event: {
+        name: "message-detail",
+        category: "Message",
+        action: "Message Opened",
+      },
+    })
   })
 
   it("shows a loading spinner while the message is fetching", () => {
@@ -390,57 +449,51 @@ describe("MessageDetailView", () => {
     expect(mockPush).toHaveBeenCalledWith("/en/messages")
   })
 
-  it("shows a link back to the application when opened from a submission", () => {
+  it("shows the submission link when opened from a submission", () => {
     searchParams = new URLSearchParams({
       submissionId: "SCH-2025-073296",
-    })
-    findMockSubmissionById.mockReturnValue({
-      id: "SCH-2025-073296",
-      title: { en: "Birth registration" },
     })
 
     render(<MessageDetailView id='msg-1' />)
 
-    const applicationHref = "/en/my-applications?id=SCH-2025-073296"
+    const applicationHref = "/en/my-submissions?id=SCH-2025-073296"
     expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
       "href",
       "/en/messages",
     )
     expect(
-      screen.getByRole("link", { name: "Back to Birth registration" }),
+      screen.getByRole("link", { name: "SCH-2025-073296" }),
     ).toHaveAttribute("href", applicationHref)
   })
 
-  it("resolves the application link from messaging-public-api metadata", () => {
+  it("resolves the submission link from messaging-public-api metadata and links only the id", () => {
     fetchState.metadataMessage = {
       metadata: { journey: { submissionId: "PPMG0004" } },
     }
 
     render(<MessageDetailView id='msg-1' />)
 
+    // Surrounding copy is plain text; only the submission id is the link.
     expect(
-      screen.getByRole("link", { name: "Back to application" }),
-    ).toHaveAttribute("href", "/en/my-applications?id=PPMG0004")
+      screen.getByText(/Message relates to submission/),
+    ).toBeInTheDocument()
+    const link = screen.getByRole("link", { name: "PPMG0004" })
+    expect(link).toHaveTextContent("PPMG0004")
+    expect(link).toHaveAttribute("href", "/en/my-submissions?id=PPMG0004")
   })
 
-  it("resolves the application link from a related mock message id", () => {
+  it("resolves the submission link from a related mock message id", () => {
     findMockSubmissionIdForRelatedMessage.mockReturnValue("SCH-2025-084321")
-    findMockSubmissionById.mockReturnValue({
-      id: "SCH-2025-084321",
-      title: { en: "School placement registration" },
-    })
 
     render(<MessageDetailView id='rel-sch-084321-approved' />)
 
-    const applicationHref = "/en/my-applications?id=SCH-2025-084321"
+    const applicationHref = "/en/my-submissions?id=SCH-2025-084321"
     expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
       "href",
       "/en/messages",
     )
     expect(
-      screen.getByRole("link", {
-        name: "Back to School placement registration",
-      }),
+      screen.getByRole("link", { name: "SCH-2025-084321" }),
     ).toHaveAttribute("href", applicationHref)
   })
 

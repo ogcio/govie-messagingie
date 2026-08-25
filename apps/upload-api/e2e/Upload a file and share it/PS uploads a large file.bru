@@ -1,0 +1,28 @@
+meta {
+  name: PS uploads a large file
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/v1/files
+  body: multipartForm
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{accessToken}}
+}
+
+body:multipart-form {
+  file: @file(LargeFile20mb.pdf)
+}
+
+vars:post-response {
+  fileId: res.body.data.id
+}
+
+assert {
+  res.status: eq 400
+  res.body.detail: eq File is too large
+}

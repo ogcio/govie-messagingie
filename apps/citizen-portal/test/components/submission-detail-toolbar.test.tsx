@@ -32,11 +32,11 @@ vi.mock("next-intl", () => ({
 
 describe("SubmissionDetailToolbar", () => {
   it("links Back to the applications list", () => {
-    render(<SubmissionDetailToolbar backHref='/en/my-applications' />)
+    render(<SubmissionDetailToolbar backHref='/en/my-submissions' />)
 
     expect(screen.getByRole("link", { name: "Back" })).toHaveAttribute(
       "href",
-      "/en/my-applications",
+      "/en/my-submissions",
     )
   })
 })

@@ -116,12 +116,6 @@ pnpm --filter @citizen-portal/app test:k6:load
 pnpm --filter @citizen-portal/app test:k6:all
 ```
 
-`pnpm exec vitest run` against the unified app currently reports
-**120 tests / 114 pass**; the 6 failing tests live in
-`test/components/unified-inbox.test.tsx` and
-`test/components/announcements-flow.test.tsx` and are pre-existing
-failures inherited from the source `messaging-next` suite.
-
 ## Local Docker testing
 
 `docker-compose.yaml` boots the consolidated image (`Dockerfile.local`)
@@ -407,22 +401,3 @@ session cookie carries the right role-set on each request. The SAG
 session cookie is parent-domain scoped (`Domain=.<env>.services.gov.ie`,
 or `Domain=.local.test` in dev) so a sign-in on one hostname is honoured
 on the other two without an extra round-trip.
-
-## Branch / PR discipline
-
-This work lives on `feat/AB#38246` (and its `-part-II` follow-up);
-follow-on stories use their own ticket branch (e.g. the feature-flagging
-work on `feat/AB#39580-feature-flagging-consolidated-webapp`).
-Every PR into `dev` from this branch is **purely additive** outside the
-consolidation surface:
-
-- `apps/citizen-portal/**`
-- `packages/citizen-shared/**`
-- `pnpm-workspace.yaml`
-- `.azure/pipeline-citizen-portal.yml`
-- root `package.json` dependency additions only
-
-Legacy app directories (`apps/messaging`, `apps/messaging-next`,
-`apps/messaging-admin`, `apps/messaging-admin-next`, `apps/messaging-api`,
-`apps/messaging-support`) are off-limits on this branch until the
-cutover and cleanup epics.

@@ -12,19 +12,15 @@ import { useAnalytics } from "@ogcio/nextjs-analytics"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState, useTransition } from "react"
 import { ANALYTICS } from "@/const/analytics"
-import { emitAuditOnce } from "@/data/audit"
-import type { MainProfile, SessionUser } from "@/data/types"
+import type { MainProfile } from "@/data/types"
 import { deleteAccountAction } from "@/utils/actions"
 
-export function DeleteAccountSection(props: {
-  profile: MainProfile
-  user: SessionUser
-}) {
+export function DeleteAccountSection(props: { profile: MainProfile }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const analyticsClient = useAnalytics()
 
-  const { user, profile } = props
+  const { profile } = props
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [checks, setChecks] = useState({
@@ -47,31 +43,9 @@ export function DeleteAccountSection(props: {
 
   const handleDelete = () => {
     startTransition(async () => {
-      void emitAuditOnce({
-        user,
-        actionName: "deleteAccount",
-        actionType: "delete",
-        args: Object.assign(
-          {},
-          {
-            profileId: profile.id,
-            action: "started",
-          },
-        ),
-      })
+      // Auditing happens inside deleteAccountAction: @/data/audit needs
+      // server-side env config and cannot run in the browser.
       const result = await deleteAccountAction({ profileId: profile.id })
-      void emitAuditOnce({
-        user,
-        actionName: "deleteAccount",
-        actionType: "delete",
-        args: Object.assign(
-          {},
-          {
-            profileId: profile.id,
-            result: result.success ? "success" : "failure",
-          },
-        ),
-      })
 
       handleDeleteEventTracking()
 

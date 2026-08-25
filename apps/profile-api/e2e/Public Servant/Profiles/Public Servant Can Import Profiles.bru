@@ -1,0 +1,49 @@
+meta {
+  name: Public Servant can import profiles
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{baseUrl}}/api/v1/profiles/import-profiles
+  body: json
+  auth: bearer
+}
+
+headers {
+  Content-Type: application/json
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:json {
+  {
+    "profiles": [
+      {
+        "address": "street",
+        "city": "rome",
+        "firstName": "Max",
+        "lastName": "Mina",
+        "email": "max.mina@email.com",
+        "phone": "33365611100",
+        "dateOfBirth": "1980-01-02"
+      },
+      {
+        "address": "road",
+        "city": "florence",
+        "firstName": "John",
+        "lastName": "Brown",
+        "email": "john.brown@email.com",
+        "phone": "3330844111",
+        "dateOfBirth": "1960-10-02"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq "completed"
+}

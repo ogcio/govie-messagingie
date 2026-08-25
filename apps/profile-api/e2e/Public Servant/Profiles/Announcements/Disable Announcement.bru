@@ -1,0 +1,38 @@
+meta {
+  name: Disable Announcement
+  type: http
+  seq: 4
+  tags: [
+    announcements
+  ]
+}
+
+patch {
+  url: {{baseUrl}}/api/v1/support/announcements/{{publishedAnnouncementId}}
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{supportAccessToken}}
+}
+
+body:json {
+  {
+    "isEnabled": "false"
+  }
+}
+
+vars:pre-request {
+  publishDate: 
+}
+
+vars:post-response {
+  publishedAnnouncementId: res.body.data && res.body.data ?  res.body.data.id : undefined
+}
+
+script:pre-request {
+  const publishDate = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+  
+  bru.setVar("publishDate",publishDate);
+}

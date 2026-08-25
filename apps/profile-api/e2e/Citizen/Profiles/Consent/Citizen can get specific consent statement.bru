@@ -1,0 +1,26 @@
+meta {
+  name: Citizen can get specific consent statement
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/citizens/consent-statements/{{currentConsentStatementId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "subject": "messaging",
+    "status": "pending"
+  }
+}
+
+assert {
+  res.status: eq 200
+}

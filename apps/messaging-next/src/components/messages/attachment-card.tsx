@@ -11,9 +11,9 @@ import {
   type IconProps,
   Link,
 } from "@ogcio/design-system-react"
-import { useGatewayFetch } from "@ogcio/sag-client/react"
+import { useAuth, useGatewayFetch } from "@ogcio/sag-client/react"
 import { useTranslations } from "next-intl"
-import { useEffect } from "react"
+import { type MouseEvent, useEffect } from "react"
 import { TRACE_MESSAGES } from "@/const/traces"
 import type { FileMetadata } from "@/types"
 import styles from "./attachment-card.module.css"
@@ -69,9 +69,18 @@ function getFileTypeLabel(fileName: string): string {
 export function AttachmentCard({ id }: { id: string }) {
   const t = useTranslations("home.detail.attachment")
 
+  const { authenticated, loading, signIn } = useAuth()
+
   const { data, error, isLoading } = useGatewayFetch<FileMetadata>(
     `/upload/api/v1/metadata/${id}`,
   )
+
+  const reauthIfLoggedOut = (e: MouseEvent<HTMLAnchorElement>) => {
+    if (!loading && !authenticated) {
+      e.preventDefault()
+      signIn({ redirectUrl: window.location.href })
+    }
+  }
 
   useEffect(() => {
     if (isLoading || data) return
@@ -116,6 +125,7 @@ export function AttachmentCard({ id }: { id: string }) {
               download={data.fileName}
               iconStart='download'
               aria-label={t("downloadFile", { fileName: data.fileName })}
+              onClick={reauthIfLoggedOut}
             >
               {t("download")}
             </Link>
@@ -126,6 +136,7 @@ export function AttachmentCard({ id }: { id: string }) {
               rel='noopener noreferrer'
               iconStart='open_in_new'
               aria-label={t("openFile", { fileName: data.fileName })}
+              onClick={reauthIfLoggedOut}
             >
               {t("open")}
             </Link>

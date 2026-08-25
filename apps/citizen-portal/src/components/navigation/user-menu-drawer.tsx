@@ -1,23 +1,36 @@
 "use client"
 
-import { Button, Heading, Stack } from "@ogcio/design-system-react"
+import { Button, Heading, Link } from "@ogcio/design-system-react"
 import { useTranslations } from "next-intl"
 import type { PropsWithChildren } from "react"
-import { DrawerLink } from "./drawer-link"
 
 /**
  * Drawer that opens off the page header on small screens / always-shown
- * mode. Unified from messages and profile zones in Phase B2.
+ * mode. Aligns with the DS drawer menu pattern (AB#41657) by rendering
+ * nav entries as `ListItem` inside a `<ul>` — the same shape the DS
+ * `DrawerMenuExample` uses for secondary items. `ListItem` owns the
+ * visited / hover styles (`gi-list-item`), so items no longer pick up
+ * the browser's purple `:visited` colour.
  *
- * Profile's signature wins: the `showProfileLink` prop covers the
- * messages-zone use case (always visible: profile is the canonical
- * "view my profile" target) while still letting the profile zone hide
- * the link when the active route IS my-profile (driven by
- * `useShowApplicationLinks()`).
+ * Items are plain (not `bold`): in the DS example `bold` marks primary
+ * items, the expandable ones with a chevron. Ours are all flat links,
+ * i.e. DS secondary items.
  *
- * Translation namespace `navigation.userMenu.{viewMyProfile, logout}`
- * replaces messages' `navigation.header.drawer.{profile, logout}` —
- * see the catalogue restructure in the same commit.
+ * The name and its profile link sit above the list rather than in it —
+ * the link belongs to the name ("view MY profile"), so it reads as a
+ * caption under the heading instead of a peer of the nav items. It
+ * still has to *look* like those items though, hence `noColor` +
+ * `noUnderline` + `sm`: inherited text colour (which also opts the
+ * link out of DS's blue and the purple `:visited`, the bug this ticket
+ * started from) with the underline only on hover, same as `ListItem`.
+ *
+ * The `showProfileLink` prop covers the messages-zone use case (always
+ * visible: profile is the canonical "view my profile" target) while
+ * still letting the profile zone hide the link when the active route
+ * IS my-profile (driven by `useShowApplicationLinks()`).
+ *
+ * Children are expected to be `<li>` wrappers around further
+ * `ListItem`s (see `page-header.tsx`).
  */
 export function UserMenuDrawer({
   name,
@@ -35,21 +48,15 @@ export function UserMenuDrawer({
 
   return (
     <div className='user-drawer-menu-container'>
-      <Stack direction='column' gap={12}>
-        <div>
-          <Heading as='h2' size='md'>
-            {name}
-          </Heading>
-          {showProfileLink ? (
-            <DrawerLink href={profileHref} bold>
-              {t("viewMyProfile")}
-            </DrawerLink>
-          ) : null}
-        </div>
-        <Stack direction='column' gap={4} hasDivider>
-          {children as React.ReactNode}
-        </Stack>
-      </Stack>
+      <Heading as='h2' size='lg'>
+        {name}
+      </Heading>
+      {showProfileLink ? (
+        <Link href={profileHref} noColor noUnderline size='sm'>
+          {t("viewMyProfile")}
+        </Link>
+      ) : null}
+      <ul className='gi-mt-4'>{children}</ul>
 
       <Button className='footer' size='large' onClick={onSignOut}>
         {t("logout")}

@@ -30,6 +30,9 @@ const ORG_FIXTURES: Record<
   },
 }
 
+/** Holds the org lookup in flight so the loading branch can be asserted. */
+let lookupPending = false
+
 vi.mock("@ogcio/sag-client/react", () => ({
   useGatewayFetch: (path: string | null) => {
     fetchedPaths.push(path)
@@ -43,12 +46,12 @@ vi.mock("@ogcio/sag-client/react", () => ({
       }
     }
     const orgMatch = path.match(/^\/profile\/api\/v1\/organisations\/(.+)$/)
-    const data = orgMatch ? ORG_FIXTURES[orgMatch[1]] : undefined
+    const data = orgMatch && !lookupPending ? ORG_FIXTURES[orgMatch[1]] : undefined
     return {
       data,
       metadata: undefined,
       error: null,
-      isLoading: false,
+      isLoading: lookupPending,
       refresh: vi.fn(),
     }
   },
@@ -81,6 +84,7 @@ describe("<SenderName>", () => {
   beforeEach(() => {
     fetchedPaths.length = 0
     currentLocale = "en"
+    lookupPending = false
   })
 
   it("short-circuits the profile lookup for the support system slug and renders the localized brand label", () => {
@@ -124,6 +128,14 @@ describe("<SenderName>", () => {
     expect(fetchedPaths).toEqual([
       "/profile/api/v1/organisations/org-not-seeded",
     ])
+  })
+
+  it("shows a skeleton, not the fallback, while the org lookup is in flight", () => {
+    lookupPending = true
+    render(<SenderName organisationId='org-dsp' />)
+
+    expect(screen.getByTestId("sender-name-skeleton")).toBeInTheDocument()
+    expect(screen.queryByText("Unknown sender")).not.toBeInTheDocument()
   })
 
   it("does not call the profile API when no organisationId is supplied", () => {

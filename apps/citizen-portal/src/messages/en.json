@@ -1,6 +1,7 @@
 {
   "metadata": {
-    "title": "MessagingIE"
+    "title": "MessagingIE",
+    "description": "Secure messages and public services from the Irish Government."
   },
   "scaffold": {
     "heading": "Citizen Portal",
@@ -30,23 +31,23 @@
     }
   },
   "submissions": {
-    "heading": "Your applications",
+    "heading": "Your submissions",
     "backToDashboard": "Back to dashboard",
-    "loading": "Loading applications",
-    "error": "Error loading applications: {message}",
+    "loading": "Loading submissions",
+    "error": "Error loading submissions: {message}",
     "empty": {
-      "all": "You have no applications yet.",
-      "search": "No applications match your search."
+      "all": "You have no submissions yet.",
+      "search": "No submissions match your search."
     },
     "table": {
       "column": {
         "id": "ID",
-        "application": "Application",
+        "submission": "Submission",
         "status": "Status",
         "date": "Date"
       },
       "aria": {
-        "applicationList": "Application list"
+        "submissionList": "Submission list"
       }
     },
     "status": {
@@ -57,18 +58,18 @@
       "cancelled": "Cancelled"
     },
     "recent": {
-      "title": "Your recent applications",
-      "loading": "Loading applications",
-      "empty": "You have no applications yet.",
-      "error": "Error loading applications: {message}",
-      "link": "View all applications"
+      "title": "Your recent submissions",
+      "loading": "Loading submissions",
+      "empty": "You have no submissions yet.",
+      "error": "Error loading submissions: {message}",
+      "link": "View all submissions"
     },
     "detail": {
-      "heading": "Application details",
-      "loading": "Loading application",
-      "notFound": "Application not found",
-      "toolbarAriaLabel": "Application actions",
-      "applicationFor": "Application for",
+      "heading": "Submission details",
+      "loading": "Loading submission",
+      "notFound": "Submission not found",
+      "toolbarAriaLabel": "Submission actions",
+      "submissionFor": "Submission for",
       "description": "Description",
       "id": "ID",
       "startDate": "Start date",
@@ -76,7 +77,7 @@
       "status": "Status",
       "related": {
         "title": "Related messages",
-        "empty": "There are no messages related to this application.",
+        "empty": "There are no messages related to this submission.",
         "attachment": "Has attachment",
         "read": "Read",
         "unread": "Unread"
@@ -103,6 +104,7 @@
         "attachment": "Attachment"
       },
       "rowsPerPage": "Rows per page",
+      "loadingMore": "Loading more messages",
       "aria": {
         "messageList": "Message list"
       },
@@ -219,8 +221,7 @@
       "delete": "Delete",
       "noSubject": "(no subject)",
       "toolbarAriaLabel": "Message actions",
-      "backToApplication": "Back to application",
-      "backToApplicationNamed": "Back to {title}",
+      "relatesToSubmission": "Message relates to submission <link>{submissionId}</link>",
       "attachmentOnlyFallback": "Please select the attachment(s) to preview your message content",
       "attachment": {
         "open": "Open",
@@ -249,14 +250,14 @@
       "messages": "MessagingIE",
       "profile": "My Profile",
       "dashboard": "Dashboard",
-      "applications": "Applications"
+      "submissions": "Submissions"
     },
     "header": {
       "title": "MessagingIE",
       "onboarding": "Onboarding",
       "drawer": {
         "dashboard": "Dashboard",
-        "applications": "Applications",
+        "submissions": "Submissions",
         "messaging": "MessagingIE",
         "whatsNew": "What's new",
         "close": "Close"

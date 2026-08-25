@@ -18,20 +18,20 @@ export async function updateMessageAction(params: {
   const { loggedInUser, body, pool, logger } = params;
   const client = await pool.connect();
   try {
-    const recipientUserId = await findMessageRecipient({
+    const recipient = await findMessageRecipient({
       client,
       messageId: body.messageId,
     });
-    if (!recipientUserId) {
+    if (!recipient) {
       throw httpErrors.notFound("message not found");
     }
-    if (recipientUserId !== loggedInUser.userId) {
+    if (recipient.recipientUserId !== loggedInUser.userId) {
       const profileSdk = new ProfilePersonalSdkWrapper(logger, loggedInUser);
       const linkedProfilesIds = await profileSdk.getLinkedProfileIds(
         loggedInUser.userId,
       );
 
-      if (!linkedProfilesIds.includes(recipientUserId)) {
+      if (!linkedProfilesIds.includes(recipient.recipientUserId)) {
         throw httpErrors.notFound("message not found for user");
       }
     }
@@ -39,7 +39,8 @@ export async function updateMessageAction(params: {
       client,
       pool,
       body,
-      userId: recipientUserId,
+      userId: recipient.recipientUserId,
+      organizationId: recipient.organizationId,
       logger,
     });
   } finally {
@@ -50,22 +51,25 @@ export async function updateMessageAction(params: {
 async function findMessageRecipient(params: {
   client: PoolClient;
   messageId: string;
-}): Promise<string | undefined> {
+}): Promise<{ recipientUserId: string; organizationId: string } | undefined> {
   const queryResult = await params.client.query<{
     recipientUserId: string;
+    organizationId: string;
   }>(
     `
-    select user_id as "recipientUserId" from messages where id = $1 AND deleted_at IS NULL
+    select user_id as "recipientUserId", organisation_id as "organizationId"
+    from messages where id = $1 AND deleted_at IS NULL
     `,
     [params.messageId],
   );
-  return queryResult.rows.at(0)?.recipientUserId;
+  return queryResult.rows.at(0);
 }
 
 async function setMessageReadStatus(params: {
   client: PoolClient;
   body: PutMessageActionBody;
   userId: string;
+  organizationId: string;
   pool: Pool;
   logger: FastifyBaseLogger;
 }): Promise<void> {
@@ -100,7 +104,7 @@ async function setMessageReadStatus(params: {
       return;
     }
 
-    messagesReadCounter.add(1);
+    messagesReadCounter.add(1, { organizationId: params.organizationId });
 
     const eventLogger = new MessagingEventLogger(params.pool, params.logger);
     eventLogger.log(MessagingEventType.citizenSeenMessage, {

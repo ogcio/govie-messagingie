@@ -5,6 +5,8 @@ import fs from "fs"
 import { authenticateUser } from "../helpers/auth"
 
 const ADMIN_URL = process.env.ADMIN_URL || "http://localhost:3001"
+const PROFILE_ADMIN_URL =
+  process.env.PROFILE_ADMIN_URL || "http://localhost:3004"
 
 const adminUrls = [
   "/en/send-a-message",
@@ -62,7 +64,7 @@ test.describe("Accessibility (a11y) checks @regression", () => {
     page,
   }) => {
     await authenticateUser(page)
-    await page.goto("https://profile-admin.dev.services.gov.ie/en", {
+    await page.goto(`${PROFILE_ADMIN_URL}/en`, {
       waitUntil: "networkidle",
     })
     const accessibilityScanResults = await new AxeBuilder({ page })
@@ -103,12 +105,9 @@ test.describe("Accessibility (a11y) checks @regression", () => {
     page,
   }) => {
     await authenticateUser(page)
-    await page.goto(
-      "https://profile-admin.dev.services.gov.ie/en/service-users",
-      {
-        waitUntil: "networkidle",
-      },
-    )
+    await page.goto(`${PROFILE_ADMIN_URL}/en/service-users`, {
+      waitUntil: "networkidle",
+    })
     const accessibilityScanResults = await new AxeBuilder({ page })
       .exclude('iframe[title="reCAPTCHA"]')
       .analyze()

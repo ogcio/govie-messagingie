@@ -17,6 +17,7 @@ import { messagingApi } from "@/util/api-paths"
 import { defaultFormGap, formatDate, formatTime } from "@/util/datetime"
 import {
   extractMessageMeta,
+  extractScheduledAt,
   type MessageEventDetailItem,
 } from "@/util/message-event-meta"
 import { url } from "@/util/url"
@@ -39,6 +40,11 @@ export function MessageEventDetailClient() {
     [messageEvents],
   )
 
+  const scheduledAt = useMemo(
+    () => extractScheduledAt(messageEvents),
+    [messageEvents],
+  )
+
   const columns = useMemo<ColumnDef<MessageEventDetailItem>[]>(
     () => [
       {
@@ -56,16 +62,26 @@ export function MessageEventDetailClient() {
         id: "date",
         header: t("table.header.date"),
         meta: { size: "sm-fixed" },
-        accessorFn: (row) => formatDate(row.createdAt),
+        accessorFn: (row) =>
+          formatDate(
+            row.eventType === "message_schedule" && scheduledAt
+              ? scheduledAt
+              : row.createdAt,
+          ),
       },
       {
         id: "time",
         header: t("table.header.time"),
         meta: { size: "sm-fixed" },
-        accessorFn: (row) => formatTime(row.createdAt),
+        accessorFn: (row) =>
+          formatTime(
+            row.eventType === "message_schedule" && scheduledAt
+              ? scheduledAt
+              : row.createdAt,
+          ),
       },
     ],
-    [t],
+    [t, scheduledAt],
   )
 
   const table = useReactTable({

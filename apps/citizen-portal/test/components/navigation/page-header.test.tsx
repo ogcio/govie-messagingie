@@ -69,6 +69,9 @@ vi.mock("@/lib/feature-config", () => ({
     return flagState.messages
   },
   getEnabledLandingZone: (zone: "messages" | "profile" | "dashboard") => zone,
+  // LEA (My Submissions) is off in this suite — the drawer's
+  // Applications link has its own dedicated coverage elsewhere.
+  isLeaEnabled: () => false,
 }))
 
 // `useCrossZoneLink` and the `ZONE_CONFIG` table are exercised by their
@@ -127,6 +130,12 @@ vi.mock("@ogcio/design-system-react", () => {
     DrawerBody: Pass,
     Link: ({ href, children }: { href: string; children: React.ReactNode }) => (
       <a href={href}>{children}</a>
+    ),
+    // ListItem is the DS drawer nav primitive (AB#41657). Its real
+    // surface is a styled anchor (`gi-list-item`); the stub only cares
+    // about exposing an anchor the role-based queries can find.
+    ListItem: ({ href, label }: { href: string; label: string }) => (
+      <a href={href}>{label}</a>
     ),
   }
 })
@@ -233,7 +242,7 @@ describe("PageHeader", () => {
     render(<PageHeader publicName='Jane' onSignOut={() => {}} />)
 
     // The profile drawer link is rendered via UserMenuDrawer; the
-    // dashboard + messaging drawer links are rendered as <DrawerLink>
+    // dashboard + messaging drawer links are rendered as <ListItem>
     // children inside the drawer body. Every cross-zone href must be
     // absolute — the canonicalisation map is the safety net, but the
     // rendered URL should already point at the canonical host so a

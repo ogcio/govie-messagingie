@@ -1,0 +1,29 @@
+meta {
+  name: Public Servant Can Find A Profile
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/v1/profiles/find-profile?lastName={{profileLastName}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  profileLastName: {{profileLastName}}
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:post-response {
+  profileId: res.body.data ?  res.body.data.id : undefined
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data.id: isDefined
+}

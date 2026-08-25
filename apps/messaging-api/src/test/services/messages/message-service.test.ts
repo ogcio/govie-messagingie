@@ -17,12 +17,27 @@ import {
   processMessage,
 } from "../../../services/messages/message-service.js";
 import type { CreateMessageBody } from "../../../types/messages.js";
+import {
+  messagesFailedCounter,
+  messagesScheduledCounter,
+} from "../../../utils/metrics.js";
 import { utils } from "../../../utils/utils.js";
 import {
   DATABASE_TEST_URL_KEY,
   getPoolFromConnectionString,
 } from "../../build-testcontainer-pg.js";
 import { getMockBaseLogger } from "../../test-server-builder.js";
+
+vi.mock("../../../utils/metrics.js", () => ({
+  messagesSentCounter: { add: vi.fn() },
+  messagesReadCounter: { add: vi.fn() },
+  messagesCreatedCounter: { add: vi.fn() },
+  messagesQueueGauge: { record: vi.fn() },
+  messagesScheduledCounter: { add: vi.fn() },
+  messagesFailedCounter: { add: vi.fn() },
+  messageDeliveryDurationHistogram: { record: vi.fn() },
+  setupAsyncMetrics: vi.fn(),
+}));
 
 vi.mock("../../../utils/authentication-factory.js", () => ({
   getM2MUploadSdk: vi.fn().mockResolvedValue({}),
@@ -244,6 +259,41 @@ describe("Message Service", () => {
         threadName: message.message.threadName,
         security: message.security,
         externalId: message.message.externalId,
+      });
+    });
+
+    it("emits messages_scheduled tagged by organization on successful scheduling", async () => {
+      schedulerWorks = true;
+      const message = getMockMessage();
+      const output = await processMessage({
+        pool,
+        sender,
+        message,
+        logger: getMockBaseLogger(),
+      });
+
+      expect(output.messageId).toBeDefined();
+      expect(messagesScheduledCounter.add).toHaveBeenCalledWith(1, {
+        organizationId: expect.any(String),
+      });
+    });
+
+    it("emits messages_failed tagged by organization and stage=schedule on scheduling failure", async () => {
+      schedulerWorks = false;
+      const message = getMockMessage();
+
+      await expect(
+        processMessage({
+          pool,
+          sender,
+          message,
+          logger: getMockBaseLogger(),
+        }),
+      ).rejects.toThrow("Error scheduling messages");
+
+      expect(messagesFailedCounter.add).toHaveBeenCalledWith(1, {
+        organizationId: expect.any(String),
+        stage: "schedule",
       });
     });
 

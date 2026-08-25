@@ -1,0 +1,28 @@
+meta {
+  name: Citizen can get their own profile
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/profiles/:profileId
+  body: none
+  auth: bearer
+}
+
+params:path {
+  profileId: {{userProfileId}}
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+vars:pre-request {
+  userProfileId: {{process.env.CITIZEN_USER_PROFILE_ID}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data.id: eq {{userProfileId}}
+}

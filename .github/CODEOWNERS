@@ -1,2 +1,4 @@
 # Global
-* @ogcio/messaging-devs
+* @ogcio/building-blocks-devops @ogcio/messaging @ogcio/messaging_admins @ogcio/messaging_editors
+
+/apps/ @ogcio/messaging @ogcio/messaging_admins @ogcio/messaging_editors

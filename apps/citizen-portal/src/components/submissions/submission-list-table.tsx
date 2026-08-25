@@ -77,7 +77,7 @@ export function SubmissionListTable({
       {
         id: "application",
         accessorFn: (row) => pickLocalized(row.title, locale),
-        header: tTable("column.application"),
+        header: tTable("column.submission"),
         cell: ({ row }) => (
           <Link
             href={`${pathname}?id=${row.original.id}`}
@@ -148,10 +148,9 @@ export function SubmissionListTable({
           <div className={inboxTableStyles.desktopTable}>
             <Table
               data-testid='submissions-table'
-              aria-label={tTable("aria.applicationList")}
+              aria-label={tTable("aria.submissionList")}
               layout='auto'
               rowSize='md'
-              stripped
               className={inboxTableStyles.listChromeTable}
             >
               <TableHead>

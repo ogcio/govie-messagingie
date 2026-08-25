@@ -37,3 +37,10 @@ sections.
 
 - `@citizen-portal/app` (`apps/citizen-portal/`) — the single
   consolidated citizen-facing Next.js app.
+
+## Testing
+
+```bash
+pnpm --filter @citizen-portal/shared test        # vitest (node)
+pnpm --filter @citizen-portal/shared test:local  # watch mode
+```

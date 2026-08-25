@@ -9,7 +9,7 @@ let currentSearchParams = new URLSearchParams()
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
   useSearchParams: () => currentSearchParams,
-  usePathname: () => "/en/my-applications",
+  usePathname: () => "/en/my-submissions",
 }))
 
 vi.mock("next-intl", () => ({
@@ -17,15 +17,15 @@ vi.mock("next-intl", () => ({
   useTranslations: (namespace: string) => (key: string) => {
     const byNamespace: Record<string, Record<string, string>> = {
       submissions: {
-        "empty.all": "You have no applications yet.",
-        "empty.search": "No applications match your search.",
+        "empty.all": "You have no submissions yet.",
+        "empty.search": "No submissions match your search.",
       },
       "submissions.table": {
         "column.id": "ID",
-        "column.application": "Application",
+        "column.submission": "Submission",
         "column.status": "Status",
         "column.date": "Date",
-        "aria.applicationList": "Application list",
+        "aria.submissionList": "Submission list",
       },
       "submissions.status": {
         completed: "Completed",
@@ -79,7 +79,7 @@ describe("SubmissionListTable", () => {
     expect(table).toBeInTheDocument()
     expect(screen.getByRole("columnheader", { name: "ID" })).toBeInTheDocument()
     expect(
-      screen.getByRole("columnheader", { name: "Application" }),
+      screen.getByRole("columnheader", { name: "Submission" }),
     ).toBeInTheDocument()
     expect(
       screen.getByRole("columnheader", { name: "Status" }),
@@ -88,7 +88,7 @@ describe("SubmissionListTable", () => {
     expect(table).toHaveTextContent("SCH-2025-073296")
     expect(screen.getByRole("link", { name: "Birth registration" })).toHaveAttribute(
       "href",
-      "/en/my-applications?id=SCH-2025-073296",
+      "/en/my-submissions?id=SCH-2025-073296",
     )
     expect(table).toHaveTextContent("Completed")
   })
@@ -105,6 +105,6 @@ describe("SubmissionListTable", () => {
       />,
     )
 
-    expect(screen.getByText("You have no applications yet.")).toBeInTheDocument()
+    expect(screen.getByText("You have no submissions yet.")).toBeInTheDocument()
   })
 })

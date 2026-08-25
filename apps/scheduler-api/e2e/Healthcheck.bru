@@ -1,0 +1,24 @@
+meta {
+  name: Healthcheck
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/health
+  body: none
+  auth: none
+}
+
+assert {
+  res.status: eq 200
+  res.body: isJson
+}
+
+script:pre-request {
+  //Placeholder for any setup before making the request
+}
+
+script:post-response {
+  //Placeholder for any post response logic
+}

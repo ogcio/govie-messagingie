@@ -314,7 +314,10 @@ async function queryMessages(
                     a.scheduled_at,
                     a.subject,
                     a.organisation_id,
-                    JSONB_AGG(JSONB_BUILD_OBJECT('type',l.event_type, 'status',l.event_status)) as status
+                    JSONB_AGG(
+                        JSONB_BUILD_OBJECT('type',l.event_type, 'status',l.event_status)
+                        ORDER BY l.created_at DESC, l.id DESC
+                    ) as status
                 from a
                 join messaging_event_logs l on l.message_id = a.id
                 group by a.id, a.scheduled_at, a.subject, a.organisation_id

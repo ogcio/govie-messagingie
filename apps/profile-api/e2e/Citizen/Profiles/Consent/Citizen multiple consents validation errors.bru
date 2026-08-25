@@ -1,0 +1,40 @@
+meta {
+  name: Citizen consents validation errors
+  type: http
+  seq: 8
+}
+
+post {
+  url: {{baseUrl}}/api/v1/citizens/consents
+  body: json
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{citizenAccessToken}}
+}
+
+body:json {
+  {
+    "consents": [
+      {
+        "subject": "messaging",
+        "status": "opted-in",
+        "consentStatementId": "{{currentConsentStatementId}}"
+      },
+      {
+        "subject": "messaging",
+        "status": "opted-out",
+        "consentStatementId": "0f0cc14c-5433-4152-8166-8474fe45b104"
+      }
+    ]
+  }
+}
+
+assert {
+  res.status: eq 400
+  res.body.errors: length 1
+  res.body.errors[0].subject: eq "messaging"
+  res.body.errors[0].consentStatementId: eq "0f0cc14c-5433-4152-8166-8474fe45b104"
+  res.body.errors[0].errors: contains "Statement is not the current active statement for subject 'messaging'"
+}

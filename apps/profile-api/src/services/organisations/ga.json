@@ -1,0 +1,44 @@
+{
+  "ogcio": { "name": "OGCIO Seeded Org", "shortName": "OGCIO" },
+  "abp": { "name": "An Bord Pleanála", "shortName": "ABP" },
+  "acp": { "name": "An Coimisiún Pleanála", "shortName": "ACP" },
+  "inactive-ps-org": {
+    "name": "Inactive Public Servants Org",
+    "shortName": "Inactive PS"
+  },
+  "first-testing": {
+    "name": "First Testing Organisation",
+    "shortName": "First Test"
+  },
+  "second-testing": {
+    "name": "Second Testing Organisation",
+    "shortName": "Second Test"
+  },
+  "hse": { "name": "Health Service Executive", "shortName": "HSE" },
+  "dsp": { "name": "An Roinn Coimirce Sóisialaí", "shortName": "DSP" },
+  "doe": { "name": "An Roinn Oideachais agus Óige", "shortName": "DEY" },
+  "dss": { "name": "Department of Social Services", "shortName": "DSS" },
+  "lcc": { "name": "Limerick City and County Council", "shortName": "LCC" },
+  "msg-dp": { "name": "Messaging Test", "shortName": "MSG DP" },
+  "nearform-testing": { "name": "Nearform Testing", "shortName": "NF" },
+  "support": {
+    "name": "GovIE Support",
+    "shortName": "GovIE Support"
+  },
+  "digital-wallet-pilot": {
+    "name": "Digital Wallet Pilot",
+    "shortName": "DWP"
+  },
+  "groct": {
+    "name": "Oifig an Ard-Chláraitheora - Iarratais ar Theastais",
+    "shortName": "GROCT"
+  },
+  "dhlgh": {
+    "name": "An Roinn Tithíochta, Rialtais Áitiúil agus Oidhreachta - Iarratais ar Thacaíocht Tithíochta Sóisialta",
+    "shortName": "DHLGH"
+  },
+  "deysp": {
+    "name": "An Roinn Oideachas agus Óige - Iarratais ar Áiteanna Scoile",
+    "shortName": "DEYSP"
+  }
+}

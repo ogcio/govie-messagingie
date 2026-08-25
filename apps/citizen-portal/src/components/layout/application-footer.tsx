@@ -42,7 +42,8 @@ export function ApplicationFooter({
 
   return (
     <Footer
-      style={{ marginTop: "auto" }}
+      // Reserve chrome height so client paint / logo decode don't shift the page (CLS).
+      style={{ marginTop: "auto", minHeight: "12rem" }}
       utilitySlot={
         <Stack
           wrap

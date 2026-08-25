@@ -45,7 +45,7 @@ export function MyApplications() {
   // keep the list visible across focus revalidations (see useSubmissionsList).
   const isWaiting =
     (authLoading || !user || isLoading) && submissions.length === 0
-  const listPath = `/${locale}/my-applications`
+  const listPath = `/${locale}/my-submissions`
 
   return (
     <DashboardPanel

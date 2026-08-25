@@ -175,6 +175,28 @@
 }
 
 /*
+ * DS gap (`.gi-modal-body` clips focus outlines).
+ *
+ * DS ships `.gi-modal-body { overflow-y: auto; padding-left/right: space-6 }`
+ * with zero vertical padding. Focusable controls inside (e.g. `InputText` /
+ * `SelectNative` in the create-folder and move-to-folder modals) draw a 3px
+ * yellow focus outline outside the element box; with no vertical padding the
+ * outline's top/bottom is clipped by the `overflow` scroll container. space-2
+ * (8px) clears the 3px outline with ~5px to spare — space-1 (4px) technically
+ * fits but leaves a 1px margin that still reads as clipped at HiDPI/subpixel
+ * rounding — while staying small enough not to force body scroll.
+ *
+ * Removable when DS pads `.gi-modal-body` enough for its own focus outline
+ * (or stops clipping outlines via overflow on the body).
+ *
+ * AB#41662
+ */
+.gi-modal-body {
+  padding-top: var(--gieds-space-2);
+  padding-bottom: var(--gieds-space-2);
+}
+
+/*
  * DS gap (overflow:hidden on `.gi-summary-list` clips td values).
  *
  * DS ships `.gi-summary-list { overflow: hidden; border-radius: 200; ... }`
@@ -221,6 +243,16 @@
 
 .user-drawer-menu-container div {
   width: 100%;
+}
+
+/*
+ * Reserve explicit size for the DS footer logo. Lighthouse CLS attributed
+ * "Media element lacking an explicit size" to this img (gi-w-auto).
+ */
+footer[data-module="gieds-footer"] img.gi-h-16 {
+  width: 181px;
+  height: 64px;
+  aspect-ratio: 181 / 64;
 }
 
 /*

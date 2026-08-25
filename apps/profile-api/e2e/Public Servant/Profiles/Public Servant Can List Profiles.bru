@@ -1,0 +1,28 @@
+meta {
+  name: Public Servant Can List Profiles
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{baseUrl}}/api/v1/profiles
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:post-response {
+  profileId: res.body.data && res.body.data[0] ?  res.body.data[0].id : undefined
+  anotherProfileId: res.body.data && res.body.data[1] ?  res.body.data[1].id : undefined
+  citizenEmail: res.body.data && res.body.data[0] ?  res.body.data[0].email : undefined
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data[0]: isDefined
+  res.body.data[0].id: isDefined
+}

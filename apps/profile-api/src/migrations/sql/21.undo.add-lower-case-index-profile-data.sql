@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS idx_profile_data_lower_email;

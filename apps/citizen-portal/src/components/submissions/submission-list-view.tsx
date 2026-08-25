@@ -56,7 +56,7 @@ export function SubmissionListView() {
 
   const handleSelect = useCallback(
     (id: string) => {
-      router.push(`/${locale}/my-applications?id=${id}`)
+      router.push(`/${locale}/my-submissions?id=${id}`)
     },
     [locale, router],
   )

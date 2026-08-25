@@ -34,5 +34,9 @@ export const ANALYTICS = {
       name: "support-profile-deleted",
       action: "Profile deleted",
     },
+    exportRequested: {
+      name: "support-profile-export-requested",
+      action: "Data export requested",
+    },
   },
 }

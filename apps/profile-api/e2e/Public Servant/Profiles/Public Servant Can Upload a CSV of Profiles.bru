@@ -1,0 +1,28 @@
+meta {
+  name: Public Servant Can Upload a CSV of Profiles
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/v1/profiles/import-profiles
+  body: multipartForm
+  auth: bearer
+}
+
+headers {
+  Content-Type: multipart/form-data
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+body:multipart-form {
+  file: @file(Public Servant/Profiles/mock-profiles.csv)
+}
+
+assert {
+  res.status: eq 200
+  res.body.status: eq "pending"
+}

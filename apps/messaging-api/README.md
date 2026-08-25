@@ -67,6 +67,14 @@ Run (use your local `.env`):
 docker run -p 8002:8002 --env-file apps/messaging-api/.env messaging-api:latest
 ```
 
+## Testing
+
+```bash
+pnpm --filter messaging-api test         # vitest + coverage (junit output)
+pnpm --filter messaging-api test:local   # watch mode
+pnpm --filter messaging-api test:e2e     # bruno e2e (local env)
+```
+
 ## Troubleshooting
 
 - `pnpm dev:health` from the repo root checks DB, API health, and other services
@@ -76,5 +84,4 @@ docker run -p 8002:8002 --env-file apps/messaging-api/.env messaging-api:latest
 ## Useful Links
 
 - [Root README](../../README.md) - Setup and workspace scripts
-- [Frontend README](../messaging/README.md) - Frontend application details
 - [Scripts Documentation](../../scripts/README.md) - Developer experience scripts

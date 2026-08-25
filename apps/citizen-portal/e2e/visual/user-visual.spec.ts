@@ -50,4 +50,15 @@ test.describe("User Visual Regression", () => {
       maxDiffPixelRatio: maxDiff,
     })
   })
+
+  test("dashboard submissions page visual snapshot @visual", async () => {
+    await page.waitForLoadState("networkidle")
+
+    await page.goto(`${DASHBOARD_URL}/en/my-submissions`)
+    await page.waitForLoadState("networkidle")
+    await expect(page).toHaveScreenshot("user-dashboard-submissions.png", {
+      fullPage: true,
+      maxDiffPixelRatio: maxDiff,
+    })
+  })
 })

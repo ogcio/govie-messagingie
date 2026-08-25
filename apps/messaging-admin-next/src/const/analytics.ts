@@ -106,7 +106,7 @@ export const ANALYTICS = {
     },
     stepComplete: {
       name: "message-step-complete",
-      action: "Message type selected",
+      action: "Message send completed",
     },
   },
   template: {

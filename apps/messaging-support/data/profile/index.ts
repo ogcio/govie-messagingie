@@ -5,6 +5,7 @@ import { logger } from "../logger"
 import { getSupportSdk } from "../sdk"
 import {
   type Consent,
+  type ExportTask,
   type FullProfile,
   type GetUserConsentDataResponse,
   type LinkProfile,
@@ -26,7 +27,8 @@ import {
   success,
 } from "../utils"
 import {
-  fetchDeleteAccount,
+  fetchCreateLifecycleTask,
+  fetchExportTask,
   fetchLogtoUserRole,
   fetchLogtoUsers,
   fetchM2MmanagementAccessToken,
@@ -342,10 +344,9 @@ async function deleteAccount(params: {
         return tokenResult
       }
 
-      const token = tokenResult.value
-
-      const deleteAccountResult = await fetchDeleteAccount({
-        bearerToken: token,
+      const deleteAccountResult = await fetchCreateLifecycleTask({
+        bearerToken: tokenResult.value,
+        type: "delete_profile",
         profileId,
         requesterUserId,
       })
@@ -356,6 +357,63 @@ async function deleteAccount(params: {
       }
 
       return deleteAccountResult
+    },
+  })
+}
+
+async function requestDataExport(params: {
+  profileId: string
+  requesterUserId: string
+}) {
+  return withSpan({
+    spanName: "ProfileDataService.requestDataExport",
+    fn: async (span) => {
+      const { requesterUserId, profileId } = params
+
+      const tokenResult = await AppHttp.fetchAppM2MToken()
+      if (!tokenResult.success) {
+        span.recordException(tokenResult.error)
+        return tokenResult
+      }
+
+      const exportResult = await fetchCreateLifecycleTask({
+        bearerToken: tokenResult.value,
+        type: "export_user_data",
+        profileId,
+        requesterUserId,
+      })
+
+      if (!exportResult.success) {
+        span.recordException(exportResult.error)
+      }
+
+      return exportResult
+    },
+  })
+}
+
+async function getExportTask(
+  profileId: string,
+): Promise<Result<ExportTask | null>> {
+  return withSpan({
+    spanName: "ProfileDataService.getExportTask",
+    fn: async (span) => {
+      const tokenResult = await AppHttp.fetchAppM2MToken()
+      if (!tokenResult.success) {
+        span.recordException(tokenResult.error)
+        return tokenResult
+      }
+
+      const taskResult = await fetchExportTask({
+        bearerToken: tokenResult.value,
+        profileId,
+      })
+
+      if (!taskResult.success) {
+        span.recordException(taskResult.error)
+      }
+
+      return taskResult
     },
   })
 }
@@ -414,6 +472,8 @@ export const ProfileDataService = {
   getAssociatedProfileIds,
   getConsents,
   deleteAccount,
+  requestDataExport,
+  getExportTask,
   getUserRelationStatus,
   getLatestConsentData,
   updateProfileConsentData,

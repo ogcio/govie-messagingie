@@ -46,6 +46,9 @@ const SEMVER_ONLY: PackageRules = {
     "@types/react-dom",
     "@ogcio/nextjs-logging-wrapper",
     "@fastify/type-provider-typebox",
+    "@tanstack/react-table",
+    "@tanstack/table-core",
+    "typescript",
   ],
   scoped: {
     "messaging-next": ["use-intl"],

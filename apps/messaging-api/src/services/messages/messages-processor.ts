@@ -4,6 +4,10 @@ import type { FastifyBaseLogger } from "fastify";
 import type { Pool, PoolClient } from "pg";
 import type { CreateMessageBody, SenderUser } from "../../types/messages.js";
 import { getM2MSchedulerSdk } from "../../utils/authentication-factory.js";
+import {
+  messagesFailedCounter,
+  messagesScheduledCounter,
+} from "../../utils/metrics.js";
 import { utils } from "../../utils/utils.js";
 import { ProfileM2MSdkWrapper } from "../users/profile-m2m-sdk-wrapper.js";
 import type { GetProfileResponse } from "../users/profile-sdk-wrapper.js";
@@ -146,6 +150,9 @@ export class MessagesProcessor {
         messageId: params.toScheduleMessage.messageId,
         receiverUserId: params.toScheduleMessage.userId,
       });
+      messagesScheduledCounter.add(1, {
+        organizationId: params.organizationId,
+      });
 
       return result[0];
     } catch (error) {
@@ -153,6 +160,10 @@ export class MessagesProcessor {
         MessagingEventType.scheduleMessageError,
         params.toScheduleMessage,
       );
+      messagesFailedCounter.add(1, {
+        organizationId: params.organizationId,
+        stage: "schedule",
+      });
       throw httpErrors.createError(503, "Error scheduling messages", {
         parent: error,
       });

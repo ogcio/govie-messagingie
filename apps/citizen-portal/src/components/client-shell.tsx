@@ -19,6 +19,7 @@ import {
   Stack,
   ToastProvider,
 } from "@ogcio/design-system-react"
+import { useAnalytics } from "@ogcio/nextjs-analytics"
 import { signIn } from "@ogcio/sag-client"
 import {
   CONNECTOR_MYGOVID,
@@ -37,6 +38,7 @@ import {
   useRef,
   useState,
 } from "react"
+import { LoginTracker } from "@/components/analytics/login-tracker"
 import { AnalyticsProvider } from "@/components/analytics-provider"
 import { AnnouncementsFlow } from "@/components/announcements-flow"
 import { ConsentBanner } from "@/components/consent-banner"
@@ -47,6 +49,7 @@ import { LoadMaterialSymbols } from "@/components/load-material-symbols"
 import { PageHeader } from "@/components/navigation/page-header"
 import { PageLoading } from "@/components/page-loading"
 import { ShellLoadingChrome } from "@/components/shell-loading-chrome"
+import { ANALYTICS } from "@/const/analytics"
 import { TRACE_MESSAGES } from "@/const/traces"
 import { env } from "@/env/env.client"
 import { useIdleMount } from "@/hooks/use-idle-mount"
@@ -309,6 +312,70 @@ function StaleClaimsRefreshGate({
   return <>{children}</>
 }
 
+/**
+ * Wraps the shell body in consent + announcements. Extracted out of
+ * `AuthenticatedShell` (which renders *above* `AnalyticsProvider`) so
+ * `useAnalytics()` is legal here — `ConsentFlow` is only ever rendered
+ * from inside `AuthenticatedShell`'s `<AnalyticsProvider>` subtree.
+ * Exported for direct testing of the consent-decision analytics event.
+ */
+export function ConsentFlow({
+  locale,
+  onLocaleChange,
+  children,
+}: {
+  locale: ConsentStatementLanguages
+  onLocaleChange: (locale: ConsentStatementLanguages) => void
+  children: ReactNode
+}) {
+  const analyticsClient = useAnalytics()
+
+  return (
+    <ConsentProvider
+      subject={MESSAGING_CONSENT_SUBJECT}
+      locale={locale}
+      isPublicServant={false}
+      onLocaleChange={onLocaleChange}
+      languageSwitcher={LANGUAGE_SWITCHER}
+      events={{
+        onConsentDecision: (accepted) => {
+          faro.api?.pushLog([
+            `Consent decision: ${accepted ? "accepted" : "declined"}`,
+          ])
+          const decision = accepted
+            ? ANALYTICS.consent.accepted
+            : ANALYTICS.consent.declined
+          analyticsClient.trackEvent({
+            event: {
+              name: decision.name,
+              category: ANALYTICS.consent.category,
+              action: decision.action,
+            },
+          })
+
+          const url = new URL(window.location.href)
+          if (url.searchParams.has(FORCE_CONSENT_PARAM)) {
+            url.searchParams.delete(FORCE_CONSENT_PARAM)
+            window.history.replaceState(history.state, "", url)
+          }
+          clearPersistedForceConsent()
+        },
+        onConsentError: (error) => {
+          faro.api?.pushLog([`Consent error: ${error}`])
+        },
+      }}
+    >
+      <AnnouncementsFlow
+        locale={locale}
+        onLocaleChange={onLocaleChange}
+        languageSwitcher={LANGUAGE_SWITCHER}
+      >
+        {children}
+      </AnnouncementsFlow>
+    </ConsentProvider>
+  )
+}
+
 function AuthenticatedShell({
   zone,
   children,
@@ -384,7 +451,6 @@ function AuthenticatedShell({
             <AppMainContent>
               <MainLoading />
             </AppMainContent>
-            <ApplicationFooter />
           </>
         }
       >
@@ -394,43 +460,15 @@ function AuthenticatedShell({
           {children}
         </AppMainContent>
       </Suspense>
+      {/* Single footer outside Suspense — fallback must not render another (CLS). */}
       <ApplicationFooter />
     </>
   )
 
   const withConsent = showConsentChrome ? (
-    <ConsentProvider
-      subject={MESSAGING_CONSENT_SUBJECT}
-      locale={currentLocale}
-      isPublicServant={false}
-      onLocaleChange={handleLocaleChange}
-      languageSwitcher={LANGUAGE_SWITCHER}
-      events={{
-        onConsentDecision: (accepted) => {
-          faro.api?.pushLog([
-            `Consent decision: ${accepted ? "accepted" : "declined"}`,
-          ])
-
-          const url = new URL(window.location.href)
-          if (url.searchParams.has(FORCE_CONSENT_PARAM)) {
-            url.searchParams.delete(FORCE_CONSENT_PARAM)
-            window.history.replaceState(history.state, "", url)
-          }
-          clearPersistedForceConsent()
-        },
-        onConsentError: (error) => {
-          faro.api?.pushLog([`Consent error: ${error}`])
-        },
-      }}
-    >
-      <AnnouncementsFlow
-        locale={currentLocale}
-        onLocaleChange={handleLocaleChange}
-        languageSwitcher={LANGUAGE_SWITCHER}
-      >
-        {shellBody}
-      </AnnouncementsFlow>
-    </ConsentProvider>
+    <ConsentFlow locale={currentLocale} onLocaleChange={handleLocaleChange}>
+      {shellBody}
+    </ConsentFlow>
   ) : (
     shellBody
   )
@@ -444,6 +482,7 @@ function AuthenticatedShell({
 
   return (
     <AnalyticsProvider>
+      <LoginTracker />
       <FeatureFlagsProvider>{chrome}</FeatureFlagsProvider>
     </AnalyticsProvider>
   )

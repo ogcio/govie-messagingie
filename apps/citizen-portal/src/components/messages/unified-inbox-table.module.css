@@ -152,18 +152,18 @@
  * Selected-row highlight (desktop). DS `TableRow` has no `selected`
  * variant, so a checked row previously signalled its state only through
  * the checkbox — unlike the mobile list, which tints the whole row. This
- * mirrors the mobile ListCard selected-state gray-200 tone (and gray-300 on
- * hover) so selection reads consistently across both viewports. The
- * doubled `.selectedRow` selector lifts specificity above
+ * mirrors the mobile ListCard selected-state neutral-100 tone (and
+ * neutral-200 on hover) so selection reads consistently across both
+ * viewports. The doubled `.selectedRow` selector lifts specificity above
  * `.clickableRow:hover` and `.unreadRow` so the selection tint always
  * wins while a row is checked.
  */
 .selectedRow.selectedRow {
-  background-color: var(--gieds-color-gray-200, #d8dadf);
+  background-color: var(--gieds-color-neutral-100, #e9eaed);
 }
 
 .selectedRow.selectedRow:hover {
-  background-color: var(--gieds-color-gray-300, #c9ccd1);
+  background-color: var(--gieds-color-neutral-200, #d8dadf);
 }
 
 /*
@@ -370,17 +370,13 @@
    */
   margin-inline-end: auto;
   /*
-   * Pinned to the same 0.9375rem the `.unreadCount*` rules use so the
-   * desktop banner's "(N) selected" visually reads as a 1:1 swap for
-   * the "(N) unread" line it replaces.
-   *
    * DS paints the banner surface `gi-bg-gray-900` but only colours its
    * (now-hidden) built-in label `gi-text-white`. `color: inherit` on the
    * actions wrapper falls back to the page text colour (near-black) and
-   * the count reads as unreadable dark-on-dark, so we pin the count to
-   * the same gray-50 DS uses for the dark mobile select-mode header.
+   * the count reads as unreadable dark-on-dark, so pin it to the same
+   * gray-50 DS uses for the dark mobile select-mode header.
    */
-  font-size: 0.9375rem;
+  font-size: var(--gieds-font-size-300);
   font-weight: var(--gieds-font-weight-500);
   color: var(--gieds-color-gray-50, #f7f7f8);
 }
@@ -462,9 +458,7 @@
 
 .mobileSelectHeaderDark .mobileSelectedCount {
   color: var(--gieds-color-gray-50, #f7f7f8);
-  /* Matches `.unreadCount` so entering select mode on mobile doesn't
-   * visibly resize the line that sits immediately above the list. */
-  font-size: 0.9375rem;
+  font-size: var(--gieds-font-size-300);
   font-weight: var(--gieds-font-weight-500);
 }
 
@@ -582,24 +576,16 @@
   }
 
   /*
-   * Flex column so the shared `InboxPagination` footer can sit after a
-   * flex-growing `.listBody`. Viewport min-height is owned by the parent
-   * `.listRoot` / `.mobileFullBleed` wrappers in unified-inbox.module.css.
+   * Flex column so the mobile infinite-scroll footer (the bottom sentinel +
+   * "loading more" indicator) can sit after a flex-growing `.listBody`.
+   * Viewport min-height is owned by the parent `.listRoot` /
+   * `.mobileFullBleed` wrappers in unified-inbox.module.css.
    */
   .tableRoot {
     display: flex;
     flex: 1 1 auto;
     flex-direction: column;
     min-height: 0;
-  }
-
-  /*
-   * Mobile only: reserve a full page of ListCard height (6rem each) so the
-   * sticky pagination footer stays in the same place when the last page has
-   * fewer messages than `pageSize`.
-   */
-  .listBody {
-    min-height: calc(var(--inbox-list-page-size, 6) * 6rem);
   }
 
   .mobileSelectHeader {

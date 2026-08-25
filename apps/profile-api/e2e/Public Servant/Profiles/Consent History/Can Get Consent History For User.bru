@@ -1,0 +1,28 @@
+meta {
+  name: Can Get Consent History For User
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organisations/consents?subject=messaging&profileId={{profileId}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  subject: messaging
+  profileId: {{profileId}}
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:pre-request {
+  profileId: {{process.env.CITIZEN_USER_PROFILE_ID}}
+}
+
+settings {
+  encodeUrl: true
+}

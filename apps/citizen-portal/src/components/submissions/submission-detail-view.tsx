@@ -44,7 +44,7 @@ export function SubmissionDetailView({ id }: { id: string }) {
 
   const textFields: { label: string; value: string }[] = [
     {
-      label: t("applicationFor"),
+      label: t("submissionFor"),
       value: pickLocalized(submission.title, locale),
     },
     {

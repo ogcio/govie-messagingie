@@ -2,6 +2,7 @@
 
 import { useGatewayFetch } from "@ogcio/sag-client/react"
 import { useLocale, useTranslations } from "next-intl"
+import { Skeleton } from "@/components/skeleton/skeleton"
 import { LANG_GA } from "@/const"
 import { getSystemSenderTranslationKey } from "./system-senders"
 
@@ -47,9 +48,11 @@ export interface SenderNameProps {
  *      per row. Multiple rows that share an organisationId dedupe down
  *      to a single network request via SWR's cache (the URL is the
  *      cache key), so a page of N messages from M unique organisations
- *      issues exactly M requests, not N. Loading / lookup-failure both
- *      fall back to the localized "Unknown sender" string — never leaks
- *      the raw UUID into the UI.
+ *      issues exactly M requests, not N. While the lookup is in flight a
+ *      `<Skeleton>` stands in — the "Unknown sender" fallback is reserved
+ *      for a *settled* lookup that produced no name, so a slow page no
+ *      longer flashes "Unknown sender" on every row before the real
+ *      senders arrive. Either way the raw UUID never leaks into the UI.
  */
 export function SenderName({ organisationId, className }: SenderNameProps) {
   const t = useTranslations("home.table")
@@ -64,11 +67,19 @@ export function SenderName({ organisationId, className }: SenderNameProps) {
    * "no organisationId at all" and "this is a known system slug" so the
    * profile service never sees a doomed lookup.
    */
-  const { data } = useGatewayFetch<OrganisationLookup>(
+  const { data, isLoading } = useGatewayFetch<OrganisationLookup>(
     organisationId && !systemSenderKey
       ? `/profile/api/v1/organisations/${organisationId}`
       : null,
   )
+
+  if (isLoading) {
+    return (
+      <span className={className} aria-busy='true'>
+        <Skeleton width='8rem' dataTestid='sender-name-skeleton' />
+      </span>
+    )
+  }
 
   const name = systemSenderKey
     ? t(`systemSender.${systemSenderKey}`)

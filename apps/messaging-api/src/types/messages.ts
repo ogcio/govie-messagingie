@@ -87,7 +87,13 @@ export const CreateMessageBodySchema = Type.Object({
     description: "Date and time of when schedule the message",
   }),
   message: MessageInputSchema,
-  attachments: Type.Optional(Type.Array(Type.String({ format: "uuid" }))),
+  attachments: Type.Optional(
+    Type.Array(Type.String({ format: "uuid" }), {
+      maxItems: 3,
+      uniqueItems: true,
+      description: "Ids of the related attachments (maximum 3)",
+    }),
+  ),
   bypassConsent: Type.Optional(
     Type.Boolean({
       default: false,
@@ -147,7 +153,8 @@ export const ReadMessageSchema = Type.Object({
   }),
   security: SecurityLevelsSchema,
   attachments: Type.Array(Type.String({ format: "uuid" }), {
-    description: "Ids of the related attachments",
+    maxItems: 3,
+    description: "Ids of the related attachments (maximum 3)",
   }),
   externalId: Type.Union([
     Type.String({
@@ -308,6 +315,7 @@ export type MessageToDeliverWoAttachments = {
   securityLevel: SecurityLevels;
   richText?: string;
   externalId?: string;
+  createdAt?: string;
 };
 
 export type MessageToDeliver = MessageToDeliverWoAttachments & {

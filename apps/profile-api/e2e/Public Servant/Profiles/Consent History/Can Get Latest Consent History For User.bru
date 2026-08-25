@@ -1,0 +1,29 @@
+meta {
+  name: Can Get Latest Consent History For User
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organisations/consents/latest?subject=messaging&profileId={{profileId}}
+  body: none
+  auth: bearer
+}
+
+params:query {
+  subject: messaging
+  profileId: {{profileId}}
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:pre-request {
+  profileId: {{process.env.CITIZEN_USER_PROFILE_ID}}
+  ~profileId: 7nrwzd06ijkb
+}
+
+settings {
+  encodeUrl: true
+}

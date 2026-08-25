@@ -1,5 +1,5 @@
 import { getEnvConfig } from "@/utils/env"
-import type { LogtoUser, LogtoUserRole, Result } from "../types"
+import type { ExportTask, LogtoUser, LogtoUserRole, Result } from "../types"
 import {
   failure,
   fetchUsersConcurrent,
@@ -144,36 +144,88 @@ export async function fetchLogtoUserRole(
   }
 }
 
-export async function fetchDeleteAccount(params: {
+export async function fetchCreateLifecycleTask(params: {
   bearerToken: string
+  type: "delete_profile" | "export_user_data"
   profileId: string
   requesterUserId: string
 }): Promise<Result<void>> {
-  const { bearerToken, profileId, requesterUserId } = params
+  const { bearerToken, type, profileId, requesterUserId } = params
   try {
     const { PROFILE_API_RESOURCE_URL } = getEnvConfig()
 
     const apiUrl = new URL(`/api/v1/lifecycle-tasks`, PROFILE_API_RESOURCE_URL)
-    const profilePatchResponse = await fetch(apiUrl, {
+    const response = await fetch(apiUrl, {
       method: "POST",
-      body: JSON.stringify({
-        type: "delete_profile",
-        profileId,
-        requesterUserId,
-      }),
+      body: JSON.stringify({ type, profileId, requesterUserId }),
       headers: {
         Authorization: `Bearer ${bearerToken}`,
         "Content-Type": "application/json",
       },
     })
 
-    const data = await profilePatchResponse.json()
+    const data = await response.json()
 
-    if (!profilePatchResponse.ok) {
-      throw new Error(`error deleting profile: ${JSON.stringify(data)}`)
+    if (!response.ok) {
+      throw new Error(
+        `error creating lifecycle task '${type}': ${JSON.stringify(data)}`,
+      )
     }
 
     return success(undefined)
+  } catch (err) {
+    return failure(err, GENERIC_USER_ERROR)
+  }
+}
+
+export async function fetchExportTask(params: {
+  bearerToken: string
+  profileId: string
+}): Promise<Result<ExportTask | null>> {
+  const { bearerToken, profileId } = params
+  try {
+    const { PROFILE_API_RESOURCE_URL } = getEnvConfig()
+
+    const apiUrl = new URL(
+      `/api/v1/lifecycle-tasks/search`,
+      PROFILE_API_RESOURCE_URL,
+    )
+    const response = await fetch(apiUrl, {
+      method: "POST",
+      body: JSON.stringify({ profileId, taskType: "export_user_data" }),
+      headers: {
+        Authorization: `Bearer ${bearerToken}`,
+        "Content-Type": "application/json",
+      },
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(
+        `error searching lifecycle tasks: ${JSON.stringify(data)}`,
+      )
+    }
+
+    const tasks = data?.data?.tasks
+
+    if (!Array.isArray(tasks)) {
+      throw new Error(
+        `unexpected lifecycle tasks search response shape: ${JSON.stringify(data)}`,
+      )
+    }
+
+    const task = tasks.at(0)
+
+    if (!task) {
+      return success(null)
+    }
+
+    return success({
+      id: task.id,
+      status: task.status,
+      metadata: task.metadata ?? null,
+    })
   } catch (err) {
     return failure(err, GENERIC_USER_ERROR)
   }

@@ -1,0 +1,22 @@
+meta {
+  name: Public Servant Can Download Profile Template
+  type: http
+  seq: 13
+}
+
+get {
+  url: {{baseUrl}}/api/v1/profiles/imports/template
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body: isDefined
+  ~res.headers.content-disposition: contains profile-template.csv
+  ~res.headers.content-type: eq text/csv
+}

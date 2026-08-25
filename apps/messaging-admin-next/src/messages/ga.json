@@ -345,7 +345,7 @@
           },
           "paragraph": {
             "main": "Más mian leat comhaid a chur le do theachtaireacht is féidir leat an uirlis thíos a úsáid.\nTá an chéim seo roghnach - cliceáil 'Ar Aghaidh' tar éis do cheangaltáin a chur leis nó 'Scipeáil' chun leanúint gan comhaid a cheangal.",
-            "maxSize": "Méid iomlán uasta: {size}MB (pdf, doc, docx, xls, xlsx, png, jpg, jpeg).",
+            "maxSize": "Uasmhéid {count} comhad, {size}MB an ceann (pdf, doc, docx, xls, xlsx, png, jpg, jpeg).",
             "permission": "Níl cead ag do chuntas ceangaltáin a uaslódáil."
           },
           "label": {
@@ -371,7 +371,8 @@
           "toast": {
             "error": {
               "upload": "Tharla earráid agus an comhad á uaslódáil. Déan iarracht arís le do thoil.",
-              "maxSize": "Sáraíonn méid iomlán na gcomhad an teorainn uasta ceadaithe."
+              "maxSize": "Sáraíonn méid an chomhaid an teorainn uasta ceadaithe.",
+              "maxCount": "Sáraíonn líon na gcomhad an teorainn uasta ceadaithe."
             }
           }
         },

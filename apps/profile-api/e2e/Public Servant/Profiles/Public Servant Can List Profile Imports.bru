@@ -1,0 +1,26 @@
+meta {
+  name: Public Servant Can List Profile Imports
+  type: http
+  seq: 8
+}
+
+get {
+  url: {{baseUrl}}/api/v1/profiles/imports?limit=5&offset=0
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:post-response {
+  importId: res.body.data && res.body.data[0] ? res.body.data[0].id : undefined
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data.length: lte 5
+  res.body.metadata.totalCount: isDefined
+}

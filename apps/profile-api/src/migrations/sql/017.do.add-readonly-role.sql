@@ -1,0 +1,12 @@
+DO
+$$
+BEGIN
+	CREATE ROLE role_readonly NOLOGIN;
+	EXCEPTION WHEN DUPLICATE_OBJECT THEN
+		RAISE NOTICE 'role_readonly  exists, skipping...';
+END
+$$;
+GRANT USAGE ON SCHEMA public TO role_readonly;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO role_readonly;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+GRANT SELECT ON TABLES TO role_readonly;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   extractMessageMeta,
+  extractScheduledAt,
   type MessageEventDetailItem,
 } from "@/util/message-event-meta"
 
@@ -59,5 +60,33 @@ describe("extractMessageMeta", () => {
     ])
     expect(result.recipient).toBe("42")
     expect(typeof result.subject).toBe("string")
+  })
+})
+
+describe("extractScheduledAt", () => {
+  it("returns undefined when the list is undefined or empty", () => {
+    expect(extractScheduledAt(undefined)).toBeUndefined()
+    expect(extractScheduledAt([])).toBeUndefined()
+  })
+
+  it("returns the scheduledAt carried by the message_create event", () => {
+    expect(
+      extractScheduledAt([
+        event({ status: "queued" }),
+        event({
+          receiverFullName: "Alice Wayne",
+          scheduledAt: "2026-05-08T09:30:00+01:00",
+        }),
+      ]),
+    ).toBe("2026-05-08T09:30:00+01:00")
+  })
+
+  it("ignores empty or non-string scheduledAt values", () => {
+    expect(
+      extractScheduledAt([
+        event({ scheduledAt: "" }),
+        event({ scheduledAt: 12345 }),
+      ]),
+    ).toBeUndefined()
   })
 })

@@ -50,7 +50,9 @@ export function ListCard({
   checkboxTestId,
   className,
 }: ListCardProps) {
-  const isEmphasized = isUnread && !isSelected
+  // Unread stays bold even while selected — selecting an unread item must not
+  // drop its emphasis (only the background changes to the selected tint).
+  const isEmphasized = isUnread
   const weightClass = isEmphasized ? styles.emphasized : styles.regular
   const previewClass = [
     styles.preview,
@@ -82,7 +84,9 @@ export function ListCard({
           aria-hidden='true'
           data-testid={checkboxTestId}
         >
-          <CheckboxIndicatorIcon checked={isChecked} size='sm' />
+          {/* 24px = DS `.gi-input-checkbox-small`, the select-all in the list
+              header. `sm` (16px) would read as a different checkbox. */}
+          <CheckboxIndicatorIcon checked={isChecked} size='md' />
         </span>
       ) : null}
       <div className={styles.content}>

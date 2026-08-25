@@ -1,0 +1,19 @@
+{
+  "root": false,
+  "extends": ["../../biome.jsonc"],
+  "files": {
+    "includes": [
+      "src/**/*.ts",
+      "db/*.js",
+      "db/**/*.json",
+      "*.json",
+      "*.jsonc",
+      "*.mts"
+    ]
+  },
+  "javascript": {
+    "formatter": {
+      "semicolons": "always"
+    }
+  }
+}

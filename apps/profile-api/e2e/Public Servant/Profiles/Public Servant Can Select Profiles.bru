@@ -1,0 +1,31 @@
+meta {
+  name: Public Servant Can Select Profiles
+  type: http
+  seq: 15
+}
+
+get {
+  url: {{baseUrl}}/api/v1/profiles/select-profiles?ids=jcotlljr66g9,h1mtwsg8qdx0
+  body: none
+  auth: bearer
+}
+
+params:query {
+  ids: jcotlljr66g9,h1mtwsg8qdx0
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:pre-request {
+  profileId: jcotlljr66g9
+  anotherProfileId: h1mtwsg8qdx0
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data[0]: isDefined
+  res.body.data[0].id: isDefined
+}

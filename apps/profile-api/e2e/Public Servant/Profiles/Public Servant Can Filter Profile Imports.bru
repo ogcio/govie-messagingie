@@ -1,0 +1,27 @@
+meta {
+  name: Public Servant Can Filter Profile Imports
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/v1/profiles/imports?organizationId=first-testing&source=csv
+  body: none
+  auth: bearer
+}
+
+params:query {
+  organizationId: first-testing
+  source: csv
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+assert {
+  res.status: eq 200
+  res.body.data: isDefined
+  res.body.data[0].source: eq "csv"
+  res.body.metadata.totalCount: isDefined
+}

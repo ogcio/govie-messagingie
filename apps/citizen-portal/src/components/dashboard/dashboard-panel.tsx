@@ -16,9 +16,9 @@ export interface DashboardPanelProps {
  * recent-applications and recent-messages columns so both have identical
  * chrome and stretch to equal height in the two-column grid.
  *
- * The list body is full-bleed so the inbox `ListCard` rows' dividers and
- * hover/unread backgrounds span the full box width; the heading and CTA are
- * inset to line up with the rows' text.
+ * The panel carries 32px internal padding so the inbox `ListCard` rows sit
+ * within the padded space rather than flush to the frame edge; the heading and
+ * CTA keep their own inline inset so their text lines up with the rows' text.
  */
 export function DashboardPanel({ title, cta, children }: DashboardPanelProps) {
   return (

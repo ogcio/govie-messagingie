@@ -31,6 +31,7 @@ export async function generateMetadata({ params }: LayoutProps<"/[locale]">) {
 
   return {
     title: t("title"),
+    description: t("description"),
     icons: [{ rel: "icon", url: favicon.src }],
   }
 }

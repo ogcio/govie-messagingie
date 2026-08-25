@@ -9,6 +9,7 @@ import {
 } from "@ogcio/sag-client/react"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { env } from "@/env/env.client"
+import { persistLastSelectedOrganization } from "@/util/last-selected-org"
 
 export type AdminOrganization = OrganizationInfo
 
@@ -20,7 +21,7 @@ interface OrganizationContext {
 }
 
 export function useOrganizationContext(): OrganizationContext {
-  const { claims } = useAuth()
+  const { claims, user } = useAuth()
   const client = useSagClient()
   const gatewayUrl = client.gatewayUrl ?? env.NEXT_PUBLIC_SAG_URL
 
@@ -74,9 +75,12 @@ export function useOrganizationContext(): OrganizationContext {
       if (!organizationId || organizationId === selectedId) return
       const ok = await selectOrganizationOnGateway(gatewayUrl, organizationId)
       if (!ok) return
+      // Remember the explicit choice so it is restored after a future
+      // logout/login, not just across the imminent hard reload (AB#28623).
+      persistLastSelectedOrganization(user?.sub, organizationId)
       window.location.reload()
     },
-    [gatewayUrl, selectedId],
+    [gatewayUrl, selectedId, user],
   )
 
   return {

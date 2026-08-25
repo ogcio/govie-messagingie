@@ -1,0 +1,18 @@
+meta {
+  name: List Announcements
+  type: http
+  seq: 2
+  tags: [
+    announcements
+  ]
+}
+
+get {
+  url: {{baseUrl}}/api/v1/support/announcements
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{supportAccessToken}}
+}

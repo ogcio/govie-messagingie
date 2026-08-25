@@ -15,6 +15,7 @@ import { useAuth, useGatewayFetch } from "@ogcio/sag-client/react"
 import { useLocale, useTranslations } from "next-intl"
 import { useState } from "react"
 import { ConsentSection } from "@/components/consent/consent-section"
+import { useFeatureFlags } from "@/components/feature-flags-provider"
 import { TwoColumnLayout } from "@/components/layout/containers"
 import { LifecycleTasks } from "@/components/lifecycle-tasks/lifecycle-tasks"
 import { PageLoading } from "@/components/page-loading"
@@ -48,6 +49,10 @@ export function MyProfile() {
   const tErrors = useTranslations("errors")
   const [showPpsn, setShowPpsn] = useState(false)
   const { user, loading: authLoading } = useAuth()
+  // Runtime gate for the "export my data" feature (`export-user` Unleash
+  // flag). Defaults OFF so the export UI — and the request/download actions
+  // it mounts — stay unavailable unless the flag is explicitly enabled.
+  const { isUserExportEnabled } = useFeatureFlags()
   const locale = useLocale()
   // `ConsentSection` concatenates `${messagingUrl}/${locale}/messages?...`,
   // so we hand it the bare messages host (no trailing path). The shared
@@ -202,7 +207,9 @@ export function MyProfile() {
           consentStatuses={profile.consentStatuses}
         />
 
-        <LifecycleTasks profileId={profile.id} locale={locale} />
+        {isUserExportEnabled && (
+          <LifecycleTasks profileId={profile.id} locale={locale} />
+        )}
       </Stack>
     </TwoColumnLayout>
   )

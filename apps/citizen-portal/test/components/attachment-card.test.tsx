@@ -1,8 +1,11 @@
-import { render, screen } from "@testing-library/react"
+import { fireEvent, render, screen } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { AttachmentCard } from "@/components/messages/attachment-card"
 
 const pushLogSpy = vi.fn()
+const trackEvent = vi.hoisted(() => vi.fn())
+const signIn = vi.hoisted(() => vi.fn())
+const authState = vi.hoisted(() => ({ authenticated: true, loading: false }))
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string, params?: { fileName?: string }) => {
@@ -23,6 +26,11 @@ vi.mock("@grafana/faro-web-sdk", () => ({
 }))
 
 vi.mock("@ogcio/sag-client/react", () => ({
+  useAuth: () => ({
+    authenticated: authState.authenticated,
+    loading: authState.loading,
+    signIn,
+  }),
   useGatewayFetch: (path: string) => {
     const idMatch = path.match(/^\/upload\/api\/v1\/metadata\/(.+)$/)
     if (!idMatch) {
@@ -48,9 +56,17 @@ vi.mock("@ogcio/sag-client/react", () => ({
   },
 }))
 
+vi.mock("@ogcio/nextjs-analytics", () => ({
+  useAnalytics: () => ({ trackEvent }),
+}))
+
 describe("AttachmentCard", () => {
   beforeEach(() => {
     pushLogSpy.mockClear()
+    trackEvent.mockClear()
+    signIn.mockClear()
+    authState.authenticated = true
+    authState.loading = false
   })
 
   it("renders file name and the file-type/size subtitle", () => {
@@ -109,5 +125,78 @@ describe("AttachmentCard", () => {
         level: "warn",
       },
     )
+  })
+
+  it("fires message-attachment-download on download click", () => {
+    render(<AttachmentCard id='file-123' />)
+    fireEvent.click(screen.getByTestId("attachment-download-action"))
+    expect(trackEvent).toHaveBeenCalledWith({
+      event: {
+        name: "message-attachment-download",
+        category: "Message",
+        action: "Attachment Downloaded",
+      },
+    })
+  })
+
+  it("fires message-attachment-download-error when metadata is missing", () => {
+    render(<AttachmentCard id='missing-metadata' />)
+    expect(trackEvent).toHaveBeenCalledWith({
+      event: {
+        name: "message-attachment-download-error",
+        category: "Message",
+        action: "Attachment Unavailable",
+      },
+    })
+  })
+
+  it("reports the missing-metadata error only once across re-renders", () => {
+    const { rerender } = render(<AttachmentCard id='missing-metadata' />)
+    rerender(<AttachmentCard id='missing-metadata' />)
+    expect(trackEvent).toHaveBeenCalledTimes(1)
+    expect(pushLogSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it("leaves the native download link intact when authenticated", () => {
+    authState.authenticated = true
+    authState.loading = false
+    render(<AttachmentCard id='file-123' />)
+
+    const notPrevented = fireEvent.click(
+      screen.getByTestId("attachment-download-action"),
+    )
+    expect(notPrevented).toBe(true)
+    expect(signIn).not.toHaveBeenCalled()
+  })
+
+  it("redirects to sign-in instead of navigating when the session is already expired", () => {
+    authState.authenticated = false
+    authState.loading = false
+    render(<AttachmentCard id='file-123' />)
+
+    const downloadPrevented = !fireEvent.click(
+      screen.getByTestId("attachment-download-action"),
+    )
+    expect(downloadPrevented).toBe(true)
+    expect(signIn).toHaveBeenCalledWith({ redirectUrl: window.location.href })
+
+    signIn.mockClear()
+    const openPrevented = !fireEvent.click(
+      screen.getByTestId("attachment-preview-action"),
+    )
+    expect(openPrevented).toBe(true)
+    expect(signIn).toHaveBeenCalledWith({ redirectUrl: window.location.href })
+  })
+
+  it("does not divert the click while auth is still loading", () => {
+    authState.authenticated = false
+    authState.loading = true
+    render(<AttachmentCard id='file-123' />)
+
+    const notPrevented = fireEvent.click(
+      screen.getByTestId("attachment-download-action"),
+    )
+    expect(notPrevented).toBe(true)
+    expect(signIn).not.toHaveBeenCalled()
   })
 })

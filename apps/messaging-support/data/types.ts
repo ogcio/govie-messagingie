@@ -221,3 +221,11 @@ export type UpdateUserConsentDataResponse = Result<
     >["data"]
   >
 >
+
+export type ExportTaskStatus = "pending" | "processing" | "completed" | "failed"
+
+export type ExportTask = {
+  id: string
+  status: ExportTaskStatus
+  metadata: { expiresAt?: string; uploadId?: string } | null
+}

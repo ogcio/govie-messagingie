@@ -1,0 +1,19 @@
+meta {
+  name: Can Get A Specific Consent Statement
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organisations/consent-statements/{{consentId}}
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+settings {
+  encodeUrl: true
+}

@@ -1,0 +1,27 @@
+meta {
+  name: Can Get All Consent Statements
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{baseUrl}}/api/v1/organisations/consent-statements
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{accessToken}}
+}
+
+vars:pre-request {
+  : 
+}
+
+vars:post-response {
+  consentId: res.body.data[0].id
+}
+
+settings {
+  encodeUrl: true
+}

@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: OGCIO MessagingIE API
   description: API for OGCIO MessagingIE Service
-  version: 1.0.0
+  version: 1.1.0
 components:
   securitySchemes:
     bearerAuth:
@@ -370,6 +370,9 @@ paths:
                   items:
                     type: string
                     format: uuid
+                  maxItems: 3
+                  uniqueItems: true
+                  description: Ids of the related attachments (maximum 3)
                 bypassConsent:
                   type: boolean
                   default: false
@@ -1016,7 +1019,8 @@ paths:
                             items:
                               type: string
                               format: uuid
-                            description: Ids of the related attachments
+                            maxItems: 3
+                            description: Ids of the related attachments (maximum 3)
                           externalId:
                             anyOf:
                               - type: string
@@ -4911,6 +4915,9 @@ paths:
                   items:
                     type: string
                     format: uuid
+                  maxItems: 3
+                  uniqueItems: true
+                  description: Ids of the related attachments (maximum 3)
                 bypassConsent:
                   type: boolean
                   default: false

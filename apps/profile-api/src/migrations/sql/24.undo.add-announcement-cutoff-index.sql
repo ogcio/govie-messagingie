@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS idx_profile_details_profile_null_org_created_at;

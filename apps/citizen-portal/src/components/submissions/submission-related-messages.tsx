@@ -8,6 +8,7 @@ import { useCallback, useMemo } from "react"
 import { CssSpinner } from "@/components/css-spinner"
 import { ListCard } from "@/components/list-card/list-card"
 import { SenderName } from "@/components/messages/sender-name"
+import { UnifiedInboxTable } from "@/components/messages/unified-inbox-table"
 import type { Message } from "@/types"
 import { formatDate } from "@/util/datetime"
 import styles from "./submission-related-messages.module.css"
@@ -22,8 +23,10 @@ function buildRelatedMessagesUrl(submissionId: string): string {
 }
 
 /**
- * Messages related to a submission, rendered in full (no pagination) using the
- * same `ListCard` rows as the messages inbox mobile list.
+ * Messages related to a submission, rendered in full (no pagination). Desktop
+ * reuses the messages inbox data grid (`UnifiedInboxTable`) as a plain
+ * read-only table; mobile keeps the same `ListCard` rows as the inbox mobile
+ * list. Only one of the two renders at any viewport width (see the module CSS).
  */
 export function SubmissionRelatedMessages({
   submissionId,
@@ -44,18 +47,23 @@ export function SubmissionRelatedMessages({
   const { data, isLoading, error } = useGatewayFetch<Message[]>(apiUrl)
   const messages = data ?? []
 
-  const open = useCallback(
+  const detailHref = useCallback(
     (messageId: string) => {
       const params = new URLSearchParams({
         id: messageId,
         submissionId,
         submissionTitle,
       })
-      window.location.assign(
-        crossZone("messages", `/${locale}/messages?${params.toString()}`),
-      )
+      return crossZone("messages", `/${locale}/messages?${params.toString()}`)
     },
     [crossZone, locale, submissionId, submissionTitle],
+  )
+
+  const open = useCallback(
+    (messageId: string) => {
+      window.location.assign(detailHref(messageId))
+    },
+    [detailHref],
   )
 
   return (
@@ -78,15 +86,36 @@ export function SubmissionRelatedMessages({
       ) : error ? (
         <Paragraph className={styles.relatedEmpty}>{error.message}</Paragraph>
       ) : messages.length ? (
-        <div className={styles.messageList}>
-          {messages.map((message) => (
-            <RelatedMessageRow
-              key={message.id}
-              message={message}
-              onOpen={open}
+        <>
+          {/*
+           * Desktop: reuse the messages inbox data grid (Sender / Details /
+           * Attachment / Date). No `selection`, action handlers or
+           * `totalCount` are passed, so it renders as a plain read-only
+           * table with no checkboxes, row actions or pagination footer.
+           * `buildDetailHref` swaps the inbox's same-route `?id=` link for
+           * the cross-zone messages URL used here.
+           */}
+          <div className={styles.desktopGrid}>
+            <UnifiedInboxTable
+              messages={messages}
+              isLoading={false}
+              pageSize={messages.length}
+              onPageSizeChange={() => {}}
+              onSelect={open}
+              buildDetailHref={detailHref}
             />
-          ))}
-        </div>
+          </div>
+          {/* Mobile: unchanged ListCard rows. */}
+          <div className={styles.messageList}>
+            {messages.map((message) => (
+              <RelatedMessageRow
+                key={message.id}
+                message={message}
+                onOpen={open}
+              />
+            ))}
+          </div>
+        </>
       ) : (
         <Paragraph className={styles.relatedEmpty}>{t("empty")}</Paragraph>
       )}

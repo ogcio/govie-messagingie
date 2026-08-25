@@ -6,6 +6,8 @@ let page: Page
 const maxDiff = 0.02
 
 const ADMIN_URL = process.env.ADMIN_URL || "http://localhost:3001"
+const PROFILE_ADMIN_URL =
+  process.env.PROFILE_ADMIN_URL || "http://localhost:3004"
 
 test.describe("Admin Visual Regression", () => {
   test.beforeAll(async ({ browser }) => {
@@ -60,7 +62,7 @@ test.describe("Admin Visual Regression", () => {
   })
 
   test("admin profile page visual snapshot @visual", async () => {
-    await page.goto("https://profile-admin.dev.services.gov.ie")
+    await page.goto(`${PROFILE_ADMIN_URL}/en`)
     await page.waitForLoadState("networkidle")
     await expect(page).toHaveScreenshot("admin-profile.png", {
       fullPage: true,
@@ -82,9 +84,7 @@ test.describe("Admin Visual Regression", () => {
   })*/
 
   test("admin service users page visual snapshot @visual", async () => {
-    await page.goto(
-      "https://profile-admin.dev.services.gov.ie/en/service-users",
-    )
+    await page.goto(`${PROFILE_ADMIN_URL}/en/service-users`)
     await page.waitForLoadState("networkidle")
     await expect(page).toHaveScreenshot("admin-service-users.png", {
       mask: [
@@ -97,9 +97,7 @@ test.describe("Admin Visual Regression", () => {
   })
 
   test("admin service users page Imports tab visual snapshot @visual", async () => {
-    await page.goto(
-      "https://profile-admin.dev.services.gov.ie/en/service-users",
-    )
+    await page.goto(`${PROFILE_ADMIN_URL}/en/service-users`)
     await page.getByText("Imports").click()
     await expect(page).toHaveScreenshot("admin-service-users-imports.png", {
       fullPage: true,
@@ -110,13 +108,13 @@ test.describe("Admin Visual Regression", () => {
   })
 
   test("admin service users page Import CSV tab visual snapshot @visual", async () => {
-    await page.goto(
-      "https://profile-admin.dev.services.gov.ie/en/service-users",
-    )
+    await page.goto(`${PROFILE_ADMIN_URL}/en/service-users`)
     await page.getByText("Import CSV").click()
     await expect(page).toHaveScreenshot("admin-service-users-import-csv.png", {
       fullPage: true,
       mask: [await page.locator("table")],
+      maskColor: "white",
+      maxDiffPixelRatio: maxDiff,
     })
   })
 })

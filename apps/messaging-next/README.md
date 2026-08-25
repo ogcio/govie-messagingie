@@ -300,14 +300,17 @@ pnpm install
 # Copy environment template
 cp .env.sample .env.local
 
-# Start the dev server
-pnpm dev
-
-# Type check
-npx tsc --noEmit
-
-# Run tests
-npx vitest run
+# Start the dev server (PORT=3002)
+pnpm --filter messaging-next dev   # or: pnpm dev:messaging-next (from root)
 ```
 
-The app runs on [http://localhost:3000](http://localhost:3000) and expects the Secure API Gateway at `http://localhost:3333`.
+The app runs on [http://localhost:3002](http://localhost:3002) and expects the Secure API Gateway at `http://localhost:3333`.
+
+## Testing
+
+```bash
+pnpm --filter messaging-next test          # vitest (jsdom) + coverage
+pnpm --filter messaging-next test:local    # watch mode
+pnpm --filter messaging-next test:browser  # vitest browser (playwright)
+pnpm --filter messaging-next test:e2e:local # playwright
+```
