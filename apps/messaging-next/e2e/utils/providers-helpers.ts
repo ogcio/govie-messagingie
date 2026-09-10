@@ -9,7 +9,7 @@ export async function createProvider(page: Page) {
 
   const { timestamp } = generateTestData()
   const providerName = `Playwright Provider name ${timestamp}`
-  const providerEmail = `playwrightprovideremail${crypto.randomUUID()}@nearform.com`
+  const providerEmail = `playwright-provider-${crypto.randomUUID()}@example.com`
 
   await page.getByRole("textbox", { name: "Provider name" }).fill(providerName)
   await page.getByRole("textbox", { name: "From address" }).fill(providerEmail)

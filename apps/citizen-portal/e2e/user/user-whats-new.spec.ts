@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test"
+import { users } from "../fixtures"
 import { createAuthenticatedPage } from "../helpers/user-auth.helper"
 
 /**
@@ -51,7 +52,7 @@ let page: Page
 
 test.describe("What's new page", () => {
   test.beforeAll(async ({ browser }) => {
-    page = await createAuthenticatedPage(browser, "e2e_citizen_1@user.com")
+    page = await createAuthenticatedPage(browser, users.citizen1.email)
 
     // Serve deterministic changelog content. `newOnly=true` (the popup's
     // request) returns nothing so the modal never opens over the page;
@@ -105,12 +106,16 @@ test.describe("What's new page", () => {
     await expect(page.getByTestId("whats-new-empty")).toBeVisible()
   })
 
-  test("is reachable from the header menu @local", async () => {
+  test("is not listed in the header menu @local", async () => {
     await page.goto("/en/messages")
     await page.getByRole("button", { name: "Menu" }).click()
-    await page.getByRole("link", { name: "What's new" }).click()
-    await expect(page).toHaveURL(/\/en\/whats-new/)
-    await expect(page.getByTestId("whats-new-heading")).toBeVisible()
+    // The DS drawer is portalled to <body> as role="dialog", so it is not
+    // reachable through the header's `banner` landmark.
+    const drawer = page.getByRole("dialog")
+    await expect(drawer).toBeVisible()
+    await expect(
+      drawer.getByRole("link", { name: "What's new" }),
+    ).toHaveCount(0)
   })
 
   test("is reachable from the footer @local", async () => {

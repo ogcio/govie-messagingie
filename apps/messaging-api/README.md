@@ -44,14 +44,11 @@ From repo root (recommended):
 
 - Prepare DB: `pnpm db:prepare` (compose up + create + migrate + sync)
 - Reset DB (with confirmation): `pnpm db:reset`
-- Reset and seed: `pnpm db:reset:seed`
-- Seed only: `pnpm db:seed` (runs this app’s seed script)
 
 From this folder:
 
 - `pnpm db:create` / `pnpm db:migrate` / `pnpm db:drop`
 - `pnpm sync-event-summary` (with `:full-resync` option)
-- `pnpm db:seed`
 
 ## Docker
 

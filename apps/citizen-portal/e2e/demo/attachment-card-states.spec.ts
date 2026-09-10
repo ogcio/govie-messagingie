@@ -1,5 +1,6 @@
 import path from "node:path"
 import { expect, type Page, test } from "@playwright/test"
+import { ids, users } from "../fixtures"
 import { stubAuthForDemo } from "./stub-auth-for-demo"
 
 /**
@@ -13,16 +14,16 @@ import { stubAuthForDemo } from "./stub-auth-for-demo"
 
 const SHOTS_DIR = path.join(__dirname, "screenshots")
 
-const PDF_ATTACHMENT = "10000001-0000-4000-8000-000000000001"
-const ZIP_ATTACHMENT = "10000001-0000-4000-8000-000000000002"
+const PDF_ATTACHMENT = ids.demoPdfAttachment
+const ZIP_ATTACHMENT = ids.demoZipAttachment
 
 const PDF_MESSAGE = {
-  id: "00000001-0000-4000-8000-000000000001",
+  id: ids.demoMessage,
   subject: "Payslip for Mark Murphy",
   createdAt: "2026-04-17T10:00:00Z",
   threadName: "Department of Education",
-  organisationId: "org-edu",
-  recipientUserId: "peter.parker",
+  organisationId: ids.organisationEducation,
+  recipientUserId: users.peterParker.username,
   excerpt: "Please find attached",
   plainText: "Mark Murphy,\n\nPlease find attached your payslip.",
   isSeen: false,
@@ -31,7 +32,7 @@ const PDF_MESSAGE = {
 
 const ZIP_MESSAGE = {
   ...PDF_MESSAGE,
-  id: "00000001-0000-4000-8000-000000000002",
+  id: ids.demoMessageSecondary,
   attachments: [ZIP_ATTACHMENT],
 }
 
@@ -82,7 +83,7 @@ async function stubApis(page: Page) {
       contentType: "application/json",
       body: JSON.stringify({
         data: {
-          id: "org-edu",
+          id: ids.organisationEducation,
           translations: {
             en: { name: "Department of Education", shortName: "DoE" },
             ga: { name: "An Roinn Oideachais", shortName: "ARO" },

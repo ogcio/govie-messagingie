@@ -66,20 +66,6 @@ export async function getMessagesForUsers(params: {
   return { success: true, data: messagesPerUser };
 }
 
-export function getAttachmentFileIdsByUserId(
-  messagesByUserId: Record<string, MessageItem[]>,
-): Record<string, string[]> {
-  const result: Record<string, string[]> = {};
-  for (const [userId, messages] of Object.entries(messagesByUserId)) {
-    const fileIds = new Set<string>();
-    for (const message of messages) {
-      for (const fileId of message.attachmentIds ?? []) fileIds.add(fileId);
-    }
-    if (fileIds.size > 0) result[userId] = Array.from(fileIds);
-  }
-  return result;
-}
-
 export function buildExportSucceededMessageContent(params: {
   publicName: string;
 }): {

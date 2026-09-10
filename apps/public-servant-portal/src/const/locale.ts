@@ -1,0 +1,17 @@
+const NEXT_LOCALE_COOKIE = "NEXT_LOCALE"
+
+const LANG_EN = "en" as const
+const LANG_GA = "ga" as const
+const AVAILABLE_LOCALES = [LANG_EN, LANG_GA] as const
+const DEFAULT_LOCALE = LANG_EN
+
+const DUBLIN_TIMEZONE = "Europe/Dublin"
+
+export {
+  AVAILABLE_LOCALES,
+  DEFAULT_LOCALE,
+  DUBLIN_TIMEZONE,
+  LANG_EN,
+  LANG_GA,
+  NEXT_LOCALE_COOKIE,
+}

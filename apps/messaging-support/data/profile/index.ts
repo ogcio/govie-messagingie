@@ -27,8 +27,6 @@ import {
   success,
 } from "../utils"
 import {
-  fetchCreateLifecycleTask,
-  fetchExportTask,
   fetchLogtoUserRole,
   fetchLogtoUsers,
   fetchM2MmanagementAccessToken,
@@ -43,7 +41,8 @@ import {
   queryRelatedUsersByUserId,
 } from "./pgAccess"
 
-const supportSdk = getSupportSdk(getEnvConfig()).profile.support
+const profileSdk = getSupportSdk(getEnvConfig()).profile
+const supportSdk = profileSdk.support
 
 async function getUserRelationStatus(
   toSearchForUserId: string,
@@ -332,31 +331,22 @@ async function getConsents(profileId: string) {
 async function deleteAccount(params: {
   profileId: string
   requesterUserId: string
-}) {
+}): Promise<Result<void>> {
   return withSpan({
     spanName: "ProfileDataService.deleteAccount",
     fn: async (span) => {
-      const { requesterUserId, profileId } = params
+      const result = await profileSdk.createDeleteProfileLifecycleTask(params)
 
-      const tokenResult = await AppHttp.fetchAppM2MToken()
-      if (!tokenResult.success) {
-        span.recordException(tokenResult.error)
-        return tokenResult
+      if (result.error) {
+        logger.error(
+          { error: serializeErrorForLog(result.error) },
+          "Failed to create delete_profile lifecycle task",
+        )
+        span.recordException(result.error)
+        return failure(result.error, GENERIC_USER_ERROR)
       }
 
-      const deleteAccountResult = await fetchCreateLifecycleTask({
-        bearerToken: tokenResult.value,
-        type: "delete_profile",
-        profileId,
-        requesterUserId,
-      })
-
-      if (!deleteAccountResult.success) {
-        span.recordException(deleteAccountResult.error)
-        return deleteAccountResult
-      }
-
-      return deleteAccountResult
+      return success(undefined)
     },
   })
 }
@@ -364,30 +354,22 @@ async function deleteAccount(params: {
 async function requestDataExport(params: {
   profileId: string
   requesterUserId: string
-}) {
+}): Promise<Result<void>> {
   return withSpan({
     spanName: "ProfileDataService.requestDataExport",
     fn: async (span) => {
-      const { requesterUserId, profileId } = params
+      const result = await profileSdk.createExportUserDataLifecycleTask(params)
 
-      const tokenResult = await AppHttp.fetchAppM2MToken()
-      if (!tokenResult.success) {
-        span.recordException(tokenResult.error)
-        return tokenResult
+      if (result.error) {
+        logger.error(
+          { error: serializeErrorForLog(result.error) },
+          "Failed to create export_user_data lifecycle task",
+        )
+        span.recordException(result.error)
+        return failure(result.error, GENERIC_USER_ERROR)
       }
 
-      const exportResult = await fetchCreateLifecycleTask({
-        bearerToken: tokenResult.value,
-        type: "export_user_data",
-        profileId,
-        requesterUserId,
-      })
-
-      if (!exportResult.success) {
-        span.recordException(exportResult.error)
-      }
-
-      return exportResult
+      return success(undefined)
     },
   })
 }
@@ -398,22 +380,31 @@ async function getExportTask(
   return withSpan({
     spanName: "ProfileDataService.getExportTask",
     fn: async (span) => {
-      const tokenResult = await AppHttp.fetchAppM2MToken()
-      if (!tokenResult.success) {
-        span.recordException(tokenResult.error)
-        return tokenResult
-      }
-
-      const taskResult = await fetchExportTask({
-        bearerToken: tokenResult.value,
+      const result = await profileSdk.getLifecycleTasks({
         profileId,
+        taskType: "export_user_data",
       })
 
-      if (!taskResult.success) {
-        span.recordException(taskResult.error)
+      if (result.error || !result.data) {
+        logger.error(
+          { error: serializeErrorForLog(result.error) },
+          "Failed to search lifecycle tasks",
+        )
+        span.recordException(result.error)
+        return failure(result.error, GENERIC_USER_ERROR)
       }
 
-      return taskResult
+      const task = result.data.tasks.at(0)
+
+      if (!task) {
+        return success(null)
+      }
+
+      return success({
+        id: task.id,
+        status: task.status,
+        metadata: task.metadata ?? null,
+      })
     },
   })
 }

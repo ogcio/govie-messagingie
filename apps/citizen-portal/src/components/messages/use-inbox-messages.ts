@@ -32,12 +32,13 @@ export function buildMessagesUrl(params: {
     url.set("search", params.search)
   }
 
-  // Folder scoping: Inbox shows only untagged messages, a user folder filters
-  // by its tag id, and Deleted is handled by its own soft-delete view (not a
-  // tag) so it is intentionally left untouched here.
+  // Folder scoping: Inbox shows only untagged messages, Deleted shows
+  // soft-deleted messages, and a user folder filters by its tag id.
   if (!params.folderId || params.folderId === INBOX_FOLDER_ID) {
     url.set("untagged", "true")
-  } else if (params.folderId !== DELETED_FOLDER_ID) {
+  } else if (params.folderId === DELETED_FOLDER_ID) {
+    url.set("deletedAfterDateTime", new Date(0).toISOString())
+  } else {
     url.set("tagId", params.folderId)
   }
 

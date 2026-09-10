@@ -1,6 +1,11 @@
-import { expect, test } from "@playwright/test"
+import { expect, test, type Browser, type Page } from "@playwright/test"
 import type { Message } from "@/types"
-import { createAuthenticatedPage } from "../helpers/user-auth.helper"
+import { ids, urls, users } from "../fixtures"
+import { createPageWithVideo } from "../helpers/browser-context"
+import {
+  loginAsCitizen,
+  signInStepVisible,
+} from "../helpers/user-auth.helper"
 
 /*
  * Edge-case coverage for the Unified Inbox that the happy-path specs miss:
@@ -24,8 +29,8 @@ const buildMessage = (
   subject: "Subject",
   createdAt: "2025-04-01T10:00:00Z",
   threadName: "Department of Social Protection",
-  organisationId: "org-1",
-  recipientUserId: "peter.parker",
+  organisationId: ids.organisationPrimary,
+  recipientUserId: users.peterParker.username,
   excerpt: "Excerpt",
   isSeen: false,
   attachmentsCount: 0,
@@ -38,7 +43,7 @@ const TWO_MESSAGES: Message[] = [
     id: "edge-msg-2",
     subject: "Second message",
     threadName: "Revenue",
-    organisationId: "org-2",
+    organisationId: ids.organisationSecondary,
     isSeen: true,
   }),
 ]
@@ -54,10 +59,7 @@ interface ListStubOptions {
   onDelete?: (ids: string[]) => void
 }
 
-async function stubMessagingApis(
-  page: Awaited<ReturnType<typeof createAuthenticatedPage>>,
-  options: ListStubOptions = {},
-) {
+async function stubMessagingApis(page: Page, options: ListStubOptions = {}) {
   const {
     messages = TWO_MESSAGES,
     searchMessages = [],
@@ -65,7 +67,10 @@ async function stubMessagingApis(
     onDelete,
   } = options
 
-  await page.route("**/messaging/api/v1/messages*", async (route, request) => {
+  // Regex (not glob): matches list GETs through the gateway the same way
+  // user-message-mark-as-read.spec.ts does. Glob `messages*` is fine for
+  // relative paths but has bitten us on absolute SAG URLs before.
+  await page.route(/\/messaging\/api\/v1\/messages/, async (route, request) => {
     if (request.method() === "GET") {
       const params = new URL(request.url()).searchParams
       const search = params.get("search")
@@ -112,18 +117,49 @@ async function stubMessagingApis(
   })
 }
 
+/**
+ * Auth first lands wherever the IdP redirects (often `/en/messages`). If the
+ * list stub is registered *after* that landing, SWR can cache the real (or
+ * 503-empty) response and a later `goto("/en/messages")` never paints the
+ * stubbed rows — build 117282 timed out on `First message` for exactly that.
+ * Install the route before login so every messages GET is stubbed.
+ *
+ * Use an absolute messaging URL: login can settle on profile/dashboard, and a
+ * relative `/en/messages` then hops zones. A fresh hop can bounce to MyGovId
+ * again (Nightly 117543: stuck on mock-login waiting for `search-input`).
+ */
+async function openStubbedInbox(
+  browser: Browser,
+  options: ListStubOptions = {},
+): Promise<Page> {
+  const page = await createPageWithVideo(browser)
+  await page.context().clearCookies()
+  await stubMessagingApis(page, options)
+  await loginAsCitizen(page, users.peterParker.email)
+
+  const inboxUrl = `${urls.messaging}/en/messages`
+  if (!page.url().startsWith(inboxUrl)) {
+    await page.goto(inboxUrl)
+  }
+  // Cross-zone hop can reopen IdP; finish login in place rather than timing
+  // out on search-input while parked on the mock form.
+  if (await signInStepVisible(page, 5_000)) {
+    await loginAsCitizen(page, users.peterParker.email)
+    if (!page.url().startsWith(inboxUrl)) {
+      await page.goto(inboxUrl)
+    }
+  }
+
+  await expect(page.getByTestId("search-input")).toBeVisible()
+  return page
+}
+
 test.describe("Unified Inbox edge cases @regression", () => {
   test("empty inbox renders the empty state and no rows", async ({
     browser,
   }) => {
-    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
-    await stubMessagingApis(page, { messages: [] })
+    const page = await openStubbedInbox(browser, { messages: [] })
 
-    await page.goto("/en/messages")
-
-    // The unified list view renders no page heading; the search box is
-    // always mounted, so use it to assert the inbox shell actually loaded.
-    await expect(page.getByTestId("search-input")).toBeVisible()
     await expect(page.getByText("You have no messages")).toBeVisible()
     // No selectable rows are rendered when the list is empty.
     await expect(page.locator('[data-testid^="select-row-"]')).toHaveCount(0)
@@ -134,15 +170,11 @@ test.describe("Unified Inbox edge cases @regression", () => {
   test("a search that matches nothing shows the no-results state", async ({
     browser,
   }) => {
-    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
     // Unfiltered list has two messages; any search returns nothing.
-    await stubMessagingApis(page, { searchMessages: [] })
-
-    await page.goto("/en/messages")
-    // Sanity: the populated list is shown before searching.
-    await expect(
-      page.getByRole("row", { name: /First message/i }),
-    ).toBeVisible()
+    const page = await openStubbedInbox(browser, { searchMessages: [] })
+    // Sanity: the populated list is shown before searching. Prefer the
+    // checkbox test id over role=row — same handle the delete specs use.
+    await expect(page.getByTestId("select-row-edge-msg-1")).toBeVisible()
 
     // Enter submits the search (see the InputText onKeyDown in
     // unified-inbox-table.tsx); the refetch carries `?search=`.
@@ -160,13 +192,8 @@ test.describe("Unified Inbox edge cases @regression", () => {
   test("Reset returns to the full inbox list after a search", async ({
     browser,
   }) => {
-    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
-    await stubMessagingApis(page, { searchMessages: [] })
-
-    await page.goto("/en/messages")
-    await expect(
-      page.getByRole("row", { name: /First message/i }),
-    ).toBeVisible()
+    const page = await openStubbedInbox(browser, { searchMessages: [] })
+    await expect(page.getByTestId("select-row-edge-msg-1")).toBeVisible()
 
     await page.getByTestId("search-input").fill("zzz-no-such-message-zzz")
     await page.getByTestId("search-input").press("Enter")
@@ -177,9 +204,7 @@ test.describe("Unified Inbox edge cases @regression", () => {
 
     await page.getByRole("button", { name: "Clear input" }).click()
 
-    await expect(
-      page.getByRole("row", { name: /First message/i }),
-    ).toBeVisible()
+    await expect(page.getByTestId("select-row-edge-msg-1")).toBeVisible()
     await expect(page.getByTestId("search-input")).toHaveValue("")
 
     await page.close()
@@ -188,13 +213,8 @@ test.describe("Unified Inbox edge cases @regression", () => {
   test("clearing search after page reload returns the full inbox list", async ({
     browser,
   }) => {
-    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
-    await stubMessagingApis(page, { searchMessages: [] })
-
-    await page.goto("/en/messages")
-    await expect(
-      page.getByRole("row", { name: /First message/i }),
-    ).toBeVisible()
+    const page = await openStubbedInbox(browser, { searchMessages: [] })
+    await expect(page.getByTestId("select-row-edge-msg-1")).toBeVisible()
 
     await page.getByTestId("search-input").fill("zzz-no-such-message-zzz")
     await page.getByTestId("search-input").press("Enter")
@@ -210,9 +230,7 @@ test.describe("Unified Inbox edge cases @regression", () => {
 
     await page.getByRole("button", { name: "Clear input" }).click()
 
-    await expect(
-      page.getByRole("row", { name: /First message/i }),
-    ).toBeVisible()
+    await expect(page.getByTestId("select-row-edge-msg-1")).toBeVisible()
     await expect(page.getByTestId("search-input")).toHaveValue("")
     await expect(page.getByTestId("search-pending-spinner")).toHaveCount(0)
 
@@ -222,14 +240,13 @@ test.describe("Unified Inbox edge cases @regression", () => {
   test("a failed delete surfaces the error toast and keeps the row", async ({
     browser,
   }) => {
-    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
     const attempted: string[][] = []
-    await stubMessagingApis(page, {
+    const page = await openStubbedInbox(browser, {
       deleteStatus: 500,
       onDelete: (ids) => attempted.push(ids),
     })
 
-    await page.goto("/en/messages")
+    await expect(page.getByTestId("select-row-edge-msg-1")).toBeVisible()
     await page.getByTestId("select-row-edge-msg-1").check()
     await page.getByTestId("bulk-delete-button").click()
 
@@ -251,7 +268,6 @@ test.describe("Unified Inbox edge cases @regression", () => {
   test("a long list paginates and page 2 serves the next slice", async ({
     browser,
   }) => {
-    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
     // 42 messages over a page size of 20 → 3 pages. Zero-padded subjects
     // keep regex row lookups unambiguous (e.g. /item 07/ won't match 17).
     const many: Message[] = Array.from({ length: 42 }, (_, i) =>
@@ -260,19 +276,19 @@ test.describe("Unified Inbox edge cases @regression", () => {
         subject: `Inbox item ${String(i + 1).padStart(2, "0")}`,
       }),
     )
-    await stubMessagingApis(page, { messages: many })
+    const page = await openStubbedInbox(browser, { messages: many })
 
     // Page 1: first 20 items present, the 21st is not.
-    await page.goto("/en/messages")
-    await expect(page.getByRole("row", { name: /item 01/i })).toBeVisible()
-    await expect(page.getByRole("row", { name: /item 06/i })).toBeVisible()
-    await expect(page.getByRole("row", { name: /item 21/i })).toHaveCount(0)
+    await expect(page.getByTestId("select-row-edge-page-1")).toBeVisible()
+    await expect(page.getByTestId("select-row-edge-page-6")).toBeVisible()
+    await expect(page.getByTestId("select-row-edge-page-21")).toHaveCount(0)
 
     // Page 2: the next slice is served and the first-page items are gone.
-    await page.goto("/en/messages?page=2")
-    await expect(page.getByRole("row", { name: /item 01/i })).toHaveCount(0)
-    await expect(page.getByRole("row", { name: /item 21/i })).toBeVisible()
-    await expect(page.getByRole("row", { name: /item 40/i })).toBeVisible()
+    await page.goto(`${urls.messaging}/en/messages?page=2`)
+    await expect(page.getByTestId("search-input")).toBeVisible()
+    await expect(page.getByTestId("select-row-edge-page-1")).toHaveCount(0)
+    await expect(page.getByTestId("select-row-edge-page-21")).toBeVisible()
+    await expect(page.getByTestId("select-row-edge-page-40")).toBeVisible()
 
     await page.close()
   })

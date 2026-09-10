@@ -7,6 +7,19 @@ export default defineConfig({
       reporter: ["text", "cobertura", "lcov"],
       provider: "v8",
       reportOnFailure: true,
+      // Without an explicit include, the denominator is only the files the
+      // tests happened to load, so untested modules are invisible and the
+      // percentage shifts with the environment.
+      include: ["src/**/*.ts"],
+      // Ratchet floors, set below the measured numbers so they catch
+      // regression rather than block the build. Raise them as coverage grows.
+      // Measured locally: 81.79 lines / 81.73 statements / 86.62 functions / 73.07 branches.
+      thresholds: {
+        lines: 80,
+        statements: 80,
+        functions: 85,
+        branches: 71,
+      },
       exclude: [
         ...defaultExclude,
         "src/test/**/*",

@@ -22,11 +22,12 @@
  * the existing docker container (see README for `docker:up:citizen-portal:local`).
  */
 import { expect, test } from "@playwright/test"
+import { ids, urls } from "../fixtures"
 
-const PORT = process.env.DOCKER_PORT ?? "8080"
-const MESSAGING_HOST = `http://messaging.local.test:${PORT}`
-const PROFILE_HOST = `http://profile.local.test:${PORT}`
-const DASHBOARD_HOST = `http://dashboard.local.test:${PORT}`
+const PORT = urls.docker.port
+const MESSAGING_HOST = urls.docker.messaging
+const PROFILE_HOST = urls.docker.profile
+const DASHBOARD_HOST = urls.docker.dashboard
 
 const PUBLIC_PAGES = [
   { path: "/en/accessibility-statement", title: /Statement of commitment/ },
@@ -61,6 +62,14 @@ const OFF_ZONE_REDIRECTS = [
   {
     from: `${MESSAGING_HOST}/en/my-dashboard`,
     to: `${DASHBOARD_HOST}/en/my-dashboard`,
+  },
+  {
+    from: `${MESSAGING_HOST}/en/my-submissions`,
+    to: `${DASHBOARD_HOST}/en/my-submissions`,
+  },
+  {
+    from: `${PROFILE_HOST}/ga/my-submissions`,
+    to: `${DASHBOARD_HOST}/ga/my-submissions`,
   },
   { from: `${PROFILE_HOST}/en/messages`, to: `${MESSAGING_HOST}/en/messages` },
   {
@@ -131,7 +140,7 @@ test.describe("@local nginx canonicalisation 301s preserve port + query", () => 
   test("legacy secure-message email link 302s to query-param format", async ({
     request,
   }) => {
-    const messageId = "0494ff56-58b0-47c7-9868-8446b242863f"
+    const messageId = ids.canonicalSecureMessage
     const response = await request.get(
       `${MESSAGING_HOST}/en/secure-messages/${messageId}`,
       { maxRedirects: 0 },
@@ -177,7 +186,7 @@ test.describe("@local nginx canonicalisation 301s preserve port + query", () => 
     request,
   }) => {
     await expect(
-      request.get(`http://127.0.0.1:${PORT}/`, {
+      request.get(`${urls.docker.loopback}/`, {
         headers: { Host: "nobody.local.test" },
         maxRedirects: 0,
       }),

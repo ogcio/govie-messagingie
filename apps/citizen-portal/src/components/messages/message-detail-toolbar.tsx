@@ -8,7 +8,7 @@ import styles from "./message-detail.module.css"
 
 export interface MessageDetailToolbarProps {
   backHref: string
-  onMove: () => void
+  onMove?: () => void
   onDelete: () => void
   isDeleting?: boolean
   isMoving?: boolean
@@ -54,26 +54,28 @@ export function MessageDetailToolbar({
         <span className={styles.toolbarLabel}>{tBack("back")}</span>
       </Link>
       <div className={styles.toolbarGroup}>
-        <Link
-          noColor
-          href='#'
-          className={styles.toolbarAction}
-          data-testid='detail-move-button'
-          aria-disabled={actionDisabled}
-          onClick={(e: React.MouseEvent) => {
-            e.preventDefault()
-            if (actionDisabled) return
-            onMove()
-          }}
-        >
-          <Icon
-            icon={"drive_file_move" as IconProps["icon"]}
-            size='md'
-            className={styles.toolbarIcon}
-            ariaHidden
-          />
-          <span className={styles.toolbarLabel}>{tMove("toolbar")}</span>
-        </Link>
+        {onMove ? (
+          <Link
+            noColor
+            href='#'
+            className={styles.toolbarAction}
+            data-testid='detail-move-button'
+            aria-disabled={actionDisabled}
+            onClick={(e: React.MouseEvent) => {
+              e.preventDefault()
+              if (actionDisabled) return
+              onMove()
+            }}
+          >
+            <Icon
+              icon={"drive_file_move" as IconProps["icon"]}
+              size='md'
+              className={styles.toolbarIcon}
+              ariaHidden
+            />
+            <span className={styles.toolbarLabel}>{tMove("toolbar")}</span>
+          </Link>
+        ) : null}
         <Link
           noColor
           href='#'

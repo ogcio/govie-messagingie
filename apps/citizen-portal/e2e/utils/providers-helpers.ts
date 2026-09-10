@@ -1,15 +1,16 @@
 import { expect, type Page } from "@playwright/test"
+import { urls } from "../fixtures"
 import { TEST_DATA } from "./consts"
 import { generateTestData } from "./functions"
 
-const ADMIN_URL = process.env.ADMIN_URL || "http://localhost:3001"
+const ADMIN_URL = urls.admin
 
 export async function createProvider(page: Page) {
   await page.goto(`${ADMIN_URL}/en/providers/email`)
 
   const { timestamp } = generateTestData()
   const providerName = `Playwright Provider name ${timestamp}`
-  const providerEmail = `playwrightprovideremail${crypto.randomUUID()}@nearform.com`
+  const providerEmail = `playwright-provider-${crypto.randomUUID()}@example.com`
 
   await page.getByRole("textbox", { name: "Provider name" }).fill(providerName)
   await page.getByRole("textbox", { name: "From address" }).fill(providerEmail)
@@ -28,8 +29,7 @@ export async function deleteProvider(page: Page, providerName: string) {
   await page.goto(`${ADMIN_URL}/en/providers`)
   await page
     .getByRole("row", { name: providerName })
-    .locator("button")
-    .last()
+    .getByRole("button", { name: "Delete" })
     .click()
   await page.getByRole("button", { name: "Delete" }).click()
   await expect(page.getByRole("cell", { name: providerName })).not.toBeVisible()

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test"
+import { ids, users } from "../fixtures"
 import { createAuthenticatedPage } from "../helpers/user-auth.helper"
 import { navigateAndVerifySearch } from "../utils/navigation-helpers"
 
@@ -16,8 +17,8 @@ const SAMPLE_MESSAGES = [
     subject: "Delete me",
     createdAt: "2025-04-01T10:00:00Z",
     threadName: "Department of Social Protection",
-    organisationId: "org-1",
-    recipientUserId: "peter.parker",
+    organisationId: ids.organisationPrimary,
+    recipientUserId: users.peterParker.username,
     excerpt: "First one to delete",
     isSeen: false,
     attachmentsCount: 0,
@@ -27,8 +28,8 @@ const SAMPLE_MESSAGES = [
     subject: "Keep me",
     createdAt: "2025-04-02T10:00:00Z",
     threadName: "Revenue",
-    organisationId: "org-2",
-    recipientUserId: "peter.parker",
+    organisationId: ids.organisationSecondary,
+    recipientUserId: users.peterParker.username,
     excerpt: "Second message",
     isSeen: true,
     attachmentsCount: 0,
@@ -70,7 +71,7 @@ test.describe("Unified Inbox delete @regression", () => {
   test("desktop: selecting a single row and confirming deletes it via the bulk toolbar", async ({
     browser,
   }) => {
-    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
+    const page = await createAuthenticatedPage(browser, users.peterParker.email)
     const deletedIds: string[][] = []
     await stubMessagingApis(page, (ids) => deletedIds.push(ids))
 
@@ -94,7 +95,7 @@ test.describe("Unified Inbox delete @regression", () => {
   test("desktop: bulk toolbar deletes selected messages", async ({
     browser,
   }) => {
-    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
+    const page = await createAuthenticatedPage(browser, users.peterParker.email)
     const deletedIds: string[][] = []
     await stubMessagingApis(page, (ids) => deletedIds.push(ids))
 
@@ -114,7 +115,7 @@ test.describe("Unified Inbox delete @regression", () => {
   test("mobile: Select mode exposes checkboxes and bulk delete", async ({
     browser,
   }) => {
-    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
+    const page = await createAuthenticatedPage(browser, users.peterParker.email)
     await page.setViewportSize({ width: 390, height: 844 }) // iPhone 12-ish
     const deletedIds: string[][] = []
     await stubMessagingApis(page, (ids) => deletedIds.push(ids))
@@ -151,7 +152,7 @@ test.describe("Unified Inbox delete @regression", () => {
   test("mobile: Close button exits select mode and clears selection", async ({
     browser,
   }) => {
-    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
+    const page = await createAuthenticatedPage(browser, users.peterParker.email)
     await page.setViewportSize({ width: 390, height: 844 })
     await stubMessagingApis(page)
 

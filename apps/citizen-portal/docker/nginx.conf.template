@@ -125,9 +125,9 @@ http {
   # would otherwise be parsed as an nginx config block opener.
   map $uri $canonical_host {
     default                                                                                                                                                "";
-    "~^/[a-z]{2}/(messages|secure-messages)(/|$)"                                                                                                          ${MESSAGING_HOST};
+    "~^/[a-z]{2}/(messages|secure-messages|whats-new)(/|$)"                                                                                                ${MESSAGING_HOST};
     "~^/[a-z]{2}/(my-profile|accessibility-statement|contact-support|cookie-policy|wrong-account-error|wrong-login-method-error|global-signout)(/|$)"      ${PROFILE_HOST};
-    "~^/[a-z]{2}/my-dashboard(/|$)"                                                                                                                        ${DASHBOARD_HOST};
+    "~^/[a-z]{2}/(my-dashboard|my-submissions)(/|$)"                                                                                                       ${DASHBOARD_HOST};
     "~^/(onboarding|post-global-signout|wrong-account-error|wrong-login-method-error|global-signout)(/|$)"                                              ${PROFILE_HOST};
     "~^/api/(application-signout|clear-session)(/|$)"                                                                                                      ${PROFILE_HOST};
   }

@@ -1,5 +1,36 @@
 # Changelog
 
+## [0.1.3](https://github.com/ogcio/govie-services-messaging/compare/citizen-portal-v0.1.2...citizen-portal-v0.1.3) (2026-09-10)
+
+
+### Features
+
+* **citizen-portal:** gate folders behind a compile-time flag AB[#42582](https://github.com/ogcio/govie-services-messaging/issues/42582) ([#892](https://github.com/ogcio/govie-services-messaging/issues/892)) ([9d0cef2](https://github.com/ogcio/govie-services-messaging/commit/9d0cef203c9f9b95890bad1bef57f8627a9cddfb))
+* **public-servant-portal:** consolidate admin apps AB[#41525](https://github.com/ogcio/govie-services-messaging/issues/41525) ([#834](https://github.com/ogcio/govie-services-messaging/issues/834)) ([0af2b56](https://github.com/ogcio/govie-services-messaging/commit/0af2b562d331744f4988eab404d934a04b051525))
+
+
+### Bug Fixes
+
+* **citizen-portal:** drop What's new from the drawer menu AB[#42591](https://github.com/ogcio/govie-services-messaging/issues/42591) ([#893](https://github.com/ogcio/govie-services-messaging/issues/893)) ([aa0f872](https://github.com/ogcio/govie-services-messaging/commit/aa0f872b8e1feb47a5677cb2ac039243e149fd3b))
+* **citizen-portal:** filter deleted folder messages AB[#42600](https://github.com/ogcio/govie-services-messaging/issues/42600) ([#895](https://github.com/ogcio/govie-services-messaging/issues/895)) ([8913122](https://github.com/ogcio/govie-services-messaging/commit/89131220b61bd1b142bae41afe1183fe23f04566))
+* **citizen-portal:** label public name submit as Update Public Name AB[#40403](https://github.com/ogcio/govie-services-messaging/issues/40403) ([#850](https://github.com/ogcio/govie-services-messaging/issues/850)) ([57e90ef](https://github.com/ogcio/govie-services-messaging/commit/57e90eff9690d51f954703e609645b018c8c6a8f))
+* **citizen-portal:** prevent session loops and name mismatches AB[#42440](https://github.com/ogcio/govie-services-messaging/issues/42440) ([#846](https://github.com/ogcio/govie-services-messaging/issues/846)) ([023d4d2](https://github.com/ogcio/govie-services-messaging/commit/023d4d24983933947f9cbc82b4a0bcbe1cf60e74))
+* **citizen-portal:** render public name helper as body text AB[#40405](https://github.com/ogcio/govie-services-messaging/issues/40405) ([#851](https://github.com/ogcio/govie-services-messaging/issues/851)) ([69d9f9a](https://github.com/ogcio/govie-services-messaging/commit/69d9f9ae73522c8952dcf8e52704946551026b6f))
+* **citizen-portal:** use dropdown for mobile folder moves AB[#40706](https://github.com/ogcio/govie-services-messaging/issues/40706) ([#858](https://github.com/ogcio/govie-services-messaging/issues/858)) ([d8948fc](https://github.com/ogcio/govie-services-messaging/commit/d8948fc1166af2327a4d7fb6c305975e7cf504b4))
+* **deps:** update all non-major dependencies ([#869](https://github.com/ogcio/govie-services-messaging/issues/869)) ([680dc92](https://github.com/ogcio/govie-services-messaging/commit/680dc9212263e5da43fb6925b949564e86451ca7))
+* repair nodemailer v10 and vitest v5 migrations AB[#42774](https://github.com/ogcio/govie-services-messaging/issues/42774) ([#903](https://github.com/ogcio/govie-services-messaging/issues/903)) ([6d29a4a](https://github.com/ogcio/govie-services-messaging/commit/6d29a4a25104912cf150bf1ce4ba02f5ecb8f802))
+* stop reliability bugs from leaking as unhandled errors AB[#42306](https://github.com/ogcio/govie-services-messaging/issues/42306) ([#884](https://github.com/ogcio/govie-services-messaging/issues/884)) ([e639509](https://github.com/ogcio/govie-services-messaging/commit/e639509b8ddbd9b5984af23decbf291e4d6cabbb))
+
+
+### Miscellaneous Chores
+
+* deps update AB[#42306](https://github.com/ogcio/govie-services-messaging/issues/42306) ([#853](https://github.com/ogcio/govie-services-messaging/issues/853)) ([3b207d0](https://github.com/ogcio/govie-services-messaging/commit/3b207d0226a628af1bbcfceb28dabc79645e2553))
+* **deps:** bump @ogcio/sag-client to 0.7.11 AB[#42515](https://github.com/ogcio/govie-services-messaging/issues/42515) ([#896](https://github.com/ogcio/govie-services-messaging/issues/896)) ([2d50257](https://github.com/ogcio/govie-services-messaging/commit/2d5025745609fb107b35db17020dc0e14d926ae4))
+* **deps:** bump @ogcio/sag-client to 0.7.9 AB[#42440](https://github.com/ogcio/govie-services-messaging/issues/42440) ([#854](https://github.com/ogcio/govie-services-messaging/issues/854)) ([29d0616](https://github.com/ogcio/govie-services-messaging/commit/29d06166188332213719a011dc7d550e351861b7))
+* **deps:** update vitest monorepo to v5 (major) ([#899](https://github.com/ogcio/govie-services-messaging/issues/899)) ([5da3cfe](https://github.com/ogcio/govie-services-messaging/commit/5da3cfefc5803c9651aaa33c75fec60c91b1cad9))
+* Fix citizen portal tests AB[#42515](https://github.com/ogcio/govie-services-messaging/issues/42515) ([#894](https://github.com/ogcio/govie-services-messaging/issues/894)) ([0c950d5](https://github.com/ogcio/govie-services-messaging/commit/0c950d5c8ab5a90e3f918939a906874ca506a96e))
+* Fix failing messaging api test AB[#42515](https://github.com/ogcio/govie-services-messaging/issues/42515) ([#891](https://github.com/ogcio/govie-services-messaging/issues/891)) ([5fa6771](https://github.com/ogcio/govie-services-messaging/commit/5fa677168aebc51b1b414c72aca83c1ef36e946e))
+
 ## [0.1.2](https://github.com/ogcio/govie-services-messaging/compare/citizen-portal-v0.1.1...citizen-portal-v0.1.2) (2026-08-25)
 
 

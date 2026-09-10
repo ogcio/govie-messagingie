@@ -46,12 +46,9 @@
  *   Skip in CI smoke:    pnpm exec playwright test --grep-invert '@blocker-AB#38246-sag'
  */
 import { expect, test } from "@playwright/test"
+import { urls } from "./fixtures"
 
-const HOSTS = {
-  messages: process.env.MESSAGING_HOST ?? "http://messaging.local.test:8080",
-  profile: process.env.PROFILE_HOST ?? "http://profile.local.test:8080",
-  dashboard: process.env.DASHBOARD_HOST ?? "http://dashboard.local.test:8080",
-}
+const HOSTS = urls.crossZone
 
 // Opt-in by exporting `RUN_CROSS_ZONE_E2E=1` together with the local
 // auth chain (`docker-compose.local-auth.yaml`). Without that env, the
@@ -69,7 +66,7 @@ test.describe("@cross-zone @blocker-AB#38246-sag SAG session survives subdomain 
   test.skip(
     !process.env.RUN_CROSS_ZONE_E2E,
     "Set RUN_CROSS_ZONE_E2E=1 with the local-auth docker compose stack up to run this spec. " +
-      "See docs/testing.md → 'Full local e2e (test:e2e:local:full)'.",
+      "See docs/internal/testing.md → 'Full local e2e (test:e2e:local:full)'.",
   )
 
   test("authenticated user on messaging.* stays authenticated on profile.*", async ({

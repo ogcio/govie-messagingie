@@ -108,7 +108,7 @@ describe("ConsentManagement Component", () => {
       />,
     )
 
-    selectOption("Declined")
+    selectOption("Decline")
 
     fireEvent.click(screen.getByRole("button", { name: /save/i }))
 
@@ -134,7 +134,7 @@ describe("ConsentManagement Component", () => {
       />,
     )
 
-    selectOption("Declined")
+    selectOption("Decline")
 
     fireEvent.click(screen.getByRole("button", { name: /save/i }))
 
@@ -158,7 +158,7 @@ describe("ConsentManagement Component", () => {
       />,
     )
 
-    selectOption("Declined")
+    selectOption("Decline")
 
     const saveBtn = screen.getByRole("button", { name: /save/i })
     fireEvent.click(saveBtn)

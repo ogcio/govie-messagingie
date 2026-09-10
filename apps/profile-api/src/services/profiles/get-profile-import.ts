@@ -6,6 +6,7 @@ import { getProfileImport as getProfileImportSql } from "./sql/get-profile-impor
 export const getProfileImport = async (params: {
   pool: Pool;
   profileImportId: string;
+  organisationId?: string;
 }): Promise<{
   organisationId: string;
   metadata: SavedFileInfo["metadata"];
@@ -13,6 +14,10 @@ export const getProfileImport = async (params: {
   createdAt: string;
 }> => {
   return withClient(params.pool, async (client) => {
-    return await getProfileImportSql(client, params.profileImportId);
+    return await getProfileImportSql(
+      client,
+      params.profileImportId,
+      params.organisationId,
+    );
   });
 };

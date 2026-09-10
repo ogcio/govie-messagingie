@@ -29,7 +29,7 @@ import {
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { useMemo } from "react"
+import { useCallback, useMemo } from "react"
 import { ListCard } from "@/components/list-card/list-card"
 import { useUrlSearchParams } from "@/hooks/use-url-search-params"
 import type { Message } from "@/types"
@@ -144,6 +144,14 @@ export function UnifiedInboxTable({
 
   const searchValue = searchParams.get("search") ?? ""
   const statusValue = searchParams.get("status")
+  const defaultDetailHref = useCallback(
+    (id: string) => {
+      const params = new URLSearchParams(searchParams)
+      params.set("id", id)
+      return `${pathname}?${params.toString()}`
+    },
+    [pathname, searchParams],
+  )
   const appliedFilters = useMemo(
     () => messageFiltersFromStatusParam(statusValue),
     [statusValue],
@@ -258,7 +266,7 @@ export function UnifiedInboxTable({
             href={
               buildDetailHref
                 ? buildDetailHref(row.original.id)
-                : `${pathname}?id=${row.original.id}`
+                : defaultDetailHref(row.original.id)
             }
             scroll={false}
             prefetch={false}
@@ -298,7 +306,7 @@ export function UnifiedInboxTable({
     )
 
     return cols
-  }, [selectionEnabled, selection, t, pathname, buildDetailHref])
+  }, [selectionEnabled, selection, t, buildDetailHref, defaultDetailHref])
 
   const table = useReactTable({
     data: messages,

@@ -119,6 +119,15 @@ export const env = defineZoneEnv({
     NEXT_PUBLIC_ENABLE_LEA: booleanFlag("false"),
 
     /**
+     * Message folders (AB#42582). Build-time only — baked into the static
+     * export. Gates the citizen-portal folder sidebar, move actions, and
+     * mobile folder panel. Defaults `false` so an unconfigured build ships
+     * folders off; flip via pipeline `nextPublicEnableFolders` when ready.
+     * See `@/lib/feature-config` and the app README.
+     */
+    NEXT_PUBLIC_ENABLE_FOLDERS: booleanFlag("false"),
+
+    /**
      * Dev-only fallback: when the messages API returns an empty list,
      * render a bundled fixture (`src/mock/messages.json`) so the unified
      * inbox has content to show. Defaults to `false`. Set to `true` in
@@ -214,6 +223,7 @@ export const env = defineZoneEnv({
     NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION:
       process.env.NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION,
     NEXT_PUBLIC_ENABLE_LEA: process.env.NEXT_PUBLIC_ENABLE_LEA,
+    NEXT_PUBLIC_ENABLE_FOLDERS: process.env.NEXT_PUBLIC_ENABLE_FOLDERS,
     NEXT_PUBLIC_ENABLE_MOCK_MESSAGES:
       process.env.NEXT_PUBLIC_ENABLE_MOCK_MESSAGES,
     NEXT_PUBLIC_ANALYTICS_URL: process.env.NEXT_PUBLIC_ANALYTICS_URL,

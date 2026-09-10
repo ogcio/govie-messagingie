@@ -34,6 +34,11 @@ export abstract class ProfileSdkWrapper {
     );
 
     if (userData.error) {
+      if (userData.error.statusCode === 404) {
+        throw httpErrors.createError(404, `User with ${id} id not found`, {
+          parent: userData.error,
+        });
+      }
       throw httpErrors.createError(
         503,
         `Failed fetching user from profile sdk: ${userData.error.detail}`,

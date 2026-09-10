@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
     NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION: true,
     // LEA defaults off (prod keeps the default version); dev/uat turn it on.
     NEXT_PUBLIC_ENABLE_LEA: false,
+    NEXT_PUBLIC_ENABLE_FOLDERS: false,
   },
 }))
 
@@ -21,6 +22,7 @@ vi.mock("@/env/env.client", () => ({ env: mocks.env }))
 import {
   getEnabledLandingZone,
   isJourneyIntegrationEnabled,
+  isFoldersEnabled,
   isLeaEnabled,
   isPaymentsIntegrationEnabled,
   isFormsIntegrationEnabled,
@@ -42,6 +44,7 @@ describe("feature-config", () => {
       NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION: true,
       // LEA is env-specific, not a topology flag; reset to its default (off).
       NEXT_PUBLIC_ENABLE_LEA: false,
+      NEXT_PUBLIC_ENABLE_FOLDERS: false,
     })
   })
 
@@ -102,6 +105,17 @@ describe("feature-config", () => {
     it("reflects NEXT_PUBLIC_ENABLE_LEA when turned on (dev/uat)", () => {
       setTopology({ NEXT_PUBLIC_ENABLE_LEA: true })
       expect(isLeaEnabled()).toBe(true)
+    })
+  })
+
+  describe("isFoldersEnabled", () => {
+    it("defaults off so folders stay hidden until explicitly enabled", () => {
+      expect(isFoldersEnabled()).toBe(false)
+    })
+
+    it("reflects NEXT_PUBLIC_ENABLE_FOLDERS when turned on", () => {
+      setTopology({ NEXT_PUBLIC_ENABLE_FOLDERS: true })
+      expect(isFoldersEnabled()).toBe(true)
     })
   })
 

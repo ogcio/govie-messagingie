@@ -1,6 +1,7 @@
 import { expect, type Page, test } from "@playwright/test"
 import { authenticateUser } from "../helpers/auth"
 import { createPageWithVideo } from "../helpers/browser-context"
+import { navigateAndVerifyHeading } from "../utils/navigation-helpers"
 
 let page: Page
 const maxDiff = 0.02
@@ -62,8 +63,11 @@ test.describe("Admin Visual Regression", () => {
   })
 
   test("admin profile page visual snapshot @visual", async () => {
-    await page.goto(`${PROFILE_ADMIN_URL}/en`)
-    await page.waitForLoadState("networkidle")
+    await navigateAndVerifyHeading(
+      page,
+      `${PROFILE_ADMIN_URL}/en`,
+      "My Profile",
+    )
     await expect(page).toHaveScreenshot("admin-profile.png", {
       fullPage: true,
       maxDiffPixelRatio: maxDiff,
@@ -84,8 +88,11 @@ test.describe("Admin Visual Regression", () => {
   })*/
 
   test("admin service users page visual snapshot @visual", async () => {
-    await page.goto(`${PROFILE_ADMIN_URL}/en/service-users`)
-    await page.waitForLoadState("networkidle")
+    await navigateAndVerifyHeading(
+      page,
+      `${PROFILE_ADMIN_URL}/en/service-users`,
+      "Service users",
+    )
     await expect(page).toHaveScreenshot("admin-service-users.png", {
       mask: [
         await page.locator("table"),
@@ -97,7 +104,11 @@ test.describe("Admin Visual Regression", () => {
   })
 
   test("admin service users page Imports tab visual snapshot @visual", async () => {
-    await page.goto(`${PROFILE_ADMIN_URL}/en/service-users`)
+    await navigateAndVerifyHeading(
+      page,
+      `${PROFILE_ADMIN_URL}/en/service-users`,
+      "Service users",
+    )
     await page.getByText("Imports").click()
     await expect(page).toHaveScreenshot("admin-service-users-imports.png", {
       fullPage: true,
@@ -108,7 +119,11 @@ test.describe("Admin Visual Regression", () => {
   })
 
   test("admin service users page Import CSV tab visual snapshot @visual", async () => {
-    await page.goto(`${PROFILE_ADMIN_URL}/en/service-users`)
+    await navigateAndVerifyHeading(
+      page,
+      `${PROFILE_ADMIN_URL}/en/service-users`,
+      "Service users",
+    )
     await page.getByText("Import CSV").click()
     await expect(page).toHaveScreenshot("admin-service-users-import-csv.png", {
       fullPage: true,

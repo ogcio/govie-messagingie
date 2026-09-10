@@ -2,7 +2,7 @@
 
 import { Button, Heading, Link } from "@ogcio/design-system-react"
 import { useTranslations } from "next-intl"
-import type { PropsWithChildren } from "react"
+import type { PropsWithChildren, ReactNode } from "react"
 
 /**
  * Drawer that opens off the page header on small screens / always-shown
@@ -39,7 +39,8 @@ export function UserMenuDrawer({
   showProfileLink = true,
   children,
 }: PropsWithChildren<{
-  name: string
+  /** Usually `<PublicName>`; a plain string for pre-profile surfaces. */
+  name: ReactNode
   profileHref: string
   onSignOut: () => void
   showProfileLink?: boolean

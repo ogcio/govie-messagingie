@@ -83,6 +83,18 @@ export function isLeaEnabled(): boolean {
 }
 
 /**
+ * Whether the citizen-portal message-folders feature is enabled for this
+ * build (AB#42582).
+ *
+ * A build-time switch (baked into the static export) that gates the folder
+ * sidebar, move actions, and the mobile folder panel. Defaults `false` so
+ * any unconfigured build ships folders off.
+ */
+export function isFoldersEnabled(): boolean {
+  return env.NEXT_PUBLIC_ENABLE_FOLDERS
+}
+
+/**
  * Fallback order used when a requested landing zone is disabled.
  * Dashboard is the canonical landing surface so it is preferred when
  * shipped; messages is next; profile is the terminal fallback because it

@@ -15,7 +15,6 @@ test.describe("Unified Inbox - Browser Integration Tests", () => {
     page: any
   }) => {
     await page.goto("http://localhost:3002/en/messages")
-    await page.waitForLoadState("networkidle")
 
     // Basic test that the page loads and key elements are present
     const table = page.locator('[data-testid="unified-inbox-table"]')
@@ -30,7 +29,6 @@ test.describe("Unified Inbox - Browser Integration Tests", () => {
 
   test("supports mobile responsiveness", async ({ page }: { page: any }) => {
     await page.goto("http://localhost:3002/en/messages")
-    await page.waitForLoadState("networkidle")
 
     // Test mobile viewport
     await page.setViewportSize({ width: 375, height: 667 })
@@ -50,7 +48,6 @@ test.describe("Unified Inbox - Browser Integration Tests", () => {
 
   test("supports search functionality", async ({ page }: { page: any }) => {
     await page.goto("http://localhost:3002/en/messages")
-    await page.waitForLoadState("networkidle")
 
     const searchInput = page.locator('[data-testid="search-input"]')
 
@@ -68,7 +65,6 @@ test.describe("Unified Inbox - Browser Integration Tests", () => {
 
   test("supports filter functionality", async ({ page }: { page: any }) => {
     await page.goto("http://localhost:3002/en/messages")
-    await page.waitForLoadState("networkidle")
 
     const statusFilter = page.locator('[data-testid="status-filter"]')
 
@@ -85,7 +81,6 @@ test.describe("Unified Inbox - Browser Integration Tests", () => {
     page: any
   }) => {
     await page.goto("http://localhost:3002/en/messages")
-    await page.waitForLoadState("networkidle")
 
     const table = page.locator('[data-testid="unified-inbox-table"]')
 
@@ -99,20 +94,16 @@ test.describe("Unified Inbox - Browser Integration Tests", () => {
 
   test("supports keyboard navigation", async ({ page }: { page: any }) => {
     await page.goto("http://localhost:3002/en/messages")
-    await page.waitForLoadState("networkidle")
 
     const searchInput = page.locator('[data-testid="search-input"]')
+    await expect(searchInput).toBeVisible()
 
     // Test keyboard focus
     await page.keyboard.press("Tab")
-
-    // Verify search input can receive focus
-    await expect(searchInput).toBeVisible()
   })
 
   test("handles touch targets on mobile", async ({ page }: { page: any }) => {
     await page.goto("http://localhost:3002/en/messages")
-    await page.waitForLoadState("networkidle")
 
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 })
@@ -137,15 +128,13 @@ test.describe("Unified Inbox - Browser Integration Tests", () => {
     const startTime = Date.now()
 
     await page.goto("http://localhost:3002/en/messages")
-    await page.waitForLoadState("networkidle")
+    const table = page.locator('[data-testid="unified-inbox-table"]')
+    await expect(table).toBeVisible()
 
     const endTime = Date.now()
     const loadTime = endTime - startTime
 
     // Verify page loads within reasonable time (5 seconds)
     expect(loadTime).toBeLessThan(5000)
-
-    const table = page.locator('[data-testid="unified-inbox-table"]')
-    await expect(table).toBeVisible()
   })
 })

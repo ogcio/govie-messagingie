@@ -41,7 +41,7 @@ describe("Profile Logic - buildListUserSdkBody", () => {
     const result = buildListUserSdkBody(params)
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.value.name).toStrictEqual(["O'Reilly"]);
+      expect(result.value.name).toStrictEqual(["O'Reilly"])
     }
   })
 
@@ -69,14 +69,12 @@ describe("Profile Logic - buildListUserSdkBody", () => {
     }
   })
 
-
   it("should handle array values for a single search key (e.g. multi-select)", async () => {
     const params = { email: ["test1@test.com", "test2@test.com"] }
     const result = buildListUserSdkBody(params)
 
     expect(result.success).toBe(true)
     if (result.success) {
-      
       expect(result.value.email).toContain("test1@test.com")
       expect(result.value.email).toContain("test2@test.com")
     }
@@ -88,23 +86,25 @@ describe("Profile Logic - buildListUserSdkBody", () => {
     const result = buildListUserSdkBody(params)
 
     expect(result.success).toBe(true)
-    if(result.success) {
-    expect(result.value.name).toStrictEqual([longString])
+    if (result.success) {
+      expect(result.value.name).toStrictEqual([longString])
     }
   })
 
   it("builds a simple 'from' filter on a column", () => {
-    const params = {dateOfBirth: "from,1941-06-13"}
+    const params = { dateOfBirth: "from,1941-06-13" }
 
     const result = buildListUserSdkBody(params)
     expect(result.success).toBe(true)
     if (result.success) {
-      expect(result.value.dateOfBirth).toStrictEqual([{ from: "1941-06-13", to: undefined }])
+      expect(result.value.dateOfBirth).toStrictEqual([
+        { from: "1941-06-13", to: undefined },
+      ])
     }
   })
 
   it("builds a 'between' filter for key/value dates", () => {
-    const params = {dateOfBirth: "between,1941-06-13,1941-12-31"}
+    const params = { dateOfBirth: "between,1941-06-13,1941-12-31" }
 
     const result = buildListUserSdkBody(params)
 
@@ -115,4 +115,4 @@ describe("Profile Logic - buildListUserSdkBody", () => {
       ])
     }
   })
-});
+})

@@ -1,8 +1,13 @@
 import v8 from "node:v8";
 import fastifyUnderPressure from "@fastify/under-pressure";
-import type { FastifyReply, FastifyRequest } from "fastify";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
-export const autoConfig = {
+// Check if we're in a test environment
+const isTestEnv =
+  process.env.NODE_ENV === "test" || process.env.DATABASE_TEST_URL;
+
+// Production configuration
+const productionConfig = {
   maxEventLoopDelay: 1000,
   maxHeapUsedBytes: v8.getHeapStatistics().heap_size_limit,
   maxRssBytes: v8.getHeapStatistics().total_available_size,
@@ -19,4 +24,13 @@ export const autoConfig = {
   },
 };
 
-export default fastifyUnderPressure;
+// Export configuration based on environment
+export const autoConfig = isTestEnv ? {} : productionConfig;
+
+// Export the appropriate plugin based on environment
+export default isTestEnv
+  ? async function noOpUnderPressure(_fastify: FastifyInstance) {
+      // Do nothing - disable under-pressure in tests
+      return;
+    }
+  : fastifyUnderPressure;

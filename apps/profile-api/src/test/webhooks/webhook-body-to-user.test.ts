@@ -222,4 +222,61 @@ describe("webhookBodyToUser", () => {
       consentStatusOnDirectSignin: ConsentStatuses.OptedIn,
     });
   });
+
+  it("should map MyGovID ppsn, date of birth and phone when present", () => {
+    const webhookBody = {
+      id: "user-123",
+      primaryEmail: "primary@example.com",
+      identities: {
+        [MY_GOV_ID_IDENTITY]: {
+          details: {
+            email: null,
+            rawData: {
+              firstName: "John",
+              lastName: "Doe",
+              PublicServiceNumber: "1234567A",
+              BirthDate: "1990-01-01",
+              mobile: "+353871234567",
+            },
+          },
+        },
+      },
+    };
+
+    const result = webhookBodyToUser(webhookBody, []);
+
+    expect(result.details).toEqual({
+      firstName: "John",
+      lastName: "Doe",
+      email: "primary@example.com",
+      ppsn: "1234567A",
+      dateOfBirth: "1990-01-01",
+      phone: "+353871234567",
+    });
+  });
+
+  it("should fall back to the EntraId displayName when name is missing", () => {
+    // biome-ignore lint/suspicious/noExplicitAny: For testing needs
+    const webhookBody = getEntraIdBody() as any;
+    webhookBody.identities[ENTRA_ID_IDENTITY].details.name = undefined;
+
+    const result = webhookBodyToUser(webhookBody, []);
+
+    expect(result.details?.firstName).toBe("Display");
+    expect(result.details?.lastName).toBe("Name");
+  });
+
+  it("should use Not Defined when the EntraId name is empty", () => {
+    // biome-ignore lint/suspicious/noExplicitAny: For testing needs
+    const webhookBody = getEntraIdBody() as any;
+    webhookBody.identities[ENTRA_ID_IDENTITY].details.name = "";
+    webhookBody.identities[ENTRA_ID_IDENTITY].details.rawData.displayName =
+      undefined;
+    webhookBody.name = undefined;
+
+    const result = webhookBodyToUser(webhookBody, []);
+
+    expect(result.details?.firstName).toBe("Not");
+    expect(result.details?.lastName).toBe("Defined");
+  });
 });

@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { createWriteStream } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -14,11 +13,8 @@ import {
 import type { AuditLogger } from "~/utils/audit-logger.js";
 import { getLifecycleWorkerM2MSdk } from "~/utils/authentication-factory.js";
 import { type AsyncTask, failed, success } from "../../types.js";
-import { downloadAndZipFiles } from "./files.js";
-import {
-  getAttachmentFileIdsByUserId,
-  getMessagesForUsers,
-} from "./messages.js";
+import { downloadAndZipFiles, getSharedFileIdsForUsers } from "./files.js";
+import { getMessagesForUsers } from "./messages.js";
 import { notifyExportReady } from "./notify.js";
 import { getProfileIdsToExport, loadProfilesById } from "./profiles.js";
 import { uploadExportArchive } from "./upload.js";
@@ -106,6 +102,30 @@ export async function exportUserDataSdk(params: {
       ...exportDefaults,
       metadata: {
         ...defaultMetaValues,
+        action: "loading_files",
+      },
+    },
+  ]);
+
+  const filesForUsers = await getSharedFileIdsForUsers({
+    userIds: profileIdsToExport,
+    uploadSupportSdk: workerM2MSdks.upload.support,
+    logger,
+  });
+
+  if (!filesForUsers.success) {
+    logger.error(
+      { error: filesForUsers.error },
+      `[Export Data SDK] Failed to fetch shared file IDs for users ${profileIdsToExport.join(", ")}`,
+    );
+    return failed(filesForUsers.error);
+  }
+
+  auditLogger.safeSendLogs([
+    {
+      ...exportDefaults,
+      metadata: {
+        ...defaultMetaValues,
         action: "loading_messages",
         profile_ids: profileIdsToExport,
       },
@@ -125,12 +145,7 @@ export async function exportUserDataSdk(params: {
     return failed(messagesResult.error);
   }
 
-  // Scope the export file set to the user's own message attachments (messaging
-  // is the source of truth) instead of every file shared via files_users, which
-  // was polluted by a bad migration cross-join and leaked other users' files.
-  const fileIdsByUserId = getAttachmentFileIdsByUserId(messagesResult.data);
-
-  const zipFileName = `profile-export-${profileId}-${randomUUID()}.zip`;
+  const zipFileName = `profile-export-${Date.now()}.zip`;
   const zipFilePath = join(tmpdir(), zipFileName);
 
   auditLogger.safeSendLogs([
@@ -188,7 +203,7 @@ export async function exportUserDataSdk(params: {
     ]);
 
     const filesResult = await downloadAndZipFiles({
-      fileIdsByUserId,
+      fileIdsByUserId: filesForUsers.fileIdsByUserId,
       uploadSupportSdk: workerM2MSdks.upload.support,
       zip,
       logger,
@@ -213,7 +228,6 @@ export async function exportUserDataSdk(params: {
         metadata: {
           ...defaultMetaValues,
           action: "zipped_files",
-          file_id_source: "message_attachments",
         },
       },
     ]);

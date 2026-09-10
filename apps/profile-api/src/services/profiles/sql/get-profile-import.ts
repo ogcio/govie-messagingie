@@ -5,20 +5,31 @@ import type { SavedFileInfo } from "~/utils/save-request-file.js";
 export const getProfileImport = async (
   client: PoolClient,
   id: string,
+  organisationId?: string,
 ): Promise<{
   organisationId: string;
   metadata: SavedFileInfo["metadata"];
   status: string;
   createdAt: string;
 }> => {
+  const params: string[] = [id];
+  let organisationFilter = "";
+  if (organisationId !== undefined) {
+    params.push(organisationId);
+    organisationFilter = "AND organisation_id = $2";
+  }
+
   const result = await client.query<{
     organisation_id: string;
     metadata: SavedFileInfo["metadata"];
     status: string;
     created_at: string;
   }>(
-    "SELECT organisation_id, metadata, status, created_at FROM profile_imports WHERE id = $1 LIMIT 1;",
-    [id],
+    `SELECT organisation_id, metadata, status, created_at
+     FROM profile_imports
+     WHERE id = $1 ${organisationFilter}
+     LIMIT 1;`,
+    params,
   );
 
   if (!result.rows[0]?.metadata) {

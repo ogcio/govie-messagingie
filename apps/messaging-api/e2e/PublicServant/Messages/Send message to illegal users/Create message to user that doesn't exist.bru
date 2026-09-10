@@ -33,8 +33,8 @@ body:json {
 }
 
 assert {
-  res.status: eq 503
+  res.status: eq 404
   res.body.requestId: isDefined
-  res.body.name: eq ServiceUnavailableError
-  res.body.detail: eq Failed fetching user from profile sdk: Profile aaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa not found
+  res.body.name: eq NotFoundError
+  res.body.detail: eq User with aaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa id not found
 }

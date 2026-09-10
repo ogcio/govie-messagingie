@@ -6,6 +6,10 @@ import { getIdentity } from "./session"
 vi.mock("@/data/profile", () => ({
   ProfileDataService: {
     requestDataExport: vi.fn(),
+    createAccountLink: vi.fn(),
+    getAccountLinkDetails: vi.fn(),
+    updateProfileConsentData: vi.fn(),
+    deleteAccount: vi.fn(),
   },
 }))
 
@@ -18,11 +22,37 @@ vi.mock("./session", () => ({
 }))
 
 vi.mock("./appliedFilter.server", () => ({
-  serverMessagingFilterKeySelectOptions: [],
-  serverProfileFilterKeySelectOptions: [],
+  serverMessagingFilterKeySelectOptions: [
+    {
+      value: "scheduled_at",
+      type: "date",
+      label: "Scheduled",
+      source: { type: "column", column: "scheduled_at" },
+    },
+  ],
+  serverProfileFilterKeySelectOptions: [
+    {
+      value: "email",
+      type: "text",
+      label: "Email",
+      source: { type: "column", column: "email" },
+    },
+  ],
 }))
 
-const { requestDataExportAction } = await import("./actions")
+const {
+  deleteAccountAction,
+  getAccountLinkDetailsAction,
+  getMessagingFilterOptions,
+  getProfileFilterOptions,
+  linkAccountsAction,
+  requestDataExportAction,
+  updateProfileConsentDataAction,
+} = await import("./actions")
+
+const signedInUser = {
+  sub: "agent-1",
+} as Awaited<ReturnType<typeof getIdentity>>
 
 describe("requestDataExportAction", () => {
   beforeEach(() => {
@@ -30,7 +60,7 @@ describe("requestDataExportAction", () => {
   })
 
   it("returns unauthorized and calls nothing when there is no session user", async () => {
-    vi.mocked(getIdentity).mockResolvedValue(undefined)
+    vi.mocked(getIdentity).mockResolvedValue(null)
 
     const result = await requestDataExportAction({ profileId: "profile-1" })
 
@@ -89,6 +119,163 @@ describe("requestDataExportAction", () => {
         args: { profileId: "profile-1" },
       },
       "export already in progress",
+    )
+  })
+})
+
+describe("filter option actions", () => {
+  it("maps messaging filter options to client shape (no source)", async () => {
+    const options = await getMessagingFilterOptions()
+    expect(options).toEqual([
+      { value: "scheduled_at", type: "date", label: "Scheduled" },
+    ])
+  })
+
+  it("maps profile filter options to client shape (no source)", async () => {
+    const options = await getProfileFilterOptions()
+    expect(options).toEqual([{ value: "email", type: "text", label: "Email" }])
+  })
+})
+
+describe("linkAccountsAction", () => {
+  it("returns unauthorized without a session user", async () => {
+    vi.mocked(getIdentity).mockResolvedValue(null)
+
+    const result = await linkAccountsAction({
+      profileId: "p-1",
+      primaryUserId: "u-1",
+    })
+
+    expect(result.success).toBe(false)
+    expect(ProfileDataService.createAccountLink).not.toHaveBeenCalled()
+  })
+
+  it("links the accounts and audits the outcome", async () => {
+    vi.mocked(getIdentity).mockResolvedValue(signedInUser)
+    vi.mocked(ProfileDataService.createAccountLink).mockResolvedValue({
+      success: true,
+      value: undefined,
+    })
+
+    const params = { profileId: "p-1", primaryUserId: "u-1" }
+    const result = await linkAccountsAction(params)
+
+    expect(result.success).toBe(true)
+    expect(ProfileDataService.createAccountLink).toHaveBeenCalledWith(params)
+    expect(emitAuditOnce).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actionName: "createAccountLink",
+        actionType: "create",
+      }),
+      undefined,
+    )
+  })
+})
+
+describe("getAccountLinkDetailsAction", () => {
+  it("returns unauthorized without a session user", async () => {
+    vi.mocked(getIdentity).mockResolvedValue(null)
+
+    const result = await getAccountLinkDetailsAction({
+      type: "id",
+      value: "p-1",
+    })
+
+    expect(result.success).toBe(false)
+    expect(ProfileDataService.getAccountLinkDetails).not.toHaveBeenCalled()
+  })
+
+  it("returns the details and audits with the failure reason on error", async () => {
+    vi.mocked(getIdentity).mockResolvedValue(signedInUser)
+    vi.mocked(ProfileDataService.getAccountLinkDetails).mockResolvedValue({
+      success: false,
+      error: new Error("not found"),
+      userMessage: "not found",
+    })
+
+    const result = await getAccountLinkDetailsAction({
+      type: "email",
+      value: "a@b.ie",
+    })
+
+    expect(result.success).toBe(false)
+    expect(emitAuditOnce).toHaveBeenCalledWith(
+      expect.objectContaining({ actionName: "getAccountLinkDetails" }),
+      "not found",
+    )
+  })
+})
+
+describe("updateProfileConsentDataAction", () => {
+  it("returns unauthorized without a session user", async () => {
+    vi.mocked(getIdentity).mockResolvedValue(null)
+
+    const result = await updateProfileConsentDataAction({
+      profileId: "p-1",
+      consents: [],
+    })
+
+    expect(result.success).toBe(false)
+    expect(ProfileDataService.updateProfileConsentData).not.toHaveBeenCalled()
+  })
+
+  it("updates the consents and audits the outcome", async () => {
+    vi.mocked(getIdentity).mockResolvedValue(signedInUser)
+    vi.mocked(ProfileDataService.updateProfileConsentData).mockResolvedValue({
+      success: true,
+      value: [],
+    })
+
+    const params = {
+      profileId: "p-1",
+      consents: [{ subject: "marketing", status: "opted-in" as const }],
+    }
+    const result = await updateProfileConsentDataAction(params)
+
+    expect(result.success).toBe(true)
+    expect(ProfileDataService.updateProfileConsentData).toHaveBeenCalledWith(
+      params,
+    )
+    expect(emitAuditOnce).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actionName: "updateProfileConsentData",
+        actionType: "update",
+      }),
+      undefined,
+    )
+  })
+})
+
+describe("deleteAccountAction", () => {
+  it("returns unauthorized without a session user", async () => {
+    vi.mocked(getIdentity).mockResolvedValue(null)
+
+    const result = await deleteAccountAction({ profileId: "p-1" })
+
+    expect(result.success).toBe(false)
+    expect(ProfileDataService.deleteAccount).not.toHaveBeenCalled()
+  })
+
+  it("passes the signed-in agent as the requester and audits", async () => {
+    vi.mocked(getIdentity).mockResolvedValue(signedInUser)
+    vi.mocked(ProfileDataService.deleteAccount).mockResolvedValue({
+      success: true,
+      value: undefined,
+    })
+
+    const result = await deleteAccountAction({ profileId: "p-1" })
+
+    expect(result.success).toBe(true)
+    expect(ProfileDataService.deleteAccount).toHaveBeenCalledWith({
+      profileId: "p-1",
+      requesterUserId: "agent-1",
+    })
+    expect(emitAuditOnce).toHaveBeenCalledWith(
+      expect.objectContaining({
+        actionName: "deleteAccount",
+        actionType: "delete",
+      }),
+      undefined,
     )
   })
 })

@@ -1,7 +1,7 @@
 import { createRemoteJWKSet, jwtVerify, SignJWT } from "jose"
 import { cookies } from "next/headers"
 import { after, type NextRequest, NextResponse } from "next/server"
-import { fetchPostAudit } from "@/data/audit"
+import { getSupportSdk } from "@/data/sdk"
 import { buildMsalClient, msalScopes } from "@/msal"
 import type { AuthErrorKey } from "@/utils/auth"
 import {
@@ -84,25 +84,23 @@ export async function GET(req: NextRequest) {
 
     after(async () => {
       try {
-        const auditResult = await fetchPostAudit({
-          bearerToken: sessionJwt,
-          body: [
-            {
-              action_type: "create",
-              application_id: "messaging-support",
-              client_timestamp: new Date().toISOString(),
-              resource_type: "users",
-              successful: true,
-              user_id: sessionPayload.sub || "unknown",
-              metadata: {
-                userName: String(sessionPayload.name) || "unknown",
-                email: String(sessionPayload.email) || "unknown",
-              },
+        const auditSdk = getSupportSdk(getEnvConfig()).auditCollector
+        const auditResult = await auditSdk.sendLogs([
+          {
+            action_type: "create",
+            application_id: "messaging-support",
+            client_timestamp: new Date().toISOString(),
+            resource_type: "users",
+            successful: true,
+            user_id: sessionPayload.sub || "unknown",
+            metadata: {
+              userName: String(sessionPayload.name) || "unknown",
+              email: String(sessionPayload.email) || "unknown",
             },
-          ],
-        })
-        if (!auditResult.success) {
-          console.error(auditResult.userMessage)
+          },
+        ])
+        if (auditResult.error) {
+          console.error(auditResult.error)
         }
       } catch (err) {
         console.error("failed to post audit in auth callback", err)

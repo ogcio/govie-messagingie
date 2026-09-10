@@ -13,9 +13,15 @@ const APP_NAME_MAP = {
   "messaging-next": "MessagingIE App",
   "messaging-api": "MessagingIE API",
   "messaging-admin-next": "MessagingIE Admin App",
+  "public-servant-portal": "MessagingIE Public Servant Portal",
 };
 
-const APP_ORDER = ["messaging-next", "messaging-api", "messaging-admin-next"];
+const APP_ORDER = [
+  "messaging-next",
+  "messaging-api",
+  "messaging-admin-next",
+  "public-servant-portal",
+];
 
 const APPS_DIR = join(__dirname, "../apps");
 const ROOT_PACKAGE_JSON = join(__dirname, "../package.json");

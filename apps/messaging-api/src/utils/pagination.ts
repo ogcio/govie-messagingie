@@ -256,19 +256,16 @@ const generatePageLinks = (
 export const sanitizePagination = (
   pagination: PaginationParams,
 ): Required<PaginationParams> => {
+  const limit = Number(pagination.limit) || PAGINATION_LIMIT_DEFAULT;
+  const offset = Number(pagination.offset) || PAGINATION_OFFSET_DEFAULT;
+
   return {
     limit: Math.max(
-      Math.min(
-        PAGINATION_MAX_LIMIT,
-        Number(pagination.limit) ?? PAGINATION_LIMIT_DEFAULT,
-      ),
+      Math.min(PAGINATION_MAX_LIMIT, limit),
       PAGINATION_MIN_LIMIT,
     ).toString(),
 
-    offset: Math.max(
-      Number(pagination.offset) ?? PAGINATION_OFFSET_DEFAULT,
-      PAGINATION_MIN_OFFSET,
-    ).toString(),
+    offset: Math.max(offset, PAGINATION_MIN_OFFSET).toString(),
   };
 };
 

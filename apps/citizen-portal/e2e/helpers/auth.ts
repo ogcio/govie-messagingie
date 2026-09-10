@@ -1,15 +1,12 @@
 import { expect, type Page } from "@playwright/test"
-
-const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
-const ADMIN_URL = process.env.ADMIN_URL || "http://localhost:3001"
-const MOCK_URL = process.env.MOCK_URL || "http://localhost:3005"
+import { urls, users } from "../fixtures"
 
 export async function authenticateUser(page: Page) {
   // Go to the main messaging page which will redirect to auth with mygovid for mock login
-  await page.goto(`${ADMIN_URL}`)
+  await page.goto(urls.admin)
 
   // Wait for redirect to auth service
-  await page.waitForURL(`${AUTH_URL}?**`)
+  await page.waitForURL(`${urls.auth}?**`)
 
   await page.context().clearCookies({ name: "connectorsToShow" })
 
@@ -19,7 +16,7 @@ export async function authenticateUser(page: Page) {
   await page.getByRole("button", { name: "Continue with MyGovId" }).click()
 
   // Wait for the MyGovID mock login page
-  await page.waitForURL(`${MOCK_URL}/**`)
+  await page.waitForURL(`${urls.mock}/**`)
 
   // Fill in the login form
   await page
@@ -27,15 +24,16 @@ export async function authenticateUser(page: Page) {
       "#login-form > div > div.gi-w-full > div:nth-child(1) > div.gi-accordion > div",
     )
     .click()
-  await page.locator("#sub").fill("932d94fc69be147f6fcb")
+
   await page
     .locator(
       "#login-form > div > div.gi-w-full > div:nth-child(2) > div.gi-accordion > div",
     )
     .click()
-  await page.locator("#firstName").fill("e2e_ps1")
-  await page.locator("#lastName").fill("user")
-  await page.locator("#email").fill("e2e_ps_1@user.com")
+
+  await page.locator("#firstName").fill(users.publicServant1.firstName)
+  await page.locator("#lastName").fill(users.publicServant1.lastName)
+  await page.locator("#email").fill(users.publicServant1.email)
 
   await page.getByRole("button", { name: "LOGIN" }).click()
 
@@ -44,6 +42,6 @@ export async function authenticateUser(page: Page) {
   //await page.goto(`${ADMIN_URL}`)
 
   // Wait for the redirect chain to complete and return to messaging app
-  await page.waitForURL(`${ADMIN_URL}/en/**`)
-  await expect(page).toHaveURL(`${ADMIN_URL}/en/send-a-message`)
+  await page.waitForURL(`${urls.admin}/en/**`)
+  await expect(page).toHaveURL(`${urls.admin}/en/send-a-message`)
 }

@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test"
 import auth from "./auth"
+import { ids, urls, users } from "./fixtures"
 
 // Mock data
-const mockMessageId = "test-message-id"
-const mockUserId = "test-user-id"
+const mockMessageId = ids.mockMessage
+const mockUserId = ids.mockUser
 const mockMessage = {
   data: {
     recipientUserId: mockUserId,
@@ -42,8 +43,8 @@ test.describe("Secure Messages Loader", () => {
 
   test("redirects public servant to admin page", async ({ page }) => {
     // Mock authentication and public servant status
-    await auth.loginAsSpecificUser(page, "tony.stark@gov.ie", {
-      loginURL: "http://localhost:3002/pre-login",
+    await auth.loginAsSpecificUser(page, users.tonyStark.email, {
+      loginURL: `${urls.auth}/pre-login`,
     })
     await page.goto(`/secure-messages/${mockMessageId}`)
 
@@ -54,8 +55,8 @@ test.describe("Secure Messages Loader", () => {
   test("shows message for authenticated regular user with valid message", async ({
     page,
   }) => {
-    await auth.loginAsSpecificUser(page, "peter.parker@mail.ie", {
-      loginURL: "http://localhost:3002/pre-login",
+    await auth.loginAsSpecificUser(page, users.peterParker.email, {
+      loginURL: `${urls.auth}/pre-login`,
     })
     await page.goto(`/secure-messages/${mockMessageId}`)
 
@@ -64,8 +65,8 @@ test.describe("Secure Messages Loader", () => {
   })
 
   test("handles partial message from onboarding service", async ({ page }) => {
-    await auth.loginAsSpecificUser(page, "bruce.wayne@mail.ie", {
-      loginURL: "http://localhost:3002/pre-login",
+    await auth.loginAsSpecificUser(page, users.bruceWayne.email, {
+      loginURL: `${urls.auth}/pre-login`,
     })
     // Mock authentication
     await page.route("**/api/auth/user", async (route) => {

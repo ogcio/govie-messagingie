@@ -1,5 +1,8 @@
-import { createTransport, type Transporter } from "nodemailer";
-import type { Headers } from "nodemailer/lib/mailer/index.js";
+import {
+  createTransport,
+  type SendMailOptions,
+  type Transporter,
+} from "nodemailer";
 import type { MessageToDeliver } from "../../../types/messages.js";
 import type { EmailProvider } from "../../../types/providers.js";
 import {
@@ -22,7 +25,8 @@ export class EmailSpecificTransport {
   }) {
     const { recipientAddress, message } = params;
     const transporter = await this.getNodemailerTransporter();
-    const headers: Headers | undefined = this.provider.headers ?? undefined;
+    const headers: SendMailOptions["headers"] =
+      this.provider.headers ?? undefined;
 
     await transporter.sendMail({
       from: `${this.provider.providerName} <${this.provider.fromAddress}>`,

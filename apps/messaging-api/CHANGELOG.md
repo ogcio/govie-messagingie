@@ -1,5 +1,54 @@
 # Changelog
 
+## [1.2.1](https://github.com/ogcio/govie-services-messaging/compare/messaging-api-v1.2.0...messaging-api-v1.2.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **deps:** pin @opentelemetry/core for GHSA-8988-4f7v-96qf AB[#42306](https://github.com/ogcio/govie-services-messaging/issues/42306) ([#870](https://github.com/ogcio/govie-services-messaging/issues/870)) ([5fe3e09](https://github.com/ogcio/govie-services-messaging/commit/5fe3e09069ce47eda40ee76bd0e09fc70569e8fc))
+* **deps:** update all non-major dependencies ([#869](https://github.com/ogcio/govie-services-messaging/issues/869)) ([680dc92](https://github.com/ogcio/govie-services-messaging/commit/680dc9212263e5da43fb6925b949564e86451ca7))
+* **deps:** update all non-major dependencies ([#887](https://github.com/ogcio/govie-services-messaging/issues/887)) ([a4339d1](https://github.com/ogcio/govie-services-messaging/commit/a4339d119ee115413a4f8bb5edd3c9a55c1ed824))
+* **deps:** update dependency nodemailer to v10 ([#900](https://github.com/ogcio/govie-services-messaging/issues/900)) ([ecaf6e0](https://github.com/ogcio/govie-services-messaging/commit/ecaf6e05a24747415b01ebd15e22e1c96cb7063a))
+* **messaging-api:** incoherent error code on downstream 404 AB[#42352](https://github.com/ogcio/govie-services-messaging/issues/42352) ([#860](https://github.com/ogcio/govie-services-messaging/issues/860)) ([17c01f7](https://github.com/ogcio/govie-services-messaging/commit/17c01f74fdb0de30bb0f0e904899199220c0a7ab))
+* repair nodemailer v10 and vitest v5 migrations AB[#42774](https://github.com/ogcio/govie-services-messaging/issues/42774) ([#903](https://github.com/ogcio/govie-services-messaging/issues/903)) ([6d29a4a](https://github.com/ogcio/govie-services-messaging/commit/6d29a4a25104912cf150bf1ce4ba02f5ecb8f802))
+* stop reliability bugs from leaking as unhandled errors AB[#42306](https://github.com/ogcio/govie-services-messaging/issues/42306) ([#884](https://github.com/ogcio/govie-services-messaging/issues/884)) ([e639509](https://github.com/ogcio/govie-services-messaging/commit/e639509b8ddbd9b5984af23decbf291e4d6cabbb))
+
+
+### Miscellaneous Chores
+
+* deps update AB[#42306](https://github.com/ogcio/govie-services-messaging/issues/42306) ([#853](https://github.com/ogcio/govie-services-messaging/issues/853)) ([3b207d0](https://github.com/ogcio/govie-services-messaging/commit/3b207d0226a628af1bbcfceb28dabc79645e2553))
+* **deps:** update vitest monorepo to v5 (major) ([#899](https://github.com/ogcio/govie-services-messaging/issues/899)) ([5da3cfe](https://github.com/ogcio/govie-services-messaging/commit/5da3cfefc5803c9651aaa33c75fec60c91b1cad9))
+* Fix citizen portal tests AB[#42515](https://github.com/ogcio/govie-services-messaging/issues/42515) ([#894](https://github.com/ogcio/govie-services-messaging/issues/894)) ([0c950d5](https://github.com/ogcio/govie-services-messaging/commit/0c950d5c8ab5a90e3f918939a906874ca506a96e))
+* Fix failing messaging api test AB[#42515](https://github.com/ogcio/govie-services-messaging/issues/42515) ([#891](https://github.com/ogcio/govie-services-messaging/issues/891)) ([5fa6771](https://github.com/ogcio/govie-services-messaging/commit/5fa677168aebc51b1b414c72aca83c1ef36e946e))
+* stop warning when falling back to default email provider AB[#42517](https://github.com/ogcio/govie-services-messaging/issues/42517) ([#889](https://github.com/ogcio/govie-services-messaging/issues/889)) ([1ea5aa9](https://github.com/ogcio/govie-services-messaging/commit/1ea5aa94981c776766325a926b6d25049968f5e4))
+* unify and rationalize setup commands AB[#42363](https://github.com/ogcio/govie-services-messaging/issues/42363) ([#864](https://github.com/ogcio/govie-services-messaging/issues/864)) ([5f6dd94](https://github.com/ogcio/govie-services-messaging/commit/5f6dd944d32b6b187180a98824bd1456930d46d9))
+
+## [1.2.0](https://github.com/ogcio/govie-services-messaging/compare/messaging-api-v1.1.0...messaging-api-v1.2.0) (2026-08-24)
+
+
+### Features
+
+* change attachments size limit to 3x5mb AB[#37833](https://github.com/ogcio/govie-services-messaging/issues/37833) ([#759](https://github.com/ogcio/govie-services-messaging/issues/759)) ([fa00f62](https://github.com/ogcio/govie-services-messaging/commit/fa00f62d6b950d16b032b92ae6056ab66bab2539))
+* improve metrics AB[#40868](https://github.com/ogcio/govie-services-messaging/issues/40868) ([#727](https://github.com/ogcio/govie-services-messaging/issues/727)) ([a3372df](https://github.com/ogcio/govie-services-messaging/commit/a3372df5297ea9c6a5f31bd7671130f79df49246))
+* **messaging-api:** add unique(message_id, attachment_id) on attachments_messages AB[#41240](https://github.com/ogcio/govie-services-messaging/issues/41240) ([#781](https://github.com/ogcio/govie-services-messaging/issues/781)) ([00b0bc1](https://github.com/ogcio/govie-services-messaging/commit/00b0bc1a48bf8013bb4339d24749e8073d23b40b))
+* **messaging-api:** per-user / batched files_users cleanse AB[#41238](https://github.com/ogcio/govie-services-messaging/issues/41238) ([#816](https://github.com/ogcio/govie-services-messaging/issues/816)) ([ffea0c4](https://github.com/ogcio/govie-services-messaging/commit/ffea0c4878c14cf7178451d12e88ee3067151ed2))
+
+
+### Bug Fixes
+
+* event log order and align schedule date AB[#28388](https://github.com/ogcio/govie-services-messaging/issues/28388) ([#798](https://github.com/ogcio/govie-services-messaging/issues/798)) ([e5d0286](https://github.com/ogcio/govie-services-messaging/commit/e5d02866e42d30f127dd9959f417f103f4c24a9b))
+* ignore Go stdlib CVEs blocking upload-api Trivy/grype scans AB[#41977](https://github.com/ogcio/govie-services-messaging/issues/41977) ([#829](https://github.com/ogcio/govie-services-messaging/issues/829)) ([582ca5e](https://github.com/ogcio/govie-services-messaging/commit/582ca5eea9d0f794779a53efc6942f44752f2065))
+
+
+### Miscellaneous Chores
+
+* Fix nightly profile-api and messaging-api tests AB[#41529](https://github.com/ogcio/govie-services-messaging/issues/41529) ([#809](https://github.com/ogcio/govie-services-messaging/issues/809)) ([a9754c7](https://github.com/ogcio/govie-services-messaging/commit/a9754c75af3577ce036d4a707c847ce77ed065ee))
+* **messaging-api:** add files_users cleanse operator scripts AB[#41238](https://github.com/ogcio/govie-services-messaging/issues/41238) ([#786](https://github.com/ogcio/govie-services-messaging/issues/786)) ([aa21a0b](https://github.com/ogcio/govie-services-messaging/commit/aa21a0b850bbef10659fa100b1cba268fe303e2b))
+* **messaging-api:** add reproduce-export-leak operator task AB[#41237](https://github.com/ogcio/govie-services-messaging/issues/41237) ([#771](https://github.com/ogcio/govie-services-messaging/issues/771)) ([4dc3e2e](https://github.com/ogcio/govie-services-messaging/commit/4dc3e2e0c7bd9391eeeffe5ceefd073a650e9000))
+* **messaging-api:** regenerate openapi-definition.yml AB[#00001](https://github.com/ogcio/govie-services-messaging/issues/00001) ([#788](https://github.com/ogcio/govie-services-messaging/issues/788)) ([e3e5d0c](https://github.com/ogcio/govie-services-messaging/commit/e3e5d0ccf9b7fe69ab878392b85e9798465df55b))
+* remove unused backfill job files and deps AB[#41107](https://github.com/ogcio/govie-services-messaging/issues/41107) ([#766](https://github.com/ogcio/govie-services-messaging/issues/766)) ([c3de60b](https://github.com/ogcio/govie-services-messaging/commit/c3de60b70180c3c5485da809f6df7775a8eaf66a))
+* smart workspace dependency update AB[#41977](https://github.com/ogcio/govie-services-messaging/issues/41977) ([#836](https://github.com/ogcio/govie-services-messaging/issues/836)) ([3462288](https://github.com/ogcio/govie-services-messaging/commit/3462288c326b7e3ca2af93e415ca43c40ce96109))
+
 ## [1.1.0](https://github.com/ogcio/govie-services-messaging/compare/messaging-api-v1.0.0...messaging-api-v1.1.0) (2026-07-22)
 
 

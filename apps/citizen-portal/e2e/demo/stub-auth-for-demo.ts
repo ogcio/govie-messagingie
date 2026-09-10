@@ -1,12 +1,13 @@
 import type { Page } from "@playwright/test"
+import { users } from "../fixtures"
 
 const DEMO_AUTH_STATUS = {
   authenticated: true,
   app: "messaging",
   user: {
-    sub: "932d94fc69be147f6fcb",
-    email: "peter.parker@mail.ie",
-    name: "Andrew Parker",
+    sub: users.peterParker.logtoId,
+    email: users.peterParker.email,
+    name: users.peterParker.displayName,
   },
   claims: {
     roles: ["Onboarded citizen", "citizen"],

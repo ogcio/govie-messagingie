@@ -1,27 +1,58 @@
 import { expect, type Page, test } from "@playwright/test"
 import { authenticateUser } from "../helpers/auth"
 import { createPageWithVideo } from "../helpers/browser-context"
+import { waitForMockLoginForm } from "../helpers/user-auth.helper"
 import { giveConsent } from "../utils/consent-helper"
 import {
   clickButton,
   logout,
   sendMessageToNewEmailAddress,
 } from "../utils/functions"
-import { previewRecentMessageEmail } from "../utils/gmail-reader"
-
-const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
+import {
+  gmailCredentialsAvailable,
+  previewRecentMessageEmail,
+} from "../utils/gmail-reader"
 
 let authenticatedPage: Page
 
+/**
+ * Both tests sign in without filling the mock-IdP form. That is deliberate:
+ * the form pre-populates a random identity on load, which is exactly the
+ * brand-new, unlinked user these flows need. Filling in a seeded fixture user
+ * would link an already-known account and defeat the test.
+ *
+ * These two tests are the only e2e that depend on a real mailbox: they send a
+ * secure message to a fresh `messagingie2+<uuid>@gmail.com` alias and then
+ * read it back over the Gmail API (`utils/gmail-reader.ts`). So they fail for
+ * environmental reasons the portal cannot cause, and `expect(email).not
+ * .toBeNull()` in the reader is where that surfaces. Before touching this
+ * spec, rule those out in order:
+ *   1. The Gmail OAuth refresh token in `utils/gmail-reader.ts` expires every
+ *      ~30 days; once stale, `checkInbox` polls out and finds nothing. The
+ *      regeneration steps are in that file.
+ *   2. Dev mail delivery lag — the send can succeed while the notification
+ *      lands after the poll window.
+ * The send path itself (template select -> add recipient -> send) and the
+ * notification subject (`secureMessageSubject`, "You have received a new
+ * secure message from ...", which the reader's `subject:secure message`
+ * query matches) were both verified intact for AB#42515.
+ */
 test.describe("User can link a new email address to an account", () => {
+  test.skip(
+    !gmailCredentialsAvailable(),
+    "E2E Gmail credentials are not configured.",
+  )
+
   test.beforeEach(async ({ browser }) => {
     authenticatedPage = await createPageWithVideo(browser)
     //clear the cache
     await authenticatedPage.context().clearCookies()
   })
 
-  test.afterAll(async () => {
-    await authenticatedPage.close()
+  test.afterEach(async () => {
+    if (authenticatedPage && !authenticatedPage.isClosed()) {
+      await authenticatedPage.context().close()
+    }
   })
 
   test("citizen can link a new email address to an account @smoke @regression", async () => {
@@ -32,15 +63,8 @@ test.describe("User can link a new email address to an account", () => {
     // Click link from email
     await previewRecentMessageEmail(authenticatedPage, email)
     // Login as a new user
-    //await authenticatedPage.goto("/")
-    if (authenticatedPage.url().includes(`${AUTH_URL}`)) {
-      // Click the MyGovID login button
-      await authenticatedPage
-        .getByRole("button", { name: "Continue with MyGovId" })
-        .click()
-    }
+    await waitForMockLoginForm(authenticatedPage)
     await authenticatedPage.getByRole("button", { name: "LOGIN" }).click()
-    await authenticatedPage.waitForLoadState("networkidle")
     //Confirm consent
     await giveConsent(authenticatedPage)
     // Confirm link account
@@ -57,21 +81,13 @@ test.describe("User can link a new email address to an account", () => {
     await logout(authenticatedPage)
     await previewRecentMessageEmail(authenticatedPage, email)
     // Login as a new user
-    //await authenticatedPage.goto("/")
-    if (authenticatedPage.url().includes(`${AUTH_URL}`)) {
-      // Click the MyGovID login button
-      await authenticatedPage
-        .getByRole("button", { name: "Continue with MyGovId" })
-        .click()
-    }
+    await waitForMockLoginForm(authenticatedPage)
     await authenticatedPage.getByRole("button", { name: "LOGIN" }).click()
-    await authenticatedPage.waitForLoadState("networkidle")
     //Confirm consent
     await giveConsent(authenticatedPage)
     // Confirm link account
     await clickButton(authenticatedPage, "Report an Issue")
     //Disabled as forms url is not configured in dev
-    //await authenticatedPage.waitForLoadState("networkidle")
     //const url = await authenticatedPage.url()
     //await expect(url).toContain("forms")
   })

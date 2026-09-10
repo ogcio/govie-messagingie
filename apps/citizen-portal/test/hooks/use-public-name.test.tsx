@@ -1,7 +1,10 @@
 import { renderHook } from "@testing-library/react"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-let fetchState: { data: { publicName?: string } | undefined } = {
+let fetchState: {
+  data: { publicName?: string } | undefined
+  error?: Error
+} = {
   data: undefined,
 }
 const fetchCalls: Array<string | null> = []
@@ -13,90 +16,103 @@ vi.mock("@ogcio/sag-client/react", () => ({
   },
 }))
 
+// Driven explicitly: `useIdleMount`'s `NODE_ENV === "test"` shortcut would
+// make these assertions depend on the ambient NODE_ENV.
+const idle = vi.hoisted(() => ({ ready: true }))
+vi.mock("@/hooks/use-idle-mount", () => ({
+  useIdleMount: () => idle.ready,
+}))
+
 import type { AuthUser } from "@ogcio/sag-client"
 import { usePublicName } from "@/hooks/use-public-name"
 
 /**
- * `usePublicName` drives the welcome heading on the dashboard and the
- * authenticated `PageHeader`. The fallback chain is explicitly tiered:
- *
- *   profile.publicName -> user.name -> user.email -> ""
- *
- * so a user that JUST signed in (profile fetch in flight) sees their
- * IdP-provided name rather than blank space, but the canonical
- * citizen-chosen name always wins once it loads. Pinning each tier
- * stops a future refactor from accidentally rearranging the chain
- * (e.g. swapping `email` above `name` would be a privacy regression).
+ * The chain is `profile.publicName -> user.name -> user.email -> ""`, but the
+ * tiers below `publicName` must only be reached once the lookup has *settled*
+ * — falling back while it is in flight paints one valid name and then swaps
+ * to the other.
  */
 describe("usePublicName", () => {
   beforeEach(() => {
     fetchState = { data: undefined }
     fetchCalls.length = 0
+    idle.ready = true
   })
+
+  const user = (extra: Record<string, unknown> = {}) =>
+    ({ sub: "user-1", ...extra }) as unknown as AuthUser
 
   it("returns profile.publicName when the profile fetch resolves", () => {
     fetchState = { data: { publicName: "Janet Citizen" } }
-    const user = {
-      sub: "user-1",
-      name: "Jane Citizen",
-      email: "jane@example.com",
-    } as unknown as AuthUser
-
-    const { result } = renderHook(() => usePublicName(user))
-    expect(result.current).toBe("Janet Citizen")
+    const { result } = renderHook(() =>
+      usePublicName(user({ name: "Jane Citizen", email: "jane@example.com" })),
+    )
+    expect(result.current.publicName).toBe("Janet Citizen")
+    expect(result.current.isLoading).toBe(false)
   })
 
-  it("falls back to user.name when profile.publicName is missing", () => {
-    fetchState = { data: undefined }
-    const user = {
-      sub: "user-1",
-      name: "Jane Citizen",
-      email: "jane@example.com",
-    } as unknown as AuthUser
-
-    const { result } = renderHook(() => usePublicName(user))
-    expect(result.current).toBe("Jane Citizen")
+  it("reports loading while the profile lookup is still in flight", () => {
+    const { result } = renderHook(() =>
+      usePublicName(user({ name: "Jane Citizen" })),
+    )
+    expect(result.current.isLoading).toBe(true)
   })
 
-  it("falls back to user.email when both profile.publicName and user.name are missing", () => {
-    fetchState = { data: undefined }
-    const user = {
-      sub: "user-1",
-      email: "jane@example.com",
-    } as unknown as AuthUser
+  it("falls back to user.name once the profile lookup fails", () => {
+    fetchState = { data: undefined, error: new Error("403") }
+    const { result } = renderHook(() =>
+      usePublicName(user({ name: "Jane Citizen", email: "jane@example.com" })),
+    )
+    expect(result.current.publicName).toBe("Jane Citizen")
+    expect(result.current.isLoading).toBe(false)
+  })
 
-    const { result } = renderHook(() => usePublicName(user))
-    expect(result.current).toBe("jane@example.com")
+  it("falls back to user.name when the profile resolves without a publicName", () => {
+    fetchState = { data: {} }
+    const { result } = renderHook(() =>
+      usePublicName(user({ name: "Jane Citizen", email: "jane@example.com" })),
+    )
+    expect(result.current.publicName).toBe("Jane Citizen")
+    expect(result.current.isLoading).toBe(false)
+  })
+
+  it("falls back to user.email when the profile settled and user.name is missing", () => {
+    fetchState = { data: {} }
+    const { result } = renderHook(() =>
+      usePublicName(user({ email: "jane@example.com" })),
+    )
+    expect(result.current.publicName).toBe("jane@example.com")
   })
 
   it("returns the empty string when the user has no identifiers", () => {
-    fetchState = { data: undefined }
-    const user = { sub: "user-1" } as unknown as AuthUser
-
-    const { result } = renderHook(() => usePublicName(user))
-    expect(result.current).toBe("")
+    fetchState = { data: {} }
+    const { result } = renderHook(() => usePublicName(user()))
+    expect(result.current.publicName).toBe("")
   })
 
-  it("returns the empty string when the user is undefined (unauthenticated)", () => {
-    // Pre-auth, the hook still runs from inside the rendered tree.
-    // Make sure it stays safe-by-default — no throws, no nullable
-    // surprises on the consumer side.
+  it("returns the empty string and is not loading when unauthenticated", () => {
     const { result } = renderHook(() => usePublicName(undefined))
-    expect(result.current).toBe("")
+    expect(result.current.publicName).toBe("")
+    expect(result.current.isLoading).toBe(false)
   })
 
   it("pauses the gateway fetch (passes null path) until user.sub is available", () => {
-    // SWR/useGatewayFetch is keyed on the path; a null path tells the
-    // gateway client to skip the request. The dashboard mounts this
-    // hook before auth has resolved, so the pause is what stops a
-    // pre-auth 401 from being logged to o11y.
     renderHook(() => usePublicName(undefined))
     expect(fetchCalls[0]).toBeNull()
   })
 
   it("calls the gateway with the profile path keyed on user.sub once auth resolves", () => {
-    const user = { sub: "user-42" } as unknown as AuthUser
-    renderHook(() => usePublicName(user))
+    renderHook(() => usePublicName(user({ sub: "user-42" })))
     expect(fetchCalls[0]).toBe("/profile/api/v1/profiles/user-42")
+  })
+
+  it("reports loading while the idle gate defers the profile fetch", () => {
+    // Known user, name not yet fetched: still a swap risk, so still loading.
+    idle.ready = false
+    const { result } = renderHook(() =>
+      usePublicName(user({ name: "Jane Citizen" })),
+    )
+    expect(fetchCalls[0]).toBeNull()
+    expect(result.current.isLoading).toBe(true)
   })
 })

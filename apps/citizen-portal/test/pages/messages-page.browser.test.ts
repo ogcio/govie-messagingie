@@ -24,9 +24,6 @@ test("messages page loads and displays content", async ({
   // Navigate to the messages page
   await page.goto("http://localhost:3000/en/messages")
 
-  // Wait for the page to load
-  await page.waitForLoadState("networkidle")
-
   // Check that the heading is visible
   const heading = page.getByRole("heading", { level: 1 })
   await expect(heading).toBeVisible()
@@ -38,7 +35,7 @@ test("messages page loads and displays content", async ({
 
 test("messages page handles navigation", async ({ page }: { page: any }) => {
   await page.goto("http://localhost:3000/en/messages")
-  await page.waitForLoadState("networkidle")
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible()
 
   // Check if there are message links
   const links = page.getByRole("link")
@@ -48,12 +45,8 @@ test("messages page handles navigation", async ({ page }: { page: any }) => {
     // Click the first message link
     await links.first().click()
 
-    // Wait for navigation
-    await page.waitForLoadState("networkidle")
-
     // Verify we're on a message detail page
     // Adjust the selector based on your actual page structure
-    const url = page.url()
-    expect(url).toMatch(/\/messages\/\d+/)
+    await page.waitForURL(/\/messages\/\d+/)
   }
 })

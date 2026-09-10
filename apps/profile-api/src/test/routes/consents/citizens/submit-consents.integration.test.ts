@@ -4,7 +4,6 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
   CascadeConsentReasons,
   ConsentStatuses,
-  ConsentSubjects,
 } from "~/schemas/consents/shared.js";
 import { createProfile } from "~/services/profiles/sql/create-profile.js";
 import {
@@ -36,6 +35,10 @@ const createTestProfile = async (profileData: {
 
 // Helper function to generate random subjects to avoid conflicts with other test suites
 const generateRandomSubject = () => `subject-${randomUUID().substring(0, 8)}`;
+// Suite-private subject: 'messaging' statements are also inserted by other
+// suites (e.g. support submit-consents), which races with the cached
+// consentStatementId here when files run concurrently.
+const suiteSubject = generateRandomSubject();
 
 describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
   let app: FastifyInstance;
@@ -53,14 +56,14 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
     const oldDate = new Date(Date.now() - 2000);
 
     const currentStatement = await insertTestConsentStatement(pool, {
-      subject: ConsentSubjects.Messaging,
+      subject: suiteSubject,
       publishDate: currentDate,
       isEnabled: true,
     });
     consentStatementId = currentStatement.id;
 
     const oldStatement = await insertTestConsentStatement(pool, {
-      subject: ConsentSubjects.Messaging,
+      subject: suiteSubject,
       publishDate: oldDate,
       isEnabled: true,
     });
@@ -118,7 +121,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               status: ConsentStatuses.OptedOut,
               consentStatementId: consentStatementId,
             },
@@ -140,7 +143,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               status: ConsentStatuses.OptedOut,
               consentStatementId: consentStatementId,
             },
@@ -169,7 +172,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               // Missing status and statementId
             },
           ],
@@ -218,7 +221,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               status: ConsentStatuses.OptedIn,
               consentStatementId: consentStatementId,
             },
@@ -229,7 +232,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
       expect(response.statusCode).toBe(201);
       const body = JSON.parse(response.body);
       expect(body.data).toHaveLength(1);
-      expect(body.data[0].subject).toBe(ConsentSubjects.Messaging);
+      expect(body.data[0].subject).toBe(suiteSubject);
       expect(body.data[0].status).toBe(ConsentStatuses.OptedIn);
       expect(body.data[0].consentStatementId).toBe(consentStatementId);
       expect(body.data[0].isLatestStatement).toBe(true);
@@ -259,7 +262,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               status: ConsentStatuses.OptedIn,
               consentStatementId: consentStatementId,
             },
@@ -275,7 +278,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
       expect(response.statusCode).toBe(201);
       const body = JSON.parse(response.body);
       expect(body.data).toHaveLength(2);
-      expect(body.data[0].subject).toBe(ConsentSubjects.Messaging);
+      expect(body.data[0].subject).toBe(suiteSubject);
       expect(body.data[0].status).toBe(ConsentStatuses.OptedIn);
       expect(body.data[1].subject).toBe(randomSubject);
       expect(body.data[1].status).toBe(ConsentStatuses.OptedOut);
@@ -299,7 +302,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               status: ConsentStatuses.OptedIn,
               consentStatementId: randomUUID(),
             },
@@ -311,7 +314,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
       const body = JSON.parse(response.body);
       expect(body.errors).toBeDefined();
       expect(body.errors[0].errors).toContain(
-        "Statement is not the current active statement for subject 'messaging'",
+        `Statement is not the current active statement for subject '${suiteSubject}'`,
       );
     });
 
@@ -331,7 +334,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               status: ConsentStatuses.OptedIn,
               consentStatementId: oldConsentStatementId, // Using old statement
             },
@@ -343,7 +346,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
       const body = JSON.parse(response.body);
       expect(body.errors).toBeDefined();
       expect(body.errors[0].errors).toContain(
-        "Statement is not the current active statement for subject 'messaging'",
+        `Statement is not the current active statement for subject '${suiteSubject}'`,
       );
     });
 
@@ -371,7 +374,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               status: ConsentStatuses.OptedIn,
               consentStatementId: differentStatement.id, // Using statement from different subject
             },
@@ -383,7 +386,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
       const body = JSON.parse(response.body);
       expect(body.errors).toBeDefined();
       expect(body.errors[0].errors).toContain(
-        "Statement is not the current active statement for subject 'messaging'",
+        `Statement is not the current active statement for subject '${suiteSubject}'`,
       );
     });
 
@@ -439,7 +442,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               status: ConsentStatuses.OptedIn,
               consentStatementId: consentStatementId,
             },
@@ -454,7 +457,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               status: ConsentStatuses.Pending, // Invalid: can't go from opted-in to pending
               consentStatementId: consentStatementId,
             },
@@ -489,7 +492,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               status: ConsentStatuses.OptedIn,
               consentStatementId: consentStatementId, // Valid
             },
@@ -543,7 +546,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               status: ConsentStatuses.OptedOut,
               consentStatementId: consentStatementId,
             },
@@ -595,7 +598,7 @@ describe("POST /api/v1/citizens/consents - Integration Tests", async () => {
         body: {
           consents: [
             {
-              subject: ConsentSubjects.Messaging,
+              subject: suiteSubject,
               status: ConsentStatuses.OptedIn,
               consentStatementId: consentStatementId,
             },

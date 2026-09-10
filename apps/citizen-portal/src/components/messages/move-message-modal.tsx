@@ -9,7 +9,6 @@ import {
   ModalTitle,
   ModalWrapper,
   Paragraph,
-  Stack,
 } from "@ogcio/design-system-react"
 import {
   SelectItem,
@@ -53,13 +52,6 @@ export function MoveMessageModal({
     onConfirm(resolveSelectedFolderId())
   }, [onConfirm, resolveSelectedFolderId])
 
-  const handleMobileSelect = useCallback(
-    (folderId: string | null) => {
-      onConfirm(folderId)
-    },
-    [onConfirm],
-  )
-
   const hasDestinations = destinations.length > 0
 
   return (
@@ -75,53 +67,29 @@ export function MoveMessageModal({
       <ModalTitle>{t("title")}</ModalTitle>
       <ModalBody>
         {hasDestinations ? (
-          <>
-            <div className={styles.desktopSelect}>
-              <FormField>
-                <FormFieldLabel
-                  text={t("chooseFolder")}
-                  htmlFor='move-folder'
-                />
-                <SelectNative
-                  id='move-folder'
-                  data-testid='move-folder-select'
-                  value={selectedId}
-                  disabled={isMoving}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                    setSelectedId(e.target.value)
-                  }
-                >
-                  {destinations.map((dest) => (
-                    <SelectItem
-                      key={dest.id ?? "inbox"}
-                      value={String(dest.id ?? "inbox")}
-                    >
-                      {dest.label}
-                    </SelectItem>
-                  ))}
-                </SelectNative>
-              </FormField>
-            </div>
-            <Stack
-              direction='column'
-              gap={0}
-              className={styles.mobileList}
-              itemsAlignment='stretch'
-            >
-              {destinations.map((dest) => (
-                <button
-                  key={dest.id ?? "inbox"}
-                  type='button'
-                  className={styles.mobileFolderItem}
-                  data-testid={`move-folder-option-${dest.id ?? "inbox"}`}
-                  disabled={isMoving}
-                  onClick={() => handleMobileSelect(dest.id)}
-                >
-                  {dest.label}
-                </button>
-              ))}
-            </Stack>
-          </>
+          <div className={styles.select}>
+            <FormField>
+              <FormFieldLabel text={t("chooseFolder")} htmlFor='move-folder' />
+              <SelectNative
+                id='move-folder'
+                data-testid='move-folder-select'
+                value={selectedId}
+                disabled={isMoving}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                  setSelectedId(e.target.value)
+                }
+              >
+                {destinations.map((dest) => (
+                  <SelectItem
+                    key={dest.id ?? "inbox"}
+                    value={String(dest.id ?? "inbox")}
+                  >
+                    {dest.label}
+                  </SelectItem>
+                ))}
+              </SelectNative>
+            </FormField>
+          </div>
         ) : (
           <Paragraph>{t("noFolders")}</Paragraph>
         )}
@@ -135,7 +103,6 @@ export function MoveMessageModal({
               appearance='default'
               onClick={onClose}
               disabled={isMoving}
-              className={styles.desktopFooterButton}
               data-testid='move-confirmation-cancel'
             >
               {t("cancel")}
@@ -147,7 +114,6 @@ export function MoveMessageModal({
               onClick={handleConfirm}
               disabled={isMoving || !selectedId}
               ariaBusy={isMoving}
-              className={styles.desktopFooterButton}
               data-testid='move-confirmation-confirm'
             >
               {t("move")}

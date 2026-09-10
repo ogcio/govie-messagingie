@@ -82,9 +82,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify: FastifyInstance) => {
     async (
       request: FastifyRequestTypebox<typeof GetProfileImportDetailsSchema>,
     ) => {
+      const organisationId = withOrganizationId(request);
       const [importData, importDetailsData] = await Promise.all([
-        getProfileImport({ pool, profileImportId: request.params.importId }),
-        getProfileImportDetails(pool, request.params.importId),
+        getProfileImport({
+          pool,
+          profileImportId: request.params.importId,
+          organisationId,
+        }),
+        getProfileImportDetails(pool, request.params.importId, organisationId),
       ]);
 
       return {

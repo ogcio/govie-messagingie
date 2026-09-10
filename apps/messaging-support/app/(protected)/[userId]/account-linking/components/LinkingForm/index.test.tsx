@@ -74,20 +74,20 @@ describe("LinkingForms Orchestrator", () => {
       profile: { id: "other", links: [], name: "Clean Profile" },
       expected: "Mock Confirm Submit",
     },
-  ])("Transitions to $expected when profile is $desc", ({
-    profile,
-    expected,
-  }) => {
-    mockLookupResult = profile
+  ])(
+    "Transitions to $expected when profile is $desc",
+    ({ profile, expected }) => {
+      mockLookupResult = profile
 
-    render(<LinkingForms toSetAsParentId={canonicalId} />)
+      render(<LinkingForms toSetAsParentId={canonicalId} />)
 
-    fireEvent.click(screen.getByText("Mock Lookup Submit"))
+      fireEvent.click(screen.getByText("Mock Lookup Submit"))
 
-    if (expected === "Mock Confirm Submit") {
-      expect(screen.getByText(expected)).toBeInTheDocument()
-    } else {
-      expect(screen.getByText(expected)).toBeInTheDocument()
-    }
-  })
+      if (expected === "Mock Confirm Submit") {
+        expect(screen.getByText(expected)).toBeInTheDocument()
+      } else {
+        expect(screen.getByText(expected)).toBeInTheDocument()
+      }
+    },
+  )
 })

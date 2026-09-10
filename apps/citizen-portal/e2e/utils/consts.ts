@@ -1,19 +1,17 @@
-export const PROFILE_URL = "https://profile-admin.dev.services.gov.ie/en"
+import { urls } from "../fixtures"
+
+export const PROFILE_URL = urls.profileAdmin
 export const SERVICE_USERS_URL = `${PROFILE_URL}/service-users`
 export const WAIT_TIME = 2000
 
 /** Logto sign-in page — matches `e2e/helpers/user-auth.helper.ts`. */
-export const AUTH_SIGN_IN_URL =
-  process.env.E2E_AUTH_URL?.trim() ||
-  process.env.AUTH_URL?.trim() ||
-  "https://authorization.dev.services.gov.ie/sign-in"
+export const AUTH_SIGN_IN_URL = urls.authSignIn
 
 /**
  * Citizen-facing profile hostname. Local full e2e sets `PROFILE_HOST`;
  * hosted dev e2e falls back to the real cluster URL.
  */
-export const PROFILE_SERVICE_URL =
-  process.env.PROFILE_HOST ?? "https://profile.dev.services.gov.ie"
+export const PROFILE_SERVICE_URL = urls.profileService
 
 /** Mirrors Journey Builder / Payments logout redirect shape. */
 export function buildGlobalSignoutUrl(

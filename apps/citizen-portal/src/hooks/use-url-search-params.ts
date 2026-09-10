@@ -19,10 +19,15 @@ function patchHistoryOnce() {
   if (historyPatched || typeof window === "undefined") return
   historyPatched = true
 
+  // Next's App Router pushes history state from a `useInsertionEffect`, and
+  // React forbids scheduling updates there. A microtask defers past it, and
+  // `location.search` is already current by the time subscribers read it.
   const notify = () => {
-    for (const listener of listeners) {
-      listener()
-    }
+    queueMicrotask(() => {
+      for (const listener of listeners) {
+        listener()
+      }
+    })
   }
   const originalPushState = history.pushState.bind(history)
   const originalReplaceState = history.replaceState.bind(history)

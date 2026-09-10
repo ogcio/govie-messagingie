@@ -6,7 +6,7 @@ we needed does not exist, because the bundle ships something incomplete,
 or because the app's runtime assumptions (Next.js App Router, `next-intl`,
 no Tailwind build) diverge from what DS assumes.
 
-It is a companion to [`../../docs/gi-classes.md`](../../docs/gi-classes.md)
+It is a companion to [`../../docs/internal/gi-classes.md`](../../docs/internal/gi-classes.md)
 (the reference of the 1 040 `gi-*` classes compiled into the DS bundle)
 and supersedes the ad‑hoc `DS gap:` / `Removable when DS …` comments
 scattered across the app's CSS and TSX. Each entry keeps a pointer back

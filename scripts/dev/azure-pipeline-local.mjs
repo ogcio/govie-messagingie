@@ -113,6 +113,7 @@ class AzurePipelineLocal {
           "pnpm test",
           "pnpm --filter messaging-next test",
           "pnpm --filter messaging-admin-next test",
+          "pnpm --filter public-servant-portal test",
           "pnpm --filter messaging-api test",
         ],
       },
@@ -122,6 +123,7 @@ class AzurePipelineLocal {
           "pnpm build:api",
           "pnpm build:next",
           "pnpm build:admin-next",
+          "pnpm build:public-servant-portal",
         ],
       },
       {
@@ -129,6 +131,7 @@ class AzurePipelineLocal {
         commands: [
           "docker build -f apps/messaging-next/Dockerfile -t messaging-next .",
           "docker build -f apps/messaging-admin-next/Dockerfile -t messaging-admin-next .",
+          "docker build -f apps/public-servant-portal/Dockerfile -t public-servant-portal .",
           "docker build -f apps/messaging-api/Dockerfile -t messaging-api .",
         ],
       },
@@ -355,6 +358,7 @@ jobs:
     console.log("- messaging-api")
     console.log("- messaging-next")
     console.log("- messaging-admin-next")
+    console.log("- public-servant-portal")
 
     console.log("\n🔧 Local Equivalents:")
     console.log("- Security: pnpm lint, pnpm test")

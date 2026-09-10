@@ -1,6 +1,6 @@
 import react from "@vitejs/plugin-react"
 import { playwright } from "@vitest/browser-playwright"
-import { defineConfig } from "vitest/config"
+import { defaultExclude, defineConfig } from "vitest/config"
 
 /**
  * Vitest configuration for the unified citizen-portal app.
@@ -12,6 +12,9 @@ import { defineConfig } from "vitest/config"
 export default defineConfig({
   plugins: [react()],
   test: {
+    // Vitest only defaults this when the shell hasn't set it, and a shell
+    // exporting "development" makes useIdleMount defer work under test.
+    env: { NODE_ENV: "test" },
     globals: true,
     environment: "jsdom",
     reporters: "default",
@@ -20,6 +23,14 @@ export default defineConfig({
       reporter: ["text", "cobertura", "lcov"],
       provider: "v8",
       reportOnFailure: true,
+      include: ["src/**/*.ts", "src/**/*.tsx"],
+      thresholds: {
+        lines: 80,
+        statements: 80,
+        functions: 80,
+        branches: 80,
+      },
+      exclude: [...defaultExclude, "**/*.test.*", "test/**"],
     },
     include: [
       "**/@(test?(s)|__test?(s)__)/**/*.test.@(js|cjs|mjs|tap|cts|jsx|mts|ts|tsx)",

@@ -152,7 +152,7 @@ describe("Template Service", () => {
       search: templateNameGa,
     });
 
-    expect(templateEn.totalCount).toBe("1");
+    expect(templateEn.totalCount).toBe(1);
     expect(templateEn.data.at(0)?.id).toEqual(createdTemplate.id);
     expect(templateEn.data.at(0)?.contents.at(0)?.templateName).toEqual(
       templateNameEn,
@@ -165,7 +165,7 @@ describe("Template Service", () => {
     expect(templateEn.data.at(0)?.contents.at(1)?.language).toEqual("ga");
 
     expect(templateGa.data.at(0)?.id).toEqual(createdTemplate.id);
-    expect(templateGa.totalCount).toBe("1");
+    expect(templateGa.totalCount).toBe(1);
     expect(templateGa.data.at(0)?.contents.at(0)?.templateName).toEqual(
       templateNameEn,
     );
@@ -345,7 +345,7 @@ async function createHelperTemplate(params?: {
 }> {
   const toUseUserId = params?.userId || userId;
   const toUseOrganizationId = params?.organizationId || organizationId;
-  const random = Math.floor(Math.random() * 10000);
+  const random = randomUUID();
   const inputBody: CreateTemplateReqBody = params?.body || {
     contents: [
       {

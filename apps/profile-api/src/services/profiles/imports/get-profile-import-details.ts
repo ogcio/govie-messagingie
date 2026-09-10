@@ -6,7 +6,8 @@ import { withClient } from "~/utils/with-client.js";
 export const getProfileImportDetails = async (
   pool: Pool,
   importId: string,
+  organisationId?: string,
 ): Promise<KnownProfileDataDetails[]> =>
   withClient(pool, async (client) =>
-    getProfileImportDetailsSQL(client, importId),
+    getProfileImportDetailsSQL(client, importId, undefined, organisationId),
   );

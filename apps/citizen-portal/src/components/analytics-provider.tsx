@@ -92,15 +92,16 @@ export function AnalyticsProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!idleReady || !context.analyticsInstance?.isInitialized()) return
-    try {
-      context.analyticsInstance.track.pageView({
+
+    void context.analyticsInstance?.track
+      .pageView({
         event: {
           title: window.document.title,
         },
       })
-    } catch (e) {
-      console.error("Analytics: Error during route change", e)
-    }
+      ?.catch((e: unknown) => {
+        console.error("Analytics: Error during route change", e)
+      })
   }, [idleReady, context.analyticsInstance, pathname, searchParams])
 
   if (!baseUrl || !websiteId) {

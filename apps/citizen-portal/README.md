@@ -106,6 +106,7 @@ pnpm --filter @citizen-portal/app test:browser  # vitest --browser (playwright)
 # end-to-end (playwright) — drives the docker harness
 pnpm --filter @citizen-portal/app test:e2e:local           # http://messaging.local.test:8080 (full suite)
 pnpm --filter @citizen-portal/app test:e2e:smoke:local     # nginx canonicalisation + public pages, ~2s, no auth
+pnpm --filter @citizen-portal/app test:e2e:webkit:smoke    # login, inbox, message open, mark-as-read only
 pnpm --filter @citizen-portal/app test:e2e:dev             # *.dev.services.gov.ie
 pnpm --filter @citizen-portal/app test:smoke:e2e
 pnpm --filter @citizen-portal/app test:regression:e2e
@@ -250,7 +251,7 @@ common ones:
 ## Feature flags & standalone deployments
 
 > Full reference (rationale, touch points, extending, testing):
-> [`docs/feature-flags.md`](../../docs/feature-flags.md).
+> [`docs/internal/feature-flags.md`](../../docs/internal/feature-flags.md).
 
 The consolidated app ships every zone and cross-block integration by
 default, but a future adopter may want to run a reduced subset (e.g.
@@ -326,6 +327,20 @@ so its value can differ per environment:
 
 Prod keeps the default (non-LEA) version. Gate the LEA surfaces on
 `isLeaEnabled()` when they are built.
+
+### Build-time rollout flag — `NEXT_PUBLIC_ENABLE_FOLDERS` (AB#42582)
+
+Citizen-portal-only switch for the message-folders feature (sidebar, move
+actions, mobile folder panel). Parsed by the same helper and read via
+`isFoldersEnabled()`. **Defaults `false`** in every environment until
+the pipeline `nextPublicEnableFolders` is flipped.
+
+| Flag | Default | Dev | UAT | Prod |
+| --- | --- | --- | --- | --- |
+| `NEXT_PUBLIC_ENABLE_FOLDERS` | `false` | `false` | `false` | `false` |
+
+Folder e2e specs skip unless `NEXT_PUBLIC_ENABLE_FOLDERS` is truthy in
+the Playwright process (must match the baked build).
 
 ### Runtime flag — `submission-linking` (Unleash)
 

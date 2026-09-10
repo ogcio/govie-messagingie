@@ -1,10 +1,11 @@
 import type { Page } from "@playwright/test"
+import { templates } from "../fixtures"
 import { TEST_DATA } from "./consts"
 import { generateTestData } from "./functions"
 
 export async function fillTemplateForm(page: Page, templateName?: string) {
   const { timestamp } = generateTestData()
-  const name = templateName || `Playwright Template name ${timestamp}`
+  const name = templateName || `${templates.playwrightPrefix} ${timestamp}`
 
   await page.getByRole("textbox", { name: "Template name" }).fill(name)
   await page

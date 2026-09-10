@@ -1,54 +1,11 @@
 import { cache as reactCache } from "react"
 import { getEnvConfig } from "@/utils/env"
-import { AppHttp } from "./http"
-import type { Result, SessionUser } from "./types"
-import { failure, success } from "./utils"
+import { getSupportSdk, type SupportSdks } from "./sdk"
+import type { SessionUser } from "./types"
 
-type AuditLogBody = {
-  application_version?: string
-  user_id?: string
-  user_email_address?: string
-  resource_id?: string
-  successful?: boolean
-  failure_reason?: string
-  server_id?: string
-  parent_log_entry_id?: string
-  application_id: string
-  action_type: "read" | "create" | "update" | "delete" | "list"
-  resource_type: string
-  client_timestamp: string
-  metadata: Record<string, unknown>
-}
-
-export async function fetchPostAudit(params: {
-  bearerToken: string
-  body: AuditLogBody[]
-}): Promise<Result<void>> {
-  try {
-    const { bearerToken, body } = params
-    const { AUDIT_API_URL } = getEnvConfig()
-    const res = await fetch(new URL("/api/v1/audit-logs", AUDIT_API_URL), {
-      body: JSON.stringify(body),
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${bearerToken}`,
-        "Content-Type": "application/json",
-      },
-    })
-
-    if (!res.ok) {
-      const errorText = await res.text().catch(() => "no body")
-      return failure(
-        new Error(errorText),
-        `received status ${res.status} - expected 201`,
-      )
-    }
-
-    return success(undefined)
-  } catch (err) {
-    return failure(err, "failed to post audit log")
-  }
-}
+type AuditLogBody = Parameters<
+  SupportSdks["auditCollector"]["sendLogs"]
+>[0][number]
 
 const getAuditLedger = reactCache(() => new Set<string>())
 
@@ -81,14 +38,10 @@ export async function emitAuditOnce(
 
   const { user, actionName, args } = params
   const metadata = { user, actionName, args }
-  const tokenResult = await AppHttp.fetchAppM2MToken()
-  if (!tokenResult.success) {
-    return
-  }
+  const auditSdk = getSupportSdk(getEnvConfig()).auditCollector
 
-  void fetchPostAudit({
-    bearerToken: tokenResult.value,
-    body: [
+  void auditSdk
+    .sendLogs([
       {
         action_type: "list",
         application_id: "messaging-support",
@@ -99,6 +52,6 @@ export async function emitAuditOnce(
         failure_reason: error,
         user_email_address: user.email,
       },
-    ],
-  }).catch()
+    ])
+    .catch(() => {})
 }

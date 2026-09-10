@@ -105,7 +105,6 @@ test.describe("Admin Message Sending", () => {
 
   test("clicking send another message takes you back to the first page @regression", async () => {
     await sendE2ETemplateMessage(authenticatedPage)
-    await authenticatedPage.waitForTimeout(2000)
     await authenticatedPage.getByRole("button", { name: "Add" }).first().click()
     await clickButton(authenticatedPage, "Continue to Attachments")
     await clickButton(authenticatedPage, "Skip")

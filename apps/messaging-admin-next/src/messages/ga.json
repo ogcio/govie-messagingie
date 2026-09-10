@@ -671,5 +671,8 @@
         "signout": "Logáil Amach"
       }
     }
+  },
+  "metadata": {
+    "title": "Riarachán MessagingIE"
   }
 }

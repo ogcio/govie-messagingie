@@ -116,46 +116,23 @@ vite.config.ts.timestamp-*
 yalc*
 
 tsconfig.tsbuildinfo
-# Squad: ignore runtime state (logs, inbox, sessions)
-.squad/orchestration-log/
-.squad/log/
-.squad/decisions/inbox/
-.squad/sessions/
-# Squad: SubSquad activation file (local to this machine)
-.squad-workstream
-.squad/agents
 
-.copilot
-.cursor
-
-# ------------------------------------------------------------------------------
-# BMad workflow artefacts
-# ------------------------------------------------------------------------------
-# PRDs, epics, story files, sprint status, audit reports, distillates,
-# and any other planning/agent output produced by the BMad skill suite.
-# Kept entirely out of the repo — neither committed nor shipped in
-# container images (the dockerignore mirrors these patterns).
-# Patterns are wide so any future BMad layout variant (root
-# `_bmad-output/`, scoped `_bmad/`, alternate `bmad-output/`) is also
-# excluded.
-_bmad-output/
-bmad-output/
-_bmad/
-.bmad/
-
+# TOOLS
 .github/agents
 .github/prompts
 .specsmd
 .specs-fire
-CONTEXT.md
 .github/instructions/fastify.instructions.md
-apps/messaging-api/src/scripts/send-message-batches/template/digital-wallet*
-apps/messaging-api/src/scripts/send-message-batches/template/digital-wallet-pilot.txt
-apps/messaging-api/src/scripts/send-message-batches/template/recipients*.csv
-
+.superpowers/
+.scratch/
 docs/superpowers/
 docs/adr/
-.superpowers/
+docs/agents/
+AGENTS.md
+.squad/
+.squad-workstream
+.copilot
+.cursor
 
 # Local-only screenshots used for PR documentation (uploaded as PR assets, not committed)
 .local-screenshots/
@@ -163,3 +140,15 @@ docs/adr/
 
 # Local PII hash debug config — holds pepper material, never commit
 apps/messaging-api/src/scripts/pii-hash/pii-hash.config.json
+
+# Local batch-campaign inputs — recipient lists hold citizen PII, never commit
+apps/messaging-api/src/scripts/send-message-batches/template/digital-wallet*
+apps/messaging-api/src/scripts/send-message-batches/template/digital-wallet-pilot.txt
+apps/messaging-api/src/scripts/send-message-batches/template/recipients*.csv
+
+# ------------------------------------------------------------------------------
+# SonarQube scanner
+# ------------------------------------------------------------------------------
+.scannerwork/
+.sonar/
+**/.scannerwork/

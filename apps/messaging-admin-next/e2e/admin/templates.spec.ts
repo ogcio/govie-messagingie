@@ -79,7 +79,7 @@ test.describe("Admin Message Templates", () => {
   })
 
   test("Admin can edit an existing message template @regression", async () => {
-    const updatedName = `Updated name ${Date.now()}`
+    const updatedName = `Updated name ${crypto.randomUUID()}`
     await authenticatedPage.goto(`${ADMIN_URL}/en/message-templates`)
     await authenticatedPage.getByRole("link", { name: "Edit" }).first().click()
     await authenticatedPage

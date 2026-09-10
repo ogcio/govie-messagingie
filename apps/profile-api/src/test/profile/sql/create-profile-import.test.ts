@@ -33,7 +33,7 @@ describe("createProfileImport", () => {
     const result = await createProfileImport(client, orgId);
 
     expect(result.profileImportId).toBeDefined();
-    expect(result.jobToken).toBeDefined;
+    expect(result.jobToken).toBeDefined();
 
     const got = await getProfileImport(client, result.profileImportId);
     expect(got.organisationId).toStrictEqual(orgId);
@@ -54,5 +54,30 @@ describe("createProfileImport", () => {
     await expect(
       createProfileImport(client, stringLongerThanMax),
     ).rejects.toThrow("value too long for type character varying(255)");
+  });
+
+  it("should return import when organisationId matches", async () => {
+    const orgId = `create-profile-import-${randomUUID().substring(0, 5)}`;
+    const metadata = { filename: "test.json", mimetype: "application/json" };
+    const result = await createProfileImport(client, orgId, "json", metadata);
+
+    const got = await getProfileImport(client, result.profileImportId, orgId);
+    expect(got.organisationId).toStrictEqual(orgId);
+  });
+
+  it("should throw not found when organisationId does not match", async () => {
+    const orgId = `create-profile-import-${randomUUID().substring(0, 5)}`;
+    const metadata = { filename: "test.json", mimetype: "application/json" };
+    const result = await createProfileImport(client, orgId, "json", metadata);
+
+    await expect(
+      getProfileImport(
+        client,
+        result.profileImportId,
+        `other-org-${randomUUID().substring(0, 5)}`,
+      ),
+    ).rejects.toThrow(
+      `Status for profile_import with id ${result.profileImportId} not found`,
+    );
   });
 });

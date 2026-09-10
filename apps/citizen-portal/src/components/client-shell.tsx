@@ -48,6 +48,7 @@ import { AppMainContent } from "@/components/layout/containers"
 import { LoadMaterialSymbols } from "@/components/load-material-symbols"
 import { PageHeader } from "@/components/navigation/page-header"
 import { PageLoading } from "@/components/page-loading"
+import { PublicName } from "@/components/public-name"
 import { ShellLoadingChrome } from "@/components/shell-loading-chrome"
 import { ANALYTICS } from "@/const/analytics"
 import { TRACE_MESSAGES } from "@/const/traces"
@@ -228,16 +229,13 @@ function StaleClaimsRefreshGate({
 
     if (isOnboarded) {
       if (previousAttemptTs) {
-        faro.api?.pushLog([
-          TRACE_MESSAGES.STALE_CLAIMS_REFRESH.RECOVERED,
-          {
-            context: {
-              previousAttemptTs,
-              roleCount: claims.roles?.length ?? 0,
-              orgCount: claims.organizations.length,
-            },
+        faro.api?.pushLog([TRACE_MESSAGES.STALE_CLAIMS_REFRESH.RECOVERED], {
+          context: {
+            previousAttemptTs,
+            roleCount: String(claims.roles?.length ?? 0),
+            orgCount: String(claims.organizations.length),
           },
-        ])
+        })
       }
       sessionStorage.removeItem(STALE_CLAIMS_REFRESH_KEY)
       return
@@ -245,31 +243,26 @@ function StaleClaimsRefreshGate({
 
     if (previousAttemptTs) {
       faro.api?.pushLog(
-        [
-          TRACE_MESSAGES.STALE_CLAIMS_REFRESH.SKIPPED_ALREADY_ATTEMPTED,
-          {
-            context: {
-              previousAttemptTs,
-              roles: claims.roles ?? [],
-              orgRoleCount: claims.organization_roles.length,
-            },
+        [TRACE_MESSAGES.STALE_CLAIMS_REFRESH.SKIPPED_ALREADY_ATTEMPTED],
+        {
+          level: LogLevel.WARN,
+          context: {
+            previousAttemptTs,
+            roles: (claims.roles ?? []).join(","),
+            orgRoleCount: String(claims.organization_roles.length),
           },
-        ],
-        { level: LogLevel.WARN },
+        },
       )
       return
     }
 
-    faro.api?.pushLog([
-      TRACE_MESSAGES.STALE_CLAIMS_REFRESH.DETECTED,
-      {
-        context: {
-          roles: claims.roles ?? [],
-          orgRoleCount: claims.organization_roles.length,
-          signinMethod: claims.signinMethod,
-        },
+    faro.api?.pushLog([TRACE_MESSAGES.STALE_CLAIMS_REFRESH.DETECTED], {
+      context: {
+        roles: (claims.roles ?? []).join(","),
+        orgRoleCount: String(claims.organization_roles.length),
+        signinMethod: String(claims.signinMethod),
       },
-    ])
+    })
 
     triggered.current = true
     sessionStorage.setItem(STALE_CLAIMS_REFRESH_KEY, String(Date.now()))
@@ -277,15 +270,13 @@ function StaleClaimsRefreshGate({
     invalidateSession()
       .catch((error: unknown) => {
         faro.api?.pushLog(
-          [
-            TRACE_MESSAGES.STALE_CLAIMS_REFRESH.INVALIDATE_FAILED,
-            {
-              context: {
-                error: error instanceof Error ? error.message : String(error),
-              },
+          [TRACE_MESSAGES.STALE_CLAIMS_REFRESH.INVALIDATE_FAILED],
+          {
+            level: LogLevel.ERROR,
+            context: {
+              error: error instanceof Error ? error.message : String(error),
             },
-          ],
-          { level: LogLevel.ERROR },
+          },
         )
       })
       .finally(() => {
@@ -296,10 +287,7 @@ function StaleClaimsRefreshGate({
   if (refreshing) {
     return user ? (
       <>
-        <PageHeader
-          publicName={user.name ?? user.email ?? user.sub}
-          onSignOut={signOut}
-        />
+        <PageHeader publicName={<PublicName />} onSignOut={signOut} />
         <AppMainContent>
           <MainLoading />
         </AppMainContent>
@@ -431,12 +419,7 @@ function AuthenticatedShell({
     return <LayoutLoading zone={zone} />
   }
 
-  const header = (
-    <PageHeader
-      publicName={user.name ?? user.email ?? user.sub}
-      onSignOut={signOut}
-    />
-  )
+  const header = <PageHeader publicName={<PublicName />} onSignOut={signOut} />
 
   // Static per-zone: keep it off any idle flag so the tree shape around
   // `{children}` stays stable and the content subtree never remounts/refetches.

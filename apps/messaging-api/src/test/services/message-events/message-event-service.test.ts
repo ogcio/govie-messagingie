@@ -96,7 +96,7 @@ async function insertMockMessage(
                   scheduled_at,
                   is_seen
               ) values (${values})
-              returning 
+              returning
                 id, user_id, organisation_id;
             `,
     valueArray,
@@ -969,10 +969,11 @@ describe("Message Event Service - listEvents", () => {
     });
 
     expect(listed.totalCount).toBe(1);
-    expect(listed.data[0].messageId, createdMockMessages[0].id);
-    expect(listed.data[0].eventType, MessagingEventType.deliverMessage.key);
-    expect(
-      listed.data[0].eventStatus,
+    expect(listed.data[0].messageId).toBe(createdMockMessages[0].id);
+    expect(listed.data[0].eventType).toBe(
+      MessagingEventType.deliverMessage.key,
+    );
+    expect(listed.data[0].eventStatus).toBe(
       MessagingEventType.deliverMessage.status,
     );
   });

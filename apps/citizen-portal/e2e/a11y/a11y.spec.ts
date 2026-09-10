@@ -1,21 +1,19 @@
 import AxeBuilder from "@axe-core/playwright"
 import { createHtmlReport } from "axe-html-reporter"
 import { expect, test } from "@playwright/test"
+import { ids, urls, users } from "../fixtures"
 import { createAuthenticatedPage } from "../helpers/user-auth.helper"
 import fs from "fs"
 
-const PROFILE_URL = process.env.PROFILE_URL || "http://localhost:3004"
-const DASHBOARD_URL = process.env.DASHBOARD_URL || "http://localhost:3003"
-
-/** Fixture from `e2e/user/user-messaging.spec.ts` (owned by peter.parker on dev). */
-const SECURE_MESSAGE_ID = "becb3e86-6a5c-48e1-8bf7-c1cb884df69c"
+const PROFILE_URL = urls.profileVisual
+const DASHBOARD_URL = urls.dashboardVisual
 
 const citizenPages = [
-  { url: "/en/messages", citizen: "e2e_citizen_1@user.com" },
+  { url: "/en/messages", citizen: users.citizen1.email },
   {
     // Canonical `?id=` avoids the legacy path redirect in next.config.
-    url: `/en/secure-messages?id=${SECURE_MESSAGE_ID}`,
-    citizen: "peter.parker@mail.ie",
+    url: `/en/secure-messages?id=${ids.secureMessage}`,
+    citizen: users.peterParker.email,
   },
 ]
 
@@ -25,7 +23,8 @@ test.describe("Accessibility (a11y) checks @regression", () => {
       browser,
     }) => {
       const page = await createAuthenticatedPage(browser, citizen)
-      await page.goto(url, { waitUntil: "networkidle" })
+      await page.goto(url)
+      await expect(page.locator("main")).toBeVisible()
       const accessibilityScanResults = await new AxeBuilder({ page })
         .exclude('iframe[title="reCAPTCHA"]')
         .analyze()
@@ -62,8 +61,9 @@ test.describe("Accessibility (a11y) checks @regression", () => {
   test(`citizen - should have no SERIOUS a11y violations on consent`, async ({
     browser,
   }) => {
-    const page = await createAuthenticatedPage(browser, "")
-    await page.waitForLoadState("networkidle")
+    const page = await createAuthenticatedPage(browser, users.bruceWayne.email)
+    await page.goto("/en/messages?force-consent=1")
+    await expect(page.getByRole("dialog")).toBeVisible()
     const accessibilityScanResults = await new AxeBuilder({ page })
       .exclude('iframe[title="reCAPTCHA"]')
       .analyze()
@@ -96,13 +96,16 @@ test.describe("Accessibility (a11y) checks @regression", () => {
   }) => {
     const page = await createAuthenticatedPage(
       browser,
-      "e2e_citizen_1@user.com",
+      users.citizen1.email,
     )
-    //await page.waitForLoadState("networkidle")
-
-    await page.goto(`${DASHBOARD_URL}/en/my-dashboard`, {
-      waitUntil: "networkidle",
-    })
+    await page.goto(`${DASHBOARD_URL}/en/my-dashboard`)
+    // `main` also exists on the auth pages this cross-zone hop redirects
+    // through, so waiting on it lets Axe start injecting mid-redirect and the
+    // navigation then destroys its execution context. Wait for content that
+    // only the destination app renders.
+    await expect(
+      page.getByRole("heading", { name: "Welcome back, E2E Citizen User" }),
+    ).toBeVisible()
     const accessibilityScanResults = await new AxeBuilder({ page })
       .exclude('iframe[title="reCAPTCHA"]')
       .analyze()
@@ -135,13 +138,10 @@ test.describe("Accessibility (a11y) checks @regression", () => {
   }) => {
     const page = await createAuthenticatedPage(
       browser,
-      "e2e_citizen_1@user.com",
+      users.citizen1.email,
     )
-    //await page.waitForLoadState("networkidle")
-
-    await page.goto(`${DASHBOARD_URL}/en/my-submissions`, {
-      waitUntil: "networkidle",
-    })
+    await page.goto(`${DASHBOARD_URL}/en/my-submissions`)
+    await expect(page.getByRole("textbox", { name: "Search" })).toBeVisible()
     const accessibilityScanResults = await new AxeBuilder({ page })
       .exclude('iframe[title="reCAPTCHA"]')
       .analyze()
@@ -174,13 +174,12 @@ test.describe("Accessibility (a11y) checks @regression", () => {
   }) => {
     const page = await createAuthenticatedPage(
       browser,
-      "e2e_citizen_1@user.com",
+      users.citizen1.email,
     )
-    //await page.waitForLoadState("networkidle")
-
-    await page.goto(`${PROFILE_URL}/en`, {
-      waitUntil: "networkidle",
-    })
+    await page.goto(`${PROFILE_URL}/en`)
+    await expect(
+      page.getByRole("heading", { name: "My Profile" }),
+    ).toBeVisible()
     const accessibilityScanResults = await new AxeBuilder({ page })
       .exclude('iframe[title="reCAPTCHA"]')
       .analyze()

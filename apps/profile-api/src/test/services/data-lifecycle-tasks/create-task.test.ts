@@ -1,12 +1,15 @@
 import { randomUUID } from "node:crypto";
 import type { PoolClient } from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   type LifecycleTask,
   LifecycleTaskStatuses,
   LifecycleTaskTypes,
 } from "~/schemas/data-lifecycle-tasks/index.js";
-import { createLifecycleTask } from "~/services/data-lifecycle-tasks/create-task.js";
+import {
+  createLifecycleTask,
+  throwIfActiveTaskAlreadyExists,
+} from "~/services/data-lifecycle-tasks/create-task.js";
 import { createProfile } from "~/services/profiles/sql/create-profile.js";
 import {
   DATABASE_TEST_URL_KEY,
@@ -78,5 +81,69 @@ describe("Create data lifecycle task", () => {
       requested_by_user_id: profileId,
     });
     expect(taskFromDb.rows[0].scheduled_at).toStrictEqual(now);
+  });
+
+  it("defaults missing metadata to an empty object", async () => {
+    const query = vi.fn().mockResolvedValue({ rows: [{ id: "task-1" }] });
+
+    await createLifecycleTask({
+      client: { query } as unknown as PoolClient,
+      lifecycleTaskInput: {
+        task_type: LifecycleTaskTypes.DeleteProfile,
+        profile_id: "profile-1",
+        scheduled_at: new Date().toISOString(),
+      },
+    });
+
+    expect(query.mock.calls[0][1][3]).toEqual({});
+  });
+
+  it("rejects when the database does not return the created task", async () => {
+    const client = {
+      query: vi.fn().mockResolvedValue({ rows: [] }),
+    } as unknown as PoolClient;
+
+    await expect(
+      createLifecycleTask({
+        client,
+        lifecycleTaskInput: {
+          task_type: LifecycleTaskTypes.DeleteProfile,
+          profile_id: "profile-1",
+          scheduled_at: new Date().toISOString(),
+        },
+      }),
+    ).rejects.toMatchObject({ statusCode: 500 });
+  });
+
+  it("rejects when an active task of the same type exists", async () => {
+    const client = {
+      query: vi.fn().mockResolvedValue({ rows: [{ id: "task-1" }] }),
+    } as unknown as PoolClient;
+
+    await expect(
+      throwIfActiveTaskAlreadyExists({
+        client,
+        lifecycleTaskInput: {
+          task_type: LifecycleTaskTypes.DeleteProfile,
+          profile_id: "profile-1",
+        },
+      }),
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
+  it("allows creation when no active task exists", async () => {
+    const client = {
+      query: vi.fn().mockResolvedValue({ rows: [] }),
+    } as unknown as PoolClient;
+
+    await expect(
+      throwIfActiveTaskAlreadyExists({
+        client,
+        lifecycleTaskInput: {
+          task_type: LifecycleTaskTypes.DeleteProfile,
+          profile_id: "profile-1",
+        },
+      }),
+    ).resolves.toBeUndefined();
   });
 });

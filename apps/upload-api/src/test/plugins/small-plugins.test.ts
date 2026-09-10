@@ -1,0 +1,206 @@
+/**
+ * Unit tests for the small decorator/hook plugins, called directly with a
+ * fake fastify instance (same approach as pii-hasher.test.ts).
+ */
+import type { FastifyInstance, FastifyRequest } from "fastify";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ClamavClient } from "../../utils/clamav/index.js";
+
+const getActiveSpanMock = vi.fn();
+vi.mock("@ogcio/o11y-sdk-node", () => ({
+  getActiveSpan: () => getActiveSpanMock(),
+}));
+
+const trackEventMock = vi.fn();
+vi.mock("../../utils/authentication-factory.js", async () => {
+  const actual = await vi.importActual<
+    typeof import("../../utils/authentication-factory.js")
+  >("../../utils/authentication-factory.js");
+  return {
+    ...actual,
+    getM2MAnalyticsSdk: () =>
+      Promise.resolve({ track: { event: trackEventMock } }),
+  };
+});
+
+type Hook = (request: FastifyRequest, reply?: unknown) => Promise<void>;
+type Plugin = (fastify: FastifyInstance) => Promise<void> | void;
+
+const buildFastify = (config: Record<string, unknown> = {}) => {
+  const decorations: Record<string, unknown> = {};
+  const hooks: Record<string, Hook[]> = {};
+  const fastify = {
+    config,
+    decorate: (name: string, value: unknown) => {
+      decorations[name] = value;
+    },
+    addHook: (name: string, hook: Hook) => {
+      hooks[name] = hooks[name] ?? [];
+      hooks[name].push(hook);
+    },
+    log: { warn: vi.fn(), debug: vi.fn() },
+  } as unknown as FastifyInstance;
+  return { fastify, decorations, hooks };
+};
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+describe("clamscan plugin", async () => {
+  const plugin = (await import("../../plugins/clamscan.js"))
+    .default as unknown as Plugin;
+
+  it("decorates a configured ClamavClient", async () => {
+    const { fastify, decorations } = buildFastify({
+      CLAMAV_HOST: "clamav.local",
+      CLAMAV_CHUNKS_NUMBER: 4,
+      CLAMAV_CHUNK_SIZE_KB: 128,
+    });
+
+    await plugin(fastify);
+
+    expect(decorations.avClient).toBeInstanceOf(ClamavClient);
+  });
+});
+
+describe("cache plugin", async () => {
+  const plugin = (await import("../../plugins/cache.js"))
+    .default as unknown as Plugin;
+
+  it("decorates a working node cache", async () => {
+    const { fastify, decorations } = buildFastify();
+
+    await plugin(fastify);
+
+    const cache = decorations.nodeCache as {
+      set: (k: string, v: string) => void;
+      get: (k: string) => string | undefined;
+    };
+    cache.set("key", "value");
+    expect(cache.get("key")).toBe("value");
+  });
+});
+
+describe("secrets-manager plugin", async () => {
+  const plugin = (await import("../../plugins/secrets-manager.js"))
+    .default as unknown as Plugin;
+
+  it("returns undefined when configuration is incomplete", async () => {
+    const { fastify, decorations } = buildFastify({});
+
+    await plugin(fastify);
+
+    const getSecretsManager = decorations.getSecretsManager as () => unknown;
+    expect(getSecretsManager()).toBeUndefined();
+  });
+
+  it("creates a client when region and endpoint are set", async () => {
+    const { fastify, decorations } = buildFastify({
+      AWS_SECRETS_MANAGER_REGION: "eu-west-1",
+      AWS_SECRETS_MANAGER_ENDPOINT: "http://localhost:4566",
+    });
+
+    await plugin(fastify);
+
+    const getSecretsManager = decorations.getSecretsManager as () => unknown;
+    expect(getSecretsManager()).toBeDefined();
+  });
+
+  it("passes explicit credentials through when set", async () => {
+    const { fastify, decorations } = buildFastify({
+      AWS_SECRETS_MANAGER_REGION: "eu-west-1",
+      AWS_SECRETS_MANAGER_ENDPOINT: "http://localhost:4566",
+      AWS_ACCESS_KEY_ID: "key",
+      AWS_SECRET_ACCESS_KEY: "secret",
+    });
+
+    await plugin(fastify);
+
+    const client = (decorations.getSecretsManager as () => unknown)() as {
+      config: { credentials: () => Promise<{ accessKeyId: string }> };
+    };
+    await expect(client.config.credentials()).resolves.toMatchObject({
+      accessKeyId: "key",
+    });
+  });
+});
+
+describe("analytics-sdk plugin", async () => {
+  const plugin = (await import("../../plugins/analytics-sdk.js"))
+    .default as unknown as Plugin;
+
+  it("does nothing when ANALYTICS_URL is not set", async () => {
+    vi.stubEnv("ANALYTICS_URL", "");
+    const { fastify, hooks } = buildFastify();
+
+    await plugin(fastify);
+
+    expect(hooks.onRequest).toBeUndefined();
+    vi.unstubAllEnvs();
+  });
+
+  it("tracks non-health requests", async () => {
+    vi.stubEnv("ANALYTICS_URL", "http://analytics.local");
+    const { fastify, hooks } = buildFastify();
+
+    await plugin(fastify);
+
+    const hook = hooks.onRequest[0];
+    await hook({
+      originalUrl: "/files",
+      method: "post",
+    } as unknown as FastifyRequest);
+    expect(trackEventMock).toHaveBeenCalledWith({
+      event: {
+        action: "POST",
+        category: "API",
+        name: "/files",
+        value: 1,
+      },
+    });
+
+    trackEventMock.mockClear();
+    await hook({
+      originalUrl: "/health",
+      method: "get",
+    } as unknown as FastifyRequest);
+    expect(trackEventMock).not.toHaveBeenCalled();
+    vi.unstubAllEnvs();
+  });
+});
+
+describe("pseudo-user-traces-hook plugin", async () => {
+  const plugin = (await import("../../plugins/pseudo-user-traces-hook.js"))
+    .default as unknown as Plugin;
+
+  const runHook = async (request: unknown) => {
+    const { fastify, hooks } = buildFastify();
+    await plugin(fastify);
+    await hooks.preHandler?.[0](request as FastifyRequest);
+  };
+
+  it("sets span attributes for pseudo users", async () => {
+    const setAttribute = vi.fn();
+    getActiveSpanMock.mockReturnValue({ setAttribute });
+
+    await runHook({
+      userData: { pseudoUser: { id: "pseudo-1", version: 2 } },
+    });
+
+    expect(setAttribute).toHaveBeenCalledWith("pseudo_user.id", "pseudo-1");
+    expect(setAttribute).toHaveBeenCalledWith("pseudo_user.version", 2);
+  });
+
+  it("does nothing without a pseudo user", async () => {
+    await runHook({ userData: {} });
+    expect(getActiveSpanMock).not.toHaveBeenCalled();
+  });
+
+  it("does nothing without an active span", async () => {
+    getActiveSpanMock.mockReturnValue(undefined);
+    await expect(
+      runHook({ userData: { pseudoUser: { id: "p", version: 1 } } }),
+    ).resolves.toBeUndefined();
+  });
+});

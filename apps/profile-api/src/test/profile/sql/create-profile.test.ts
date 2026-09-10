@@ -85,6 +85,17 @@ describe("createProfile", () => {
     );
   });
 
+  it("should return the id when re-inserting an unchanged profile", async () => {
+    const sampleProfile = getSampleProfile();
+    const inserted = await createProfile(client, sampleProfile);
+
+    // The upsert skips the update when nothing changed, so this returns no row.
+    // Logto re-delivers webhooks, so an unchanged repeat must not be an error.
+    const repeated = await createProfile(client, sampleProfile);
+
+    expect(repeated).toBe(inserted);
+  });
+
   it("should use default 'en' for preferredLanguage if not provided", async () => {
     const profileWithoutLanguage = getSampleProfile();
     profileWithoutLanguage.preferredLanguage = undefined;

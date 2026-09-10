@@ -26,12 +26,13 @@ vi.mock("node:fs", () => {
   };
 });
 
-describe("Get package info works as expected", {}, async () => {
+// Vitest 5 dropped describe.sequential; file-local tests already run sequentially by default.
+describe("Get package info works as expected", async () => {
   afterAll(() => {
     vi.restoreAllMocks();
   });
 
-  test.sequential("extracts the correct data", async () => {
+  test("extracts the correct data", async () => {
     currentTest = "successful-one";
     const packageInfo = await getPackageInfo();
 
@@ -39,7 +40,7 @@ describe("Get package info works as expected", {}, async () => {
     assert.deepStrictEqual("test-mock", packageInfo.name);
   });
 
-  test.sequential("throws error if file not found", async () => {
+  test("throws error if file not found", async () => {
     currentTest = throwErrorTestName;
     await expect(() => getPackageInfo()).rejects.toThrowError(
       "File does not exist: package.json",

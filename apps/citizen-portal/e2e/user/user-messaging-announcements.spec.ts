@@ -1,7 +1,7 @@
 import { expect, type Page, test } from "@playwright/test"
+import { contacts } from "../fixtures"
 import { createPageWithVideo } from "../helpers/browser-context"
-
-const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
+import { waitForMockLoginForm } from "../helpers/user-auth.helper"
 
 let page: Page
 
@@ -9,11 +9,7 @@ test.describe("User Messages page", () => {
   test.beforeAll(async ({ browser }) => {
     page = await createPageWithVideo(browser)
     await page.goto("/")
-    if (page.url().includes(`${AUTH_URL}`)) {
-      // Click the MyGovID login button
-
-      await page.getByRole("button", { name: "Continue with MyGovId" }).click()
-    }
+    await waitForMockLoginForm(page)
     await page
       .locator(
         "#login-form > div > div.gi-w-full > div:nth-child(2) > div.gi-accordion > div",
@@ -21,9 +17,11 @@ test.describe("User Messages page", () => {
       .click()
     await page.locator("#firstName").fill("Catherine")
     await page.locator("#lastName").fill("Sigurjónsdóttir")
-    await page.locator("#email").fill("catherine.sigurjonsdottir@mail.ie")
+    await page
+      .locator("#email")
+      .fill(contacts.announcementRecipient.email)
     await page.getByRole("button", { name: "LOGIN" }).click()
-    await page.waitForLoadState("networkidle")
+    await expect(page).toHaveURL(/.*\/en\//)
   })
 
   test.afterAll(async () => {
@@ -31,7 +29,11 @@ test.describe("User Messages page", () => {
     await page.close()
   })
 
-  test("a user can see an announcement @regression", async () => {
-    await expect(page.locator("body > div:nth-child(31) > div")).toBeVisible()
+  // Announcements are global per application, not recipient-specific. Dev's
+  // messaging feed is empty; re-enable when the pipeline seeds one.
+  test.fixme("a user can see an announcement @regression", async () => {
+    await expect(
+      page.getByRole("heading", { name: "Your inbox has been updated" }),
+    ).toBeVisible()
   })
 })

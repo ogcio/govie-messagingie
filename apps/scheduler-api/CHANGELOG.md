@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.1.2](https://github.com/ogcio/govie-services-messaging/compare/scheduler-api-v1.1.1...scheduler-api-v1.1.2) (2026-09-10)
+
+
+### Bug Fixes
+
+* **deps:** update all non-major dependencies ([#869](https://github.com/ogcio/govie-services-messaging/issues/869)) ([680dc92](https://github.com/ogcio/govie-services-messaging/commit/680dc9212263e5da43fb6925b949564e86451ca7))
+* **deps:** update all non-major dependencies ([#887](https://github.com/ogcio/govie-services-messaging/issues/887)) ([a4339d1](https://github.com/ogcio/govie-services-messaging/commit/a4339d119ee115413a4f8bb5edd3c9a55c1ed824))
+
+
+### Miscellaneous Chores
+
+* deps update AB[#42306](https://github.com/ogcio/govie-services-messaging/issues/42306) ([#853](https://github.com/ogcio/govie-services-messaging/issues/853)) ([3b207d0](https://github.com/ogcio/govie-services-messaging/commit/3b207d0226a628af1bbcfceb28dabc79645e2553))
+* **deps:** update vitest monorepo to v5 (major) ([#899](https://github.com/ogcio/govie-services-messaging/issues/899)) ([5da3cfe](https://github.com/ogcio/govie-services-messaging/commit/5da3cfefc5803c9651aaa33c75fec60c91b1cad9))
+* normalize local development scripts AB[#42440](https://github.com/ogcio/govie-services-messaging/issues/42440) ([#840](https://github.com/ogcio/govie-services-messaging/issues/840)) ([fe97f92](https://github.com/ogcio/govie-services-messaging/commit/fe97f927b9c92a1326aaa400257a920c1f1e8189))
+* unify and rationalize setup commands AB[#42363](https://github.com/ogcio/govie-services-messaging/issues/42363) ([#864](https://github.com/ogcio/govie-services-messaging/issues/864)) ([5f6dd94](https://github.com/ogcio/govie-services-messaging/commit/5f6dd944d32b6b187180a98824bd1456930d46d9))
+
 ## [1.1.1](https://github.com/ogcio/govie-services-messaging/compare/scheduler-api-v1.1.0...scheduler-api-v1.1.1) (2026-08-24)
 
 

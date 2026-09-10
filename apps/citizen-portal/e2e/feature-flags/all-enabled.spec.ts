@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test"
+import { users } from "../fixtures"
 import { createAuthenticatedPage } from "../helpers/user-auth.helper"
 
 /**
@@ -15,7 +16,7 @@ let page: Page
 
 test.describe("Feature flags — fully enabled deployment", () => {
   test.beforeAll(async ({ browser }) => {
-    page = await createAuthenticatedPage(browser, "e2e_citizen_1@user.com")
+    page = await createAuthenticatedPage(browser, users.citizen1.email)
   })
 
   test.afterAll(async () => {

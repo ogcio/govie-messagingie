@@ -55,7 +55,10 @@ vi.mock("../../../utils/authentication-factory.js", () => ({
       const notFoundProfileId = "not-found";
       const linkedProfileId = "linked-id";
       if (id === notFoundProfileId) {
-        return { data: undefined, error: { detail: "user not found" } };
+        return {
+          data: undefined,
+          error: { detail: "user not found", statusCode: 404 },
+        };
       }
       if (id === linkedProfileId) {
         const childProfileOne = "child-1";
@@ -80,6 +83,7 @@ vi.mock("../../../utils/authentication-factory.js", () => ({
   getM2MProfileSdk: vi.fn().mockResolvedValue({
     getProfile: vi.fn((id: string) => {
       const notFoundProfileId = "not-found";
+      const sdkErrorProfileId = "sdk-error";
       const optedOutProfileId = "opted-out";
       const deletedProfileId = "deleted-profile";
       const disabledProfileId = "disabled-profile";
@@ -122,7 +126,15 @@ vi.mock("../../../utils/authentication-factory.js", () => ({
             },
           };
         case notFoundProfileId:
-          return { data: undefined, error: { detail: "user not found" } };
+          return {
+            data: undefined,
+            error: { detail: "user not found", statusCode: 404 },
+          };
+        case sdkErrorProfileId:
+          return {
+            data: undefined,
+            error: { detail: "profile sdk failed", statusCode: 500 },
+          };
         default:
           return {
             data: { id, email: `${id}@example.com`, status: "active" },
@@ -200,6 +212,7 @@ afterAll(async () => {
 
 describe("Message Service", () => {
   const notFoundProfileId = "not-found";
+  const sdkErrorProfileId = "sdk-error";
   const linkedProfileId = "linked-id";
   const optedOutProfileId = "opted-out";
   const deletedProfileId = "deleted-profile";
@@ -339,7 +352,23 @@ describe("Message Service", () => {
       });
     });
 
-    it("should handle errors during messaging processing", async () => {
+    it("should return 404 when the recipient profile does not exist", async () => {
+      const message = getMockMessage();
+      message.recipientUserId = notFoundProfileId;
+      await expect(
+        processMessage({
+          pool,
+          sender,
+          message,
+          logger: getMockBaseLogger(),
+        }),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+        message: `User with ${notFoundProfileId} id not found`,
+      });
+    });
+
+    it("should return 404 when the sender profile does not exist", async () => {
       const message = getMockMessage();
       await expect(
         processMessage({
@@ -348,9 +377,25 @@ describe("Message Service", () => {
           message,
           logger: getMockBaseLogger(),
         }),
-      ).rejects.toThrow(
-        "Failed fetching user from profile sdk: user not found",
-      );
+      ).rejects.toMatchObject({
+        statusCode: 404,
+        message: `User with ${notFoundProfileId} id not found`,
+      });
+    });
+
+    it("should return 503 when the profile sdk fails", async () => {
+      const message = getMockMessage();
+      await expect(
+        processMessage({
+          pool,
+          sender: { ...sender, id: sdkErrorProfileId },
+          message,
+          logger: getMockBaseLogger(),
+        }),
+      ).rejects.toMatchObject({
+        statusCode: 503,
+        message: "Failed fetching user from profile sdk: profile sdk failed",
+      });
     });
 
     it("should handle errors during messaging creation", async () => {

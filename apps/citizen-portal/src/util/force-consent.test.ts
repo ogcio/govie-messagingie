@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import {
   clearPersistedForceConsent,
   FORCE_CONSENT_SESSION_KEY,
@@ -16,6 +16,7 @@ describe("force-consent persistence", () => {
 
   afterEach(() => {
     sessionStorage.clear()
+    vi.unstubAllGlobals()
   })
 
   it("stores session flag when force-consent is in the URL", () => {
@@ -49,5 +50,32 @@ describe("force-consent persistence", () => {
     clearPersistedForceConsent()
 
     expect(sessionStorage.getItem(FORCE_CONSENT_SESSION_KEY)).toBeNull()
+  })
+
+  it("leaves URLs alone without force-consent context", () => {
+    persistForceConsentFromUrl()
+
+    expect(window.location.href.endsWith("/en/messages")).toBe(true)
+    expect(withForceConsent("/en/messages")).toBe("/en/messages")
+  })
+
+  it("preserves the current query and hash on landing paths", () => {
+    window.history.replaceState(
+      {},
+      "",
+      `/en/messages?${FORCE_CONSENT_PARAM}=1&message=one#details`,
+    )
+
+    expect(withForceConsent("/en/messages")).toBe(
+      `/en/messages?${FORCE_CONSENT_PARAM}=1&message=one#details`,
+    )
+  })
+
+  it("is safe outside the browser", () => {
+    vi.stubGlobal("window", undefined)
+
+    expect(persistForceConsentFromUrl()).toBeUndefined()
+    expect(withForceConsent("/en/messages")).toBe("/en/messages")
+    expect(clearPersistedForceConsent()).toBeUndefined()
   })
 })

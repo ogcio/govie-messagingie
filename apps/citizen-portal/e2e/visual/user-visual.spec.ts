@@ -1,16 +1,21 @@
 import type { Page } from "@playwright/test"
 import { expect, test } from "@playwright/test"
+import { urls, users } from "../fixtures"
 import { createAuthenticatedPage } from "../helpers/user-auth.helper"
+import {
+  navigateAndVerifyHeading,
+  navigateAndVerifySearch,
+} from "../utils/navigation-helpers"
+import { expectSettledScreenshot } from "./visual-helpers"
 
 let page: Page
-const maxDiff = 0.02
 
-const PROFILE_URL = process.env.PROFILE_URL || "http://localhost:3004"
-const DASHBOARD_URL = process.env.DASHBOARD_URL || "http://localhost:3003"
+const PROFILE_URL = urls.profileVisual
+const DASHBOARD_URL = urls.dashboardVisual
 
 test.describe("User Visual Regression", () => {
   test.beforeAll(async ({ browser }) => {
-    page = await createAuthenticatedPage(browser, "e2e_citizen_1@user.com")
+    page = await createAuthenticatedPage(browser, users.citizen1.email)
   })
 
   test.afterAll(async () => {
@@ -19,46 +24,43 @@ test.describe("User Visual Regression", () => {
 
   test("inbox visual snapshot @visual", async () => {
     await page.goto("/")
-    await page.waitForLoadState("networkidle")
     await page.getByRole("textbox", { name: "Search" }).fill("1234567890")
     await page.getByRole("textbox", { name: "Search" }).press("Enter")
-    await page.waitForTimeout(2000) // Wait for any dynamic content to load
-    await expect(page).toHaveScreenshot("user-inbox.png", {
-      fullPage: true,
-      maxDiffPixelRatio: maxDiff,
-    })
+    await expectSettledScreenshot(page, "user-inbox.png")
   })
 
+  /**
+   * The three tests below leave the messaging zone, and `page.goto` resolves on
+   * the first document of that hop — the SAG `/auth/sign-in?app=…` redirect —
+   * not on the destination. Screenshotting straight after it therefore captures
+   * whatever is on screen mid-bounce, which is why these failed on image *size*
+   * (1280x784 against a 1280x1889 baseline) rather than on pixel diff.
+   *
+   * `b68677e9` removed the `networkidle` wait that had been absorbing the hop
+   * without replacing it here, so the race has been live since. Wait on content
+   * only the destination app renders instead, which is both what that commit
+   * intended and what `a11y.spec.ts` already does for these same three URLs.
+   */
   test("profile page visual snapshot @visual", async () => {
-    await page.waitForLoadState("networkidle")
-
-    await page.goto(`${PROFILE_URL}/en`)
-    await page.waitForLoadState("networkidle")
-    await expect(page).toHaveScreenshot("user-profile.png", {
-      fullPage: true,
-      maxDiffPixelRatio: maxDiff,
-    })
+    await navigateAndVerifyHeading(page, `${PROFILE_URL}/en`, "My Profile")
+    await expectSettledScreenshot(page, "user-profile.png")
   })
 
   test("dashboard page visual snapshot @visual", async () => {
-    await page.waitForLoadState("networkidle")
-
-    await page.goto(`${DASHBOARD_URL}/en/my-dashboard`)
-    await page.waitForLoadState("networkidle")
-    await expect(page).toHaveScreenshot("user-dashboard.png", {
-      fullPage: true,
-      maxDiffPixelRatio: maxDiff,
-    })
+    await navigateAndVerifyHeading(
+      page,
+      `${DASHBOARD_URL}/en/my-dashboard`,
+      "Welcome back, E2E Citizen User",
+    )
+    await expectSettledScreenshot(page, "user-dashboard.png")
   })
 
   test("dashboard submissions page visual snapshot @visual", async () => {
-    await page.waitForLoadState("networkidle")
-
-    await page.goto(`${DASHBOARD_URL}/en/my-submissions`)
-    await page.waitForLoadState("networkidle")
-    await expect(page).toHaveScreenshot("user-dashboard-submissions.png", {
-      fullPage: true,
-      maxDiffPixelRatio: maxDiff,
-    })
+    await navigateAndVerifySearch(
+      page,
+      `${DASHBOARD_URL}/en/my-submissions`,
+      "Search",
+    )
+    await expectSettledScreenshot(page, "user-dashboard-submissions.png")
   })
 })

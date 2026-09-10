@@ -6,6 +6,69 @@ import { appendMultipartStreamToZip } from "./zip.js";
 
 const FILES_CHUNK_SIZE = 5;
 
+export async function getSharedFileIdsForUsers(params: {
+  userIds: string[];
+  uploadSupportSdk: Upload["support"];
+  logger: pino.Logger;
+}): Promise<
+  | {
+      success: true;
+      fileIdsByUserId: Record<string, string[]>;
+    }
+  | { success: false; error: Error }
+> {
+  const { userIds, uploadSupportSdk, logger } = params;
+  const promises: Promise<{
+    userId: string;
+    error?: Error;
+    fileIds?: string[];
+    emptyResponse?: true;
+  }>[] = userIds.map(async (userId) => {
+    const files = await uploadSupportSdk.getSharedFilesForUser({ userId });
+    if (files.error || !files.data) {
+      logger.error(
+        { error: files.error },
+        `Failed to get shared files for user ${userId}`,
+      );
+      return {
+        userId,
+        error: new Error(`Failed to get shared files for user ${userId}`),
+      };
+    }
+
+    const fileIds = files.data
+      .map((file: { id?: string }) => file.id)
+      .filter((id: string | undefined): id is string => !!id);
+
+    if (fileIds.length === 0) {
+      logger.info(
+        `[Export Data SDK] No files found for user ${userId}, skipping export`,
+      );
+      return { userId, emptyResponse: true as const };
+    }
+
+    return { userId, fileIds };
+  });
+
+  const results = await Promise.all(promises);
+  const fileIdsByUserId: Record<string, string[]> = {};
+
+  for (const result of results) {
+    if ("error" in result && result.error) {
+      logger.error(
+        { error: result.error },
+        `Error fetching shared files for user ${result.userId}`,
+      );
+      return { success: false as const, error: result.error };
+    }
+
+    if (!result.emptyResponse && result.fileIds) {
+      fileIdsByUserId[result.userId] = result.fileIds;
+    }
+  }
+
+  return { success: true as const, fileIdsByUserId };
+}
 export async function downloadAndZipFiles(params: {
   fileIdsByUserId: Record<string, string[]>;
   uploadSupportSdk: Upload["support"];

@@ -107,4 +107,59 @@ describe("getProfileImportDetails", () => {
       `No import details found for import ID: ${profileImport.profileImportId}`,
     );
   });
+
+  it("should return details when organisationId matches", async () => {
+    const insertedProfiles = mockProfiles.slice(0, 1);
+    const orgId = `get-profile-import-details-${randomUUID().substring(0, 5)}`;
+    const metadata = { filename: "test.json", mimetype: "application/json" };
+    const profileImport = await createProfileImport(
+      client,
+      orgId,
+      "json",
+      metadata,
+    );
+    await createProfileImportDetails(
+      client,
+      profileImport.profileImportId,
+      insertedProfiles,
+    );
+
+    const result = await getProfileImportDetails(
+      client,
+      profileImport.profileImportId,
+      undefined,
+      orgId,
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0].email).toBe(insertedProfiles[0].email);
+  });
+
+  it("should throw not found when organisationId does not match", async () => {
+    const insertedProfiles = mockProfiles.slice(0, 1);
+    const orgId = `get-profile-import-details-${randomUUID().substring(0, 5)}`;
+    const metadata = { filename: "test.json", mimetype: "application/json" };
+    const profileImport = await createProfileImport(
+      client,
+      orgId,
+      "json",
+      metadata,
+    );
+    await createProfileImportDetails(
+      client,
+      profileImport.profileImportId,
+      insertedProfiles,
+    );
+
+    await expect(
+      getProfileImportDetails(
+        client,
+        profileImport.profileImportId,
+        undefined,
+        `other-org-${randomUUID().substring(0, 5)}`,
+      ),
+    ).rejects.toThrow(
+      `No import details found for import ID: ${profileImport.profileImportId}`,
+    );
+  });
 });

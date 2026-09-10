@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import type { PoolClient } from "pg";
 
 const isInTransaction = async (client: PoolClient): Promise<boolean> => {
@@ -15,7 +16,7 @@ export const withRollback = async <T>(
 
   if (alreadyInTransaction) {
     // If already in a transaction, use a savepoint for rollback capability
-    const savepointName = `savepoint_${Math.random().toString(36).substring(2, 15)}`;
+    const savepointName = `savepoint_${randomBytes(8).toString("hex")}`;
     try {
       await client.query(`SAVEPOINT ${savepointName}`);
       const result = await callback(client);

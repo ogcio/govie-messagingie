@@ -670,5 +670,8 @@
         "signout": "Logout"
       }
     }
+  },
+  "metadata": {
+    "title": "MessagingIE Admin"
   }
 }

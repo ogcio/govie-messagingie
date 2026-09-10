@@ -2,7 +2,7 @@ import type { PostgresDb } from "@fastify/postgres";
 import { httpErrors } from "@fastify/sensible";
 import type { AddPermissionsRequestBody } from "../schema.js";
 
-export default (pg: PostgresDb, params: AddPermissionsRequestBody) => {
+export default async (pg: PostgresDb, params: AddPermissionsRequestBody) => {
   const fileId = params.fileId;
   let toAddUserIds: string[];
   if ("userIds" in params) {
@@ -12,7 +12,7 @@ export default (pg: PostgresDb, params: AddPermissionsRequestBody) => {
   }
 
   try {
-    return pg.query(
+    return await pg.query(
       `
     INSERT INTO files_users (file_id, user_id)
     SELECT $1, unnest($2::text[])

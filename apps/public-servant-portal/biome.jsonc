@@ -1,0 +1,17 @@
+{
+  "root": false,
+  "extends": ["../../biome.jsonc"],
+  "files": {
+    "includes": [
+      "./src/**/*",
+      "./test/**/*",
+      "./e2e/**/*",
+      "!**/.next/**/*",
+      "!**/public/**/*",
+      "!**/out/**/*",
+      "!**/coverage/**/*",
+      "!**/.cursor/**/*",
+      "!next-env.d.ts"
+    ]
+  }
+}

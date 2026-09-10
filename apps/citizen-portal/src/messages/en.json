@@ -16,7 +16,7 @@
     }
   },
   "dashboard": {
-    "welcome": "Welcome back, {name}",
+    "welcome": "Welcome back, <name></name>",
     "messages": {
       "title": "Your recent messages",
       "link": "View all messages",
@@ -259,7 +259,6 @@
         "dashboard": "Dashboard",
         "submissions": "Submissions",
         "messaging": "MessagingIE",
-        "whatsNew": "What's new",
         "close": "Close"
       },
       "menu": "Menu",
@@ -344,7 +343,7 @@
     },
     "firstName": "First Name",
     "lastName": "Last Name",
-    "update": "Update",
+    "update": "Update Public Name",
     "name": "Name",
     "dateOfBirth": "Date of birth",
     "clickToReveal": "Click to reveal",

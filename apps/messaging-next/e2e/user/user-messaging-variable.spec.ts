@@ -5,6 +5,7 @@ import { clickButton, logout } from "../utils/functions"
 import { sendMessageAndVerify } from "../utils/message-helpers"
 
 let page: Page
+const recipientEmail = "messagingie2@gmail.com"
 
 test.describe("User Messages page", () => {
   test.beforeAll(async ({ browser }) => {
@@ -31,11 +32,9 @@ test.describe("User Messages page", () => {
     await page
       .getByRole("tabpanel", { name: "Search" })
       .locator('input[name="email"]')
-      .fill("michael.clarkson+4@nearform.com")
+      .fill(recipientEmail)
     await page.getByRole("button", { name: "Search" }).click()
-    await expect(page.getByRole("row").nth(1)).toContainText(
-      "michael.clarkson+4@nearform.com",
-    )
+    await expect(page.getByRole("row").nth(1)).toContainText(recipientEmail)
     await page.getByRole("button", { name: "Add recipient" }).click()
     await clickButton(page, "Continue to Attachments")
     await clickButton(page, "Skip")
@@ -61,15 +60,13 @@ test.describe("User Messages page", () => {
         "#login-form > div > div.gi-w-full > div:nth-child(2) > div.gi-accordion > div",
       )
       .click()
-    await page.locator("#firstName").fill("Alice")
-    await page.locator("#lastName").fill("Wayne")
-    await page.locator("#email").fill("bruce.wayne@mail.ie")
+    await page.locator("#firstName").fill("Andrew")
+    await page.locator("#lastName").fill("Parker")
+    await page.locator("#email").fill("peter.parker@mail.ie")
     await page.locator("#submit_btn").click()
     await page.waitForLoadState("networkidle")
 
-    await expect(page.getByRole("row").nth(1)).toContainText(
-      "michael.clarkson+4@nearform.com",
-    )
+    await expect(page.getByRole("row").nth(1)).toContainText(recipientEmail)
     // First data row (nth(0) is the header). The desktop table's CSS-module
     // class is hashed at build time, so target by ARIA role instead.
     await page.getByRole("row").nth(1).click()

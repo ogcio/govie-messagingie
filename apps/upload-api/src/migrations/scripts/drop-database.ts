@@ -26,6 +26,6 @@ export async function dropDatabase(envDbConfig: EnvDbConfig): Promise<void> {
 }
 
 async function runQuery(client: Client, dbName: string) {
-  await client.query(`DROP DATABASE ${dbName}`);
+  await client.query(`DROP DATABASE IF EXISTS ${dbName}`);
   console.log(`Database ${dbName} dropped.`);
 }

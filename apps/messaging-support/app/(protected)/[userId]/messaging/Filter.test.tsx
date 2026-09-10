@@ -299,7 +299,7 @@ describe("Messaging Filter component", () => {
       expect(screen.getByText("Filter")).toBeInTheDocument()
       expect(selectInput).toHaveValue("Event Type")
       expect(document.querySelector("input#status-selection")).toHaveValue(
-        "Delivered",
+        "Message delivery",
       )
 
       expect(screen.getByLabelText("Successful")).toBeInTheDocument()
@@ -317,7 +317,7 @@ describe("Messaging Filter component", () => {
 
       fireEvent.click(screen.getByRole("button", { name: /add filter/i }))
       expect(
-        screen.getByText("Event Type: Delivered (successful, failed)"),
+        screen.getByText("Event Type: Message delivery (successful, failed)"),
       ).toBeInTheDocument()
       expect(router.replace).toHaveBeenCalledOnce()
       expect(router.replace).toHaveBeenCalledWith(
@@ -338,7 +338,7 @@ describe("Messaging Filter component", () => {
 
       fireEvent.click(screen.getByRole("button", { name: /add filter/i }))
       expect(
-        screen.getByText("Event Type: Delivered (successful)"),
+        screen.getByText("Event Type: Message delivery (successful)"),
       ).toBeInTheDocument()
       expect(router.replace).toHaveBeenCalledOnce()
       expect(router.replace).toHaveBeenCalledWith(
@@ -359,7 +359,7 @@ describe("Messaging Filter component", () => {
 
       fireEvent.click(screen.getByRole("button", { name: /add filter/i }))
       expect(
-        screen.getByText("Event Type: Delivered (failed)"),
+        screen.getByText("Event Type: Message delivery (failed)"),
       ).toBeInTheDocument()
       expect(router.replace).toHaveBeenCalledOnce()
       expect(router.replace).toHaveBeenCalledWith(
@@ -380,7 +380,9 @@ describe("Messaging Filter component", () => {
       fireEvent.click(screen.getByLabelText("Failed"))
 
       fireEvent.click(screen.getByRole("button", { name: /add filter/i }))
-      expect(screen.getByText("Event Type: Delivered None")).toBeInTheDocument()
+      expect(
+        screen.getByText("Event Type: Message delivery None"),
+      ).toBeInTheDocument()
       expect(router.replace).toHaveBeenCalledOnce()
       expect(router.replace).toHaveBeenCalledWith(
         "?eventType=message_delivery",
@@ -397,7 +399,9 @@ describe("Messaging Filter component", () => {
     )
     vi.mocked(useSearchParams).mockReturnValue(searchParams)
     render(<Filter keyOptions={keyOptions} />)
-    expect(screen.getByText("Event Type: Delivered None")).toBeInTheDocument()
+    expect(
+      screen.getByText("Event Type: Message delivery None"),
+    ).toBeInTheDocument()
     expect(router.replace).not.toHaveBeenCalled()
   })
 
@@ -420,18 +424,18 @@ describe("Messaging Filter component", () => {
     vi.mocked(useSearchParams).mockReturnValue(searchParams)
     render(<Filter keyOptions={keyOptions} />)
     expect(
-      screen.getByText("Event Type: Seen (successful)"),
+      screen.getByText("Event Type: Message seen (successful)"),
     ).toBeInTheDocument()
 
     const chipParent = screen.getByLabelText(
-      /Event Type: Seen \(successful\)\s*/i,
+      /Event Type: Message seen \(successful\)\s*/i,
     )
 
     const chip = within(chipParent).getByRole("button")
     fireEvent.click(chip)
 
     expect(
-      screen.queryByText("Event Type: Seen (successful)"),
+      screen.queryByText("Event Type: Message seen (successful)"),
     ).not.toBeInTheDocument()
     expect(router.replace).toHaveBeenCalledOnce()
     expect(router.replace).toHaveBeenCalledWith("?")
@@ -445,23 +449,25 @@ describe("Messaging Filter component", () => {
     )
     vi.mocked(useSearchParams).mockReturnValue(searchParams)
     render(<Filter keyOptions={keyOptions} />)
-    expect(screen.getByText("Event Type: Delivered None")).toBeInTheDocument()
     expect(
-      screen.getByText("Event Type: Seen (successful)"),
+      screen.getByText("Event Type: Message delivery None"),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByText("Event Type: Message seen (successful)"),
     ).toBeInTheDocument()
 
     const chipParent = screen.getByLabelText(
-      /chip: Event Type: Delivered None\s*/i,
+      /chip: Event Type: Message delivery None\s*/i,
     )
 
     const chip = within(chipParent).getByRole("button")
     fireEvent.click(chip)
 
     expect(
-      screen.queryByText("Event Type: Delivered None"),
+      screen.queryByText("Event Type: Message delivery None"),
     ).not.toBeInTheDocument()
     expect(
-      screen.getByText("Event Type: Seen (successful)"),
+      screen.getByText("Event Type: Message seen (successful)"),
     ).toBeInTheDocument()
     expect(router.replace).toHaveBeenCalledOnce()
     expect(router.replace).toHaveBeenCalledWith(

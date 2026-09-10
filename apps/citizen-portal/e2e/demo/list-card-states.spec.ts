@@ -1,6 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { expect, type Page, test } from "@playwright/test"
+import { ids } from "../fixtures"
 import { stubAuthForDemo } from "./stub-auth-for-demo"
 
 /**
@@ -18,7 +19,7 @@ const DEMO_MESSAGES = [
     subject: "Please find attached your payslip for the month of August.",
     createdAt: "2026-07-02T09:00:00Z",
     threadName: "Department of Education",
-    organisationId: "org-edu",
+    organisationId: ids.organisationEducation,
     recipientUserId: "demo-user",
     excerpt: "Payslip attached",
     plainText: "Please find attached your payslip.",
@@ -31,7 +32,7 @@ const DEMO_MESSAGES = [
     subject: "Please find attached your payslip for the month of July.",
     createdAt: "2026-06-30T09:00:00Z",
     threadName: "Department of Education",
-    organisationId: "org-edu",
+    organisationId: ids.organisationEducation,
     recipientUserId: "demo-user",
     excerpt: "Payslip attached",
     plainText: "Please find attached your payslip.",
@@ -44,7 +45,7 @@ const DEMO_MESSAGES = [
     subject: "Your annual leave balance has been updated.",
     createdAt: "2026-06-15T09:00:00Z",
     threadName: "Department of Education",
-    organisationId: "org-edu",
+    organisationId: ids.organisationEducation,
     recipientUserId: "demo-user",
     excerpt: "Leave balance",
     plainText: "Your leave balance has been updated.",
@@ -124,7 +125,7 @@ async function stubInboxApis(page: Page) {
       contentType: "application/json",
       body: JSON.stringify({
         data: {
-          id: "org-edu",
+          id: ids.organisationEducation,
           translations: {
             en: { name: "Department of Education", shortName: "DoE" },
             ga: { name: "An Roinn Oideachais", shortName: "ARO" },

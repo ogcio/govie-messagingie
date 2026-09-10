@@ -6,7 +6,6 @@ import type {
   ProfileLinkParams,
   ProfileQueryRow,
   Result,
-  WhereClause,
 } from "../types"
 import {
   failure,
@@ -126,44 +125,6 @@ export async function queryProfileLinkDetails(
     }
 
     return success(profile)
-  } catch (err) {
-    return failure(err, GENERIC_USER_ERROR)
-  }
-}
-
-export async function queryProfiles(
-  where: WhereClause,
-): Promise<Result<ProfileQueryRow[]>> {
-  try {
-    const query = `
-          WITH pselect AS (
-              SELECT
-                  p.id,      
-                  p.primary_user_id,
-                  p.consent_statuses
-              FROM profiles p             
-          ), joins as (
-              SELECT
-                  p.*, 
-                  pd.organisation_id, 
-                  jsonb_object_agg(pdata.name, pdata.value) FILTER (WHERE pdata.name IS NOT NULL) AS data 
-              FROM pselect p
-              LEFT JOIN profile_details pd ON pd.profile_id = p.id AND pd.is_latest = true
-              LEFT JOIN profile_data pdata ON pdata.profile_details_id = pd.id
-              WHERE ${where.sql || "TRUE"}
-              GROUP BY
-                  p.id,
-                  p.primary_user_id,
-                  p.consent_statuses,
-                  pd.organisation_id
-              ORDER BY p.primary_user_id, CASE WHEN p.primary_user_id = p.id THEN 0 ELSE 1 END, p.id, pd.organisation_id NULLS FIRST
-          )
-          SELECT * FROM joins LIMIT 20;
-      `
-
-    const res = await profilePool.query<ProfileQueryRow>(query, where.values)
-
-    return success(res.rows)
   } catch (err) {
     return failure(err, GENERIC_USER_ERROR)
   }

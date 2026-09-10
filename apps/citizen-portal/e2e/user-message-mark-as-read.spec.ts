@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test"
 import type { Message } from "@/types"
-import { createAuthenticatedPage } from "./helpers/user-auth.helper"
+import { ids, urls, users } from "./fixtures"
+import {
+  createAuthenticatedPage,
+  loginAsCitizen,
+  signInStepVisible,
+} from "./helpers/user-auth.helper"
 
 /*
  * Locks in the AB#37866 fix: opening a message in the unified inbox must
@@ -24,8 +29,8 @@ const buildMessage = (
   subject: "Subject",
   createdAt: "2025-04-01T10:00:00Z",
   threadName: "Department of Social Protection",
-  organisationId: "org-1",
-  recipientUserId: "peter.parker",
+  organisationId: ids.organisationPrimary,
+  recipientUserId: users.peterParker.username,
   excerpt: "Excerpt",
   isSeen: false,
   attachmentsCount: 0,
@@ -43,71 +48,58 @@ async function stubMessagingApis(
   page: Awaited<ReturnType<typeof createAuthenticatedPage>>,
   state: StubState,
 ) {
-  // PUT /messaging/api/v1/message-actions/:id  → captures + flips state.
-  // Registered before the messages list catch-all so a request for the
-  // PUT endpoint is matched here, not by the list stub below.
-  await page.route(
-    "**/messaging/api/v1/message-actions/**",
-    async (route, request) => {
-      if (request.method() !== "PUT") {
-        await route.continue()
-        return
-      }
-      const url = new URL(request.url())
-      const id = url.pathname.split("/").pop() ?? ""
-      const body =
-        (request.postDataJSON() as {
-          messageId?: string
-          isSeen?: boolean
-        } | null) ?? {}
-      state.markedAsSeen.push({ id, isSeen: body.isSeen === true })
-      if (id === UNREAD_MESSAGE_ID && body.isSeen === true) {
-        state.unreadIsSeen = true
-      }
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ data: null, error: null }),
-      })
-    },
-  )
-
-  // GET /messaging/api/v1/messages/:id  → message detail.
-  await page.route("**/messaging/api/v1/messages/*", async (route, request) => {
-    if (request.method() !== "GET") {
+  // Glob `messages*` does not match `/messages/:id` (`*` stops at `/`), so use
+  // a regex that covers list + detail. Build 117050 hung because detail GETs
+  // fell through to the real API (422) and mark-as-read never ran.
+  await page.route(/\/messaging\/api\/v1\/message-actions\//, async (route, request) => {
+    if (request.method() !== "PUT") {
       await route.continue()
       return
     }
-    const id = new URL(request.url()).pathname.split("/").pop() ?? ""
-    // Skip the list endpoint — the trailing `?` query path matches this
-    // glob too. Defer to the list stub below.
-    if (!id || id === "messages") {
-      await route.continue()
-      return
+    const url = new URL(request.url())
+    const id = url.pathname.split("/").pop() ?? ""
+    const body =
+      (request.postDataJSON() as {
+        messageId?: string
+        isSeen?: boolean
+      } | null) ?? {}
+    state.markedAsSeen.push({ id, isSeen: body.isSeen === true })
+    if (id === UNREAD_MESSAGE_ID && body.isSeen === true) {
+      state.unreadIsSeen = true
     }
-    const isSeen = id === UNREAD_MESSAGE_ID ? state.unreadIsSeen : true
     await route.fulfill({
       status: 200,
       contentType: "application/json",
-      body: JSON.stringify({
-        data: buildMessage({
-          id,
-          subject:
-            id === UNREAD_MESSAGE_ID
-              ? "Open me to mark as read"
-              : "Already read",
-          isSeen,
-          plainText: "Hello from the e2e stub.",
-        }),
-        error: null,
-      }),
+      body: JSON.stringify({ data: null, error: null }),
     })
   })
 
-  // GET /messaging/api/v1/messages?...  → list.
-  await page.route("**/messaging/api/v1/messages*", async (route, request) => {
+  await page.route(/\/messaging\/api\/v1\/messages/, async (route, request) => {
     if (request.method() !== "GET") {
       await route.continue()
+      return
+    }
+    const path = new URL(request.url()).pathname
+    const detailMatch = path.match(/\/messages\/([^/]+)$/)
+    if (detailMatch) {
+      const id = detailMatch[1]
+      const isSeen = id === UNREAD_MESSAGE_ID ? state.unreadIsSeen : true
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          data: buildMessage({
+            id,
+            subject:
+              id === UNREAD_MESSAGE_ID
+                ? "Open me to mark as read"
+                : "Already read",
+            isSeen,
+            plainText: "Hello from the e2e stub.",
+          }),
+          error: null,
+        }),
+      })
       return
     }
     const messages: Message[] = [
@@ -120,7 +112,7 @@ async function stubMessagingApis(
         id: READ_MESSAGE_ID,
         subject: "Already read",
         threadName: "Revenue",
-        organisationId: "org-2",
+        organisationId: ids.organisationSecondary,
         isSeen: true,
       }),
     ]
@@ -137,15 +129,30 @@ async function stubMessagingApis(
 }
 
 test.describe("Unified inbox: mark-as-read on open", () => {
-  test("opens a message, fires the seen marker and the row reads as seen on navigate-back", async ({
+  test("opens a message, fires the seen marker and the row reads as seen on navigate-back @smoke @regression", async ({
     browser,
   }) => {
-    const page = await createAuthenticatedPage(browser, "peter.parker@mail.ie")
+    const page = await createAuthenticatedPage(browser, users.peterParker.email)
     const state: StubState = { unreadIsSeen: false, markedAsSeen: [] }
     await stubMessagingApis(page, state)
 
-    await page.goto("/en/messages")
-    await expect(page.getByRole("heading", { name: "Messages" })).toBeVisible()
+    // Absolute URL, and finish login in place if the hop reopens the IdP —
+    // same guard as the edge-case spec (nightly 117543), which shares this
+    // suite's serial run and mock IdP.
+    const inboxUrl = `${urls.messaging}/en/messages`
+    await page.goto(inboxUrl)
+    if (await signInStepVisible(page, 5_000)) {
+      await loginAsCitizen(page, users.peterParker.email)
+      if (!page.url().startsWith(inboxUrl)) {
+        await page.goto(inboxUrl)
+      }
+    }
+
+    // Unified inbox no longer renders a page-level "Messages" heading — the
+    // search box is the stable shell witness (same pattern as the edge-case
+    // specs). Waiting on the removed heading timed out after auth already
+    // succeeded.
+    await expect(page.getByTestId("search-input")).toBeVisible()
 
     // The row's CSS Module class is hashed at build time, but the `unreadRow`
     // substring is preserved by the Next.js CSS Modules loader — making it a
@@ -155,36 +162,49 @@ test.describe("Unified inbox: mark-as-read on open", () => {
     })
     await expect(unreadRow).toHaveClass(/unreadRow/)
 
-    // Wait for the PUT to be observed before navigating back, so the list
-    // stub has already flipped `unreadIsSeen` and the second GET returns
-    // the read state. The detail view fires markAsSeen inside a useEffect
-    // gated on detail data, so the request races the user click.
-    await Promise.all([
-      page.waitForRequest(
-        (req) =>
-          req.url().includes(`/message-actions/${UNREAD_MESSAGE_ID}`) &&
-          req.method() === "PUT",
-      ),
-      unreadRow.click(),
-    ])
+    // Subject <Link> is the real navigation target (row ::after stretches it).
+    // Do not key off data-testid — dest may lag the branch that added it.
+    await unreadRow
+      .getByRole("link", { name: /Open me to mark as read/i })
+      .click()
 
-    // Detail view rendered.
+    // Detail view rendered. Asserted before the seen marker so a click that
+    // never commits the route transition fails here, on the actual symptom,
+    // instead of downstream.
     await expect(
       page.getByRole("heading", { name: "Open me to mark as read" }),
     ).toBeVisible()
 
-    // The seen marker fired exactly once with the matching id + isSeen=true.
-    expect(state.markedAsSeen).toEqual([
-      { id: UNREAD_MESSAGE_ID, isSeen: true },
-    ])
+    // The seen marker fired exactly once with the matching id + isSeen=true,
+    // and is observed before navigating back so the list stub has already
+    // flipped `unreadIsSeen` and the second GET returns the read state.
+    //
+    // Poll the stub's record rather than page.waitForRequest: the detail view
+    // fires markAsSeen from a useEffect gated on detail data, so the PUT races
+    // the click, and an unbounded waitForRequest that misses it hangs the whole
+    // 180s test budget with no signal (nightly 117735, three attempts). The
+    // stub captures the PUT whenever it lands and expect bounds the wait.
+    await expect
+      .poll(() => state.markedAsSeen)
+      .toEqual([{ id: UNREAD_MESSAGE_ID, isSeen: true }])
 
-    // Click Back — the BackButton drives `window.history.back()`.
-    await page.getByRole("link", { name: "Go back" }).click()
+    // Detail toolbar labels the control "Back" (home.button.back). Its href is
+    // a same-path Link that can full-reload into the client-shell spinner under
+    // stubs; soft history.back() returns to the list the row click pushed from
+    // and is what the original BackButton did.
+    await expect(
+      page.getByRole("link", { name: "Back", exact: true }),
+    ).toBeVisible()
+    await page.goBack()
 
-    // List view re-mounted. The cache invalidation in `useMarkMessageAsRead`
-    // means SWR has either dropped the stale entry or already revalidated,
-    // so the row picks up `isSeen: true` and loses the unread styling
-    // without waiting on focus / reconnect heuristics.
+    // List view re-mounted. Wait for the shell before asserting row class so
+    // the back navigation does not race the unread styling check.
+    await expect(page.getByTestId("search-input")).toBeVisible()
+
+    // The cache invalidation in `useMarkMessageAsRead` means SWR has either
+    // dropped the stale entry or already revalidated, so the row picks up
+    // `isSeen: true` and loses the unread styling without waiting on focus /
+    // reconnect heuristics.
     await expect(unreadRow).not.toHaveClass(/unreadRow/)
 
     // The other row was already read and must stay that way.

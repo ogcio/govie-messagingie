@@ -41,10 +41,9 @@ export function ConfirmButton({
       async () => {
         try {
           const result = await trigger({ primaryUserId: currentUserId })
-          faro.api.pushLog([
-            TRACE_MESSAGES.CONFIRM_ACCOUNT_LINKING.SUCCESS,
-            { context: { currentUserId, targetUserId, messageId } },
-          ])
+          faro.api.pushLog([TRACE_MESSAGES.CONFIRM_ACCOUNT_LINKING.SUCCESS], {
+            context: { currentUserId, targetUserId, messageId },
+          })
 
           const localePath = pathname.replace(/\/secure-messages$/, "")
           const lang = result?.preferredLanguage
@@ -53,11 +52,15 @@ export function ConfirmButton({
             : localePath
           router.replace(`${base}/messages?id=${messageId}`)
         } catch (error) {
-          faro.api.pushLog([
-            TRACE_MESSAGES.CONFIRM_ACCOUNT_LINKING.ERROR,
-            { context: { currentUserId, targetUserId, messageId, error } },
-            { level: LogLevel.ERROR },
-          ])
+          faro.api.pushLog([TRACE_MESSAGES.CONFIRM_ACCOUNT_LINKING.ERROR], {
+            level: LogLevel.ERROR,
+            context: {
+              currentUserId,
+              targetUserId,
+              messageId,
+              error: error instanceof Error ? error.message : String(error),
+            },
+          })
 
           toaster.create({
             title: t("error.linking"),

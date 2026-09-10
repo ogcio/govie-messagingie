@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest"
 import type { Message } from "@/types"
-import { resolveInboxMessages } from "@/components/messages/resolve-inbox-messages"
+import {
+  hasActiveInboxListFilters,
+  resolveInboxMessages,
+} from "@/components/messages/resolve-inbox-messages"
 
 const sampleMessages: Message[] = [
   {
@@ -17,6 +20,43 @@ const sampleMessages: Message[] = [
 ]
 
 describe("resolveInboxMessages", () => {
+  it.each([
+    [{ search: " query ", status: "all" }, true],
+    [{ search: " ", status: "unread" }, true],
+    [{ search: null, status: "read" }, true],
+    [{ search: null, status: "all" }, false],
+  ])("detects active filters", (filters, expected) => {
+    expect(hasActiveInboxListFilters(filters)).toBe(expected)
+  })
+
+  it("keeps the list empty while the initial request is loading", () => {
+    expect(
+      resolveInboxMessages({
+        apiMessages: [],
+        isLoading: true,
+        isInboxView: true,
+        search: null,
+        status: "all",
+        page: 1,
+        pageSize: 10,
+      }),
+    ).toEqual([])
+  })
+
+  it("does not use inbox fixtures outside the inbox view", () => {
+    expect(
+      resolveInboxMessages({
+        apiMessages: [],
+        isLoading: false,
+        isInboxView: false,
+        search: null,
+        status: "all",
+        page: 1,
+        pageSize: 10,
+      }),
+    ).toEqual([])
+  })
+
   it("returns API messages when the backend has data", () => {
     expect(
       resolveInboxMessages({

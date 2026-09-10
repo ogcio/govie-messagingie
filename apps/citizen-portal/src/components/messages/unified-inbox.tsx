@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ANALYTICS } from "@/const/analytics"
 import { useIsMobile } from "@/hooks/use-is-mobile"
 import { useUrlSearchParams } from "@/hooks/use-url-search-params"
+import { isFoldersEnabled } from "@/lib/feature-config"
 import { BulkActionToolbar } from "./bulk-action-toolbar"
 import { DeleteConfirmationModal } from "./delete-confirmation-modal"
 import { DeleteResultToast } from "./delete-result-toast"
@@ -44,21 +45,26 @@ export function UnifiedInboxPage() {
 
   const selectMessage = useCallback(
     (id: string) => {
-      router.push(`${pathname}?id=${id}`, { scroll: false })
+      const params = new URLSearchParams(searchParams)
+      params.set("id", id)
+      router.push(`${pathname}?${params.toString()}`, { scroll: false })
     },
-    [router, pathname],
+    [router, pathname, searchParams],
   )
+
+  const foldersEnabled = isFoldersEnabled()
+  const sidebar = foldersEnabled ? <MessageFoldersSidebar /> : null
 
   if (selectedId) {
     return (
-      <InboxLayout sidebar={<MessageFoldersSidebar />}>
+      <InboxLayout sidebar={sidebar}>
         <MessageDetailView id={selectedId} />
       </InboxLayout>
     )
   }
 
   return (
-    <InboxLayout sidebar={<MessageFoldersSidebar />}>
+    <InboxLayout sidebar={sidebar}>
       <UnifiedInboxListView onSelect={selectMessage} />
     </InboxLayout>
   )
@@ -89,11 +95,12 @@ function UnifiedInboxListView({
   }, [analyticsClient])
 
   const isMobile = useIsMobile()
+  const foldersEnabled = isFoldersEnabled()
   const search = searchParams.get("search")
   const status = searchParams.get("status") || "all"
   const page = Number(searchParams.get("page")) || 1
   const pageSize = parsePageSize(searchParams.get("limit"))
-  const folderId = searchParams.get("folder")
+  const folderId = foldersEnabled ? searchParams.get("folder") : null
   const isInboxView = !folderId || folderId === INBOX_FOLDER_ID
   const isDeletedView = folderId === DELETED_FOLDER_ID
 
@@ -145,7 +152,7 @@ function UnifiedInboxListView({
     currentFolderId,
     inboxLabel: tMove("modal.inbox"),
   })
-  const canMove = !isDeletedView && destinations.length > 0
+  const canMove = foldersEnabled && !isDeletedView && destinations.length > 0
 
   const [deleteFlashResult, setDeleteFlashResult] =
     useState<DeleteMessagesResult | null>(null)
@@ -300,7 +307,9 @@ function UnifiedInboxListView({
               onBulkDelete={() =>
                 openDeleteConfirmation(Array.from(selection.selectedIds))
               }
-              onOpenFolders={() => setFolderPanelOpen(true)}
+              onOpenFolders={
+                foldersEnabled ? () => setFolderPanelOpen(true) : undefined
+              }
               onBulkMove={() => setMoveModalOpen(true)}
               canMove={canMove}
             />
@@ -313,17 +322,21 @@ function UnifiedInboxListView({
           onConfirm={confirmDelete}
           isDeleting={isDeleting}
         />
-        <MoveMessageModal
-          isOpen={isMoveModalOpen}
-          onClose={() => setMoveModalOpen(false)}
-          onConfirm={handleMove}
-          destinations={destinations}
-          isMoving={isMoving}
-        />
-        <MobileFolderPanel
-          isOpen={isFolderPanelOpen}
-          onClose={() => setFolderPanelOpen(false)}
-        />
+        {foldersEnabled ? (
+          <MoveMessageModal
+            isOpen={isMoveModalOpen}
+            onClose={() => setMoveModalOpen(false)}
+            onConfirm={handleMove}
+            destinations={destinations}
+            isMoving={isMoving}
+          />
+        ) : null}
+        {foldersEnabled ? (
+          <MobileFolderPanel
+            isOpen={isFolderPanelOpen}
+            onClose={() => setFolderPanelOpen(false)}
+          />
+        ) : null}
       </Stack>
     </div>
   )

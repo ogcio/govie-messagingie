@@ -15,6 +15,13 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
 }))
 
+// Stub only the constants: the barrel re-exports extension-less ESM paths
+// that Node cannot resolve under Vitest.
+vi.mock("@ogcio/sag-client/react", () => ({
+  MESSAGING_PUBLIC_SERVANT_ROLE_NAME: "Messaging Public Servant",
+  PROFILE_PUBLIC_SERVANT_ROLE_NAME: "Profile Public Servant",
+}))
+
 vi.mock("@citizen-portal/shared", () => ({
   getEnv: () => ({
     hosts: {

@@ -2,8 +2,8 @@
 # Metrics coverage audit — emission discovery.
 # Enumerates emitted signals (OTel / Matomo / Faro / event_log) across the repo.
 # Output is pasted verbatim into docs/metrics-coverage.md as the evidence appendix.
-# Re-run any time to refresh the snapshot. ponytail: grep-based inventory, not a
-# semantic analyser — it lists call sites, a human confirms meaning.
+# Re-run any time to refresh the snapshot. Note this is a grep-based inventory,
+# not a semantic analyser — it lists call sites, a human confirms meaning.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

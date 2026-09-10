@@ -32,7 +32,7 @@ pnpm monorepo consolidating the messaging platform's backend APIs and citizen/ad
 
 ```bash
 pnpm install
-pnpm dev:setup      # init .env files, start Docker services, create + migrate DB
+pnpm dev:setup      # init .env files, start Docker services, create + migrate every API DB
 pnpm dev            # run all four APIs + citizen-portal + admin-next concurrently
 pnpm dev:health     # check services are up
 ```
@@ -51,8 +51,8 @@ pnpm db:up          # postgresql, redis, maildev (1080 UI), clamav, ministack (S
 | `pnpm build` | `pnpm -r build` (all workspaces) |
 | `pnpm test` | `pnpm -r test` (all workspaces) |
 | `pnpm lint` / `pnpm format` | Biome across all workspaces |
-| `pnpm db:prepare` | compose up + create + migrate + sync event summary |
-| `pnpm db:reset` / `pnpm db:seed` | reset (with confirmation) / seed test data |
+| `pnpm db:prepare` | compose up + create + migrate all API DBs + sync event summary + seed consent statements |
+| `pnpm db:reset` | reset all API DBs (with confirmation) |
 | `pnpm env:init` / `pnpm env:update` | create / sync `.env` files from `.env.sample` |
 
 Per-app variants exist (e.g. `pnpm dev:api`, `pnpm dev:api:upload`, `pnpm build:next`). Run every API on its own with `pnpm dev:apis`, or run an app directly with a filter: `pnpm --filter <app> <script>`.
@@ -62,6 +62,7 @@ Per-app variants exist (e.g. `pnpm dev:api`, `pnpm dev:api:upload`, `pnpm build:
 ## Documentation
 
 - [`scripts/README.md`](./scripts/README.md) — dev/DB/env helper scripts
-- [`docs/testing.md`](./docs/testing.md) — citizen-portal test layers
-- [`docs/`](./docs/) — feature flags, trunk-based flow, metrics, observability
+- [`docs/internal/testing.md`](./docs/internal/testing.md) — citizen-portal test layers
+- [`docs/internal/`](./docs/internal/) — feature flags, trunk-based flow, observability
+- [`docs/wiki/`](./docs/wiki/) — docs mirrored to the programme wiki (metrics coverage)
 - Each app has its own `README.md` with getting-started + testing.

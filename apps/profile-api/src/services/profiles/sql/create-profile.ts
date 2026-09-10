@@ -1,4 +1,3 @@
-import { httpErrors } from "@fastify/sensible";
 import type { PoolClient } from "pg";
 import { DEFAULT_LANGUAGE, type Profile } from "~/schemas/profiles/model.js";
 
@@ -39,9 +38,10 @@ export const createProfile = async (
   ];
 
   const result = await client.query<{ id: string }>(query, values);
-  if (!result.rows[0]?.id) {
-    throw httpErrors.internalServerError("Cannot insert profile!");
-  }
 
-  return result.rows[0]?.id;
+  // The ON CONFLICT guard suppresses the update when every column already
+  // matches, so an unchanged re-delivery returns no row even though the profile
+  // exists. The conflict target is the id we passed in, so fall back to it
+  // rather than reporting a failure. A genuine insert failure raises instead.
+  return result.rows[0]?.id ?? profile.id;
 };

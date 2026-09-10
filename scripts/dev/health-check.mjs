@@ -34,6 +34,25 @@ class HealthChecker {
         name: "Messaging API",
         port: parseInt(process.env.API_PORT || "8002"),
         status: "unknown",
+        versionKey: "messaging-api",
+      },
+      profileApi: {
+        name: "Profile API",
+        port: parseInt(process.env.PROFILE_API_PORT || "8003"),
+        status: "unknown",
+        versionKey: "profile-api",
+      },
+      schedulerApi: {
+        name: "Scheduler API",
+        port: parseInt(process.env.SCHEDULER_API_PORT || "8005"),
+        status: "unknown",
+        versionKey: "scheduler-api",
+      },
+      uploadApi: {
+        name: "Upload API",
+        port: parseInt(process.env.UPLOAD_API_PORT || "8008"),
+        status: "unknown",
+        versionKey: "upload-api",
       },
       frontend: {
         name: "Messaging Frontend",
@@ -67,7 +86,10 @@ class HealthChecker {
 
     try {
       await this.checkDatabase()
-      await this.checkAPI()
+      await this.checkAPI("api")
+      await this.checkAPI("profileApi")
+      await this.checkAPI("schedulerApi")
+      await this.checkAPI("uploadApi")
       await this.checkFrontend()
       await this.checkMailDev()
       await this.checkPorts()
@@ -132,31 +154,38 @@ class HealthChecker {
     }
   }
 
-  async checkAPI() {
-    this.log("Checking API health...", "info")
+  async checkAPI(serviceKey) {
+    const service = this.services[serviceKey]
+    this.log(`Checking ${service.name} health...`, "info")
 
     try {
-      const apiPort = process.env.API_PORT || "8002"
       const response = await this.makeRequest(
-        `http://localhost:${apiPort}/health`,
+        `http://localhost:${service.port}/health`,
       )
 
       if (response.statusCode === 200) {
-        this.services.api.status = "healthy"
-        this.log("API is healthy", "success")
+        service.status = "healthy"
+        this.log(`${service.name} is healthy`, "success")
 
         // Parse response to check specific health indicators
         const data = JSON.parse(response.data)
-        if (data["messaging-api"]) {
-          this.log(`API version: ${data["messaging-api"]}`, "info")
+        if (service.versionKey && data[service.versionKey]) {
+          this.log(
+            `${service.name} version: ${data[service.versionKey]}`,
+            "info",
+          )
         }
       } else {
-        this.services.api.status = "unhealthy"
-        this.errors.push(`API returned status ${response.statusCode}`)
+        service.status = "unhealthy"
+        this.errors.push(
+          `${service.name} returned status ${response.statusCode}`,
+        )
       }
     } catch (error) {
-      this.services.api.status = "unhealthy"
-      this.warnings.push(`API not running or not accessible: ${error.message}`)
+      service.status = "unhealthy"
+      this.warnings.push(
+        `${service.name} not running or not accessible: ${error.message}`,
+      )
     }
   }
 

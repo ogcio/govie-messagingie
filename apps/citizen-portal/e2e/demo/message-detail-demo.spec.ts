@@ -1,4 +1,6 @@
 import { expect, type Page, test } from "@playwright/test"
+import { ids, users } from "../fixtures"
+import { isFoldersFeatureEnabled } from "../utils/folder-helper"
 import { loginDemo } from "./login-demo.helper"
 import { stubAuthForDemo } from "./stub-auth-for-demo"
 
@@ -14,16 +16,16 @@ async function prepareSession(page: Page) {
 }
 
 const DEMO_MESSAGE = {
-  id: "00000001-0000-4000-8000-000000000001",
+  id: ids.demoMessage,
   subject: "Payslip for Mark Murphy",
   createdAt: "2026-04-17T10:00:00Z",
   threadName: "Department of Education",
-  organisationId: "org-edu",
-  recipientUserId: "peter.parker",
+  organisationId: ids.organisationEducation,
+  recipientUserId: users.peterParker.username,
   excerpt: "Please find attached",
   plainText: "Mark Murphy,\n\nPlease find attached your payslip.",
   isSeen: false,
-  attachments: ["10000001-0000-4000-8000-000000000001"],
+  attachments: [ids.demoPdfAttachment],
 }
 
 async function stubDetailApis(page: Page) {
@@ -58,7 +60,7 @@ async function stubDetailApis(page: Page) {
       contentType: "application/json",
       body: JSON.stringify({
         data: {
-          id: "org-edu",
+          id: ids.organisationEducation,
           translations: {
             en: { name: "Department of Education", shortName: "DoE" },
             ga: { name: "An Roinn Oideachais", shortName: "ARO" },
@@ -86,7 +88,7 @@ async function stubDetailApis(page: Page) {
       contentType: "application/json",
       body: JSON.stringify({
         data: {
-          id: "10000001-0000-4000-8000-000000000001",
+          id: ids.demoPdfAttachment,
           fileName: "Payslip - Mark Murphy - 26-03-2026.pdf",
           fileSize: 230000,
           mimeType: "application/pdf",
@@ -114,14 +116,16 @@ test("AB#38547 message detail feature walkthrough", async ({ page }) => {
   await expect(page.getByText("17 April 2026")).toBeVisible()
   await page.waitForTimeout(1200)
 
-  await page.getByTestId("detail-move-button").click()
-  await expect(page.getByTestId("move-message-modal")).toBeVisible()
-  await page.waitForTimeout(800)
-  await page.getByTestId("move-folder-select").selectOption("mock-folder-ehic")
-  await page.waitForTimeout(600)
-  await page.getByTestId("move-confirmation-confirm").click()
-  await expect(page.getByTestId("move-success-toast")).toBeVisible()
-  await page.waitForTimeout(1500)
+  if (isFoldersFeatureEnabled()) {
+    await page.getByTestId("detail-move-button").click()
+    await expect(page.getByTestId("move-message-modal")).toBeVisible()
+    await page.waitForTimeout(800)
+    await page.getByTestId("move-folder-select").selectOption("mock-folder-ehic")
+    await page.waitForTimeout(600)
+    await page.getByTestId("move-confirmation-confirm").click()
+    await expect(page.getByTestId("move-success-toast")).toBeVisible()
+    await page.waitForTimeout(1500)
+  }
 
   await page.getByTestId("detail-delete-button").click()
   await expect(page.getByTestId("delete-confirmation-modal")).toBeVisible()

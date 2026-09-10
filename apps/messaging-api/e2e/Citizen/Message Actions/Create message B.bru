@@ -20,7 +20,7 @@ body:json {
       "recipientUserId": "{{process.env.CITIZEN_USER_PROFILE_ID}}",
       "security": "public",
       "bypassConsent": false,
-      "scheduleAt": "2026-08-06T05:05:04.865Z",
+      "scheduleAt": "{{$isoTimestamp}}",
       "message": {
         "threadName": "threadName",
         "subject": "messageSubject",

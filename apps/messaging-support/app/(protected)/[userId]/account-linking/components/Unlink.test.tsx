@@ -32,7 +32,12 @@ describe("Unlink Component", () => {
   })
 
   it("should open the modal when the trigger button is clicked", () => {
-    render(<Unlink profile={mockProfile as any} canonicalProfileId="canonical-123" />)
+    render(
+      <Unlink
+        profile={mockProfile as any}
+        canonicalProfileId='canonical-123'
+      />,
+    )
     const trigger = screen.getAllByRole("button", { name: /^unlink$/i })[0]
     fireEvent.click(trigger)
 
@@ -45,7 +50,12 @@ describe("Unlink Component", () => {
   it("should call the server action and refresh the router on success", async () => {
     ;(linkAccountsAction as any).mockResolvedValue({ success: true })
 
-    render(<Unlink profile={mockProfile as any} canonicalProfileId="canonical-123" />)
+    render(
+      <Unlink
+        profile={mockProfile as any}
+        canonicalProfileId='canonical-123'
+      />,
+    )
 
     // Open modal
     fireEvent.click(screen.getAllByRole("button", { name: /^unlink$/i })[0])
@@ -70,7 +80,12 @@ describe("Unlink Component", () => {
       ),
     )
 
-    render(<Unlink profile={mockProfile as any} canonicalProfileId="canonical-123" />)
+    render(
+      <Unlink
+        profile={mockProfile as any}
+        canonicalProfileId='canonical-123'
+      />,
+    )
     fireEvent.click(screen.getAllByRole("button", { name: /^unlink$/i })[0])
 
     const confirmBtn = screen.getByTestId("submit-unlink-btn")

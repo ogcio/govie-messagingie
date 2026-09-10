@@ -15,7 +15,15 @@ import { getEnabledLandingZone } from "@/lib/feature-config"
  */
 export type Zone = "messages" | "profile" | "dashboard"
 
-const ZONE_BY_FIRST_SEGMENT: Record<string, Zone> = {
+/**
+ * Locale-prefixed route segments and the zone that owns them.
+ *
+ * The nginx `$canonical_host` map in `docker/nginx.conf.template` must mirror
+ * this table exactly: a segment missing there is served by every hostname, so
+ * the shell mounts one zone's `sagAppName` on a foreign origin and every
+ * gateway call 401s. `test/lib/nginx-canonical-host.test.ts` enforces it.
+ */
+export const ZONE_BY_FIRST_SEGMENT: Record<string, Zone> = {
   messages: "messages",
   "secure-messages": "messages",
   "whats-new": "messages",

@@ -1,5 +1,11 @@
 import type { Page } from "@playwright/test"
 
+/** Matches the compile-time folders flag baked into the citizen-portal build. */
+export function isFoldersFeatureEnabled(): boolean {
+  const v = process.env.NEXT_PUBLIC_ENABLE_FOLDERS?.trim().toLowerCase()
+  return v === "true" || v === "1" || v === "yes" || v === "on"
+}
+
 export async function createFolder(page: Page, folderName: string) {
   await page.getByRole("button", { name: "Create new folder" }).click()
   await page.getByRole("textbox", { name: "Folder Name" }).fill(folderName)

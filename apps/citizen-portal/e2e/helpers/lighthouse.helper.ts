@@ -5,7 +5,7 @@ import type { Page } from "@playwright/test"
 import { type BrowserContext, chromium } from "playwright"
 import { playAudit } from "playwright-lighthouse"
 
-const THRESHOLDS = {
+export const THRESHOLDS = {
   performance: 50,
   accessibility: 100,
   "best-practices": 90,
@@ -30,6 +30,8 @@ export type LighthouseAuditOptions = {
   reportName: string
   /** Log in (and optionally warm the target page) before the audit. */
   authenticate: (page: Page) => Promise<void>
+  /** Per-audit override of `THRESHOLDS`. */
+  thresholds?: Record<keyof typeof THRESHOLDS, number>
 }
 
 /**
@@ -40,6 +42,7 @@ export async function runLighthouseAudit({
   auditUrl,
   reportName,
   authenticate,
+  thresholds = THRESHOLDS,
 }: LighthouseAuditOptions): Promise<void> {
   const port = getDebugPort()
   const userDataDir = path.join(os.tmpdir(), "pw-lighthouse", String(port))
@@ -54,7 +57,7 @@ export async function runLighthouseAudit({
 
     await playAudit({
       url: auditUrl,
-      thresholds: THRESHOLDS,
+      thresholds,
       port,
       reports: {
         formats: { json: true, html: true, csv: true },

@@ -19,6 +19,12 @@
   min-width: 0;
 }
 
+.inboxLayoutNoSidebar {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
 @media (min-width: 768px) {
   .inboxLayout {
     display: grid;

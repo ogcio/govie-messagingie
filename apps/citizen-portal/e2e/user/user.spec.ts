@@ -1,4 +1,5 @@
 import { expect, type Page, test } from "@playwright/test"
+import { urls, users } from "../fixtures"
 import {
   createAuthenticatedPage,
   loginAsCitizen,
@@ -11,7 +12,7 @@ let page: Page
 
 test.describe("User Features", () => {
   test.beforeAll(async ({ browser }) => {
-    page = await createAuthenticatedPage(browser, "e2e_citizen_1@user.com")
+    page = await createAuthenticatedPage(browser, users.citizen1.email)
   })
 
   test.afterAll(async () => {
@@ -31,8 +32,6 @@ test.describe("User Features", () => {
   })
 
   test("a user can switch language @smoke @regression", async () => {
-    await page.waitForLoadState("networkidle")
-
     await page.goto("/ga")
     await expect(page.getByRole("textbox", { name: "Cuardach" })).toBeVisible()
   })
@@ -46,11 +45,11 @@ test.describe("User Features", () => {
     // Logout method used by Payments and Journey Builder, which logs the user out of all sessions
     // Re-establish a session — the menu-logout test above already signed out.
     await page.context().clearCookies()
-    await loginAsCitizen(page, "e2e_citizen_1@user.com")
+    await loginAsCitizen(page, users.citizen1.email)
 
     await navigateAndVerifySearch(page, "/en/messages", "Search")
 
-    const baseURL = process.env.BASE_URL ?? "http://localhost:4001"
+    const baseURL = urls.localMessaging
     const postRedirectUri = new URL("/en/messages", baseURL).toString()
 
     await page.goto(buildGlobalSignoutUrl(postRedirectUri))

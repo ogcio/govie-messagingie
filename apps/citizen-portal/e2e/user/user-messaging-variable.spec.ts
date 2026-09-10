@@ -1,10 +1,10 @@
 import { expect, type Page, test } from "@playwright/test"
+import { contacts, users } from "../fixtures"
 import { authenticateUser } from "../helpers/auth"
 import { createPageWithVideo } from "../helpers/browser-context"
+import { loginAsCitizen } from "../helpers/user-auth.helper"
 import { clickButton, logout } from "../utils/functions"
 import { sendMessageAndVerify } from "../utils/message-helpers"
-
-const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
 
 let page: Page
 
@@ -33,51 +33,53 @@ test.describe("User Messages page", () => {
     await page
       .getByRole("tabpanel", { name: "Search" })
       .locator('input[name="email"]')
-      .fill("michael.clarkson+4@nearform.com")
+      .fill(contacts.variableRecipient.email)
     await page.getByRole("button", { name: "Search" }).click()
     await expect(page.getByRole("row").nth(1)).toContainText(
-      "michael.clarkson+4@nearform.com",
+      contacts.variableRecipient.email,
     )
-    await page.getByRole("button", { name: "Add recipient" }).click()
+    const addRecipient = page.getByRole("button", { name: "Add recipient" })
+    // Both the desktop and mobile row variants carry this same aria-label, and an
+    // opted-out recipient renders them disabled. Without this check `.click()`
+    // spends the entire test timeout in actionability polling and reports only
+    // "target closed", which says nothing about why.
+    await expect(addRecipient).toBeEnabled({ timeout: 10_000 })
+    await addRecipient.click()
     await clickButton(page, "Continue to Attachments")
     await clickButton(page, "Skip")
     await sendMessageAndVerify(page)
 
     await logout(page)
 
-    //login as citizen to view the message
-    if (page.url().includes(`${AUTH_URL}`)) {
-      // Click the MyGovID login button
-      await page.getByRole("button", { name: "Continue with MyGovId" }).click()
+    // Read the message back as its recipient. Signing in as anyone else means
+    // asserting on an inbox that never received it, which is what this test
+    // used to do: it sent to one address and read as another.
+    // loginAsCitizen fills the post-logout IdP form in place and drains the
+    // callback; do not goto("/") first (that abandons the OIDC interaction).
+    await loginAsCitizen(page, users.peterParker.email)
+    // loginAsCitizen only lands on some portal host (often the inbox from the
+    // logout probe). Hop to messages when needed before looking for rows.
+    if (!(await page.getByTestId("search-input").isVisible().catch(() => false))) {
+      await page.goto("/en/messages")
     }
-    await page
-      .locator(
-        "#login-form > div > div.gi-w-full > div:nth-child(1) > div.gi-accordion > div",
-      )
-      .click()
-    await page.locator("#sub").fill("932d94fc69be147fpq3v")
-    await page
-      .locator(
-        "#login-form > div > div.gi-w-full > div:nth-child(2) > div.gi-accordion > div",
-      )
-      .click()
-    await page.locator("#firstName").fill("Alice")
-    await page.locator("#lastName").fill("Wayne")
-    await page.locator("#email").fill("bruce.wayne@mail.ie")
-    await page.locator("#submit_btn").click()
-    await page.waitForLoadState("networkidle")
+    await expect(page.getByTestId("search-input")).toBeVisible()
 
-    await expect(page.getByRole("row").nth(1)).toContainText(
-      "michael.clarkson+4@nearform.com",
-    )
-    // First data row (nth(0) is the header). The desktop table's CSS-module
-    // class is hashed at build time, so target by ARIA role instead.
-    await page.getByRole("row").nth(1).click()
+    // Delivery is eventual; search for the substituted email so we do not
+    // depend on the message being the top row of a busy seeded inbox.
+    await page.getByTestId("search-input").fill(contacts.variableRecipient.email)
+    await page.getByTestId("search-input").press("Enter")
+    const deliveredRow = page.getByRole("row").filter({
+      hasText: contacts.variableRecipient.email,
+    })
+    await expect(deliveredRow.first()).toBeVisible({ timeout: 60_000 })
+    await deliveredRow.first().click()
 
     // The message detail view actually rendered (proves we are not on a
     // blank/error page — without this, a message that rendered nothing at
     // all would still pass the negative assertion below).
-    await expect(page.getByRole("link", { name: "Back" })).toBeVisible()
+    await expect(
+      page.getByRole("link", { name: "Back", exact: true }),
+    ).toBeVisible()
 
     // The template placeholders were substituted: the raw tokens must not
     // leak into the rendered message body.

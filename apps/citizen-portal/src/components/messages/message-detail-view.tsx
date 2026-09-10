@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { BackButton } from "@/components/button/back-button"
 import { CssSpinner } from "@/components/css-spinner"
 import { ANALYTICS } from "@/const/analytics"
+import { isFoldersEnabled } from "@/lib/feature-config"
 import { getMockAttachmentIds } from "@/mock/attachments"
 import { findMockMessageById } from "@/mock/messages"
 import { findMockSubmissionIdForRelatedMessage } from "@/mock/related-messages"
@@ -103,14 +104,14 @@ export function MessageDetailView({ id }: MessageDetailViewProps) {
     })
   }, [data, analyticsClient])
 
+  const foldersEnabled = isFoldersEnabled()
   const { deleteIds, isLoading: isDeleting } = useDeleteMessages()
   const { moveIds, isLoading: isMoving } = useMoveMessages()
 
   const [isDeleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [isMoveModalOpen, setMoveModalOpen] = useState(false)
 
-  // All messages are inbox until the Folders epic exposes tagId on messages.
-  const currentFolderId: string | null = null
+  const currentFolderId = searchParams.get("folder")
   const destinations = useMessageFolders({
     currentFolderId,
     inboxLabel: tMove("inbox"),
@@ -168,7 +169,7 @@ export function MessageDetailView({ id }: MessageDetailViewProps) {
     <div className={styles.detailRoot}>
       <MessageDetailToolbar
         backHref={backHref}
-        onMove={() => setMoveModalOpen(true)}
+        onMove={foldersEnabled ? () => setMoveModalOpen(true) : undefined}
         onDelete={() => setDeleteConfirmOpen(true)}
         isDeleting={isDeleting}
         isMoving={isMoving}
@@ -215,13 +216,15 @@ export function MessageDetailView({ id }: MessageDetailViewProps) {
         isDeleting={isDeleting}
       />
 
-      <MoveMessageModal
-        isOpen={isMoveModalOpen}
-        onClose={() => setMoveModalOpen(false)}
-        onConfirm={handleMove}
-        destinations={destinations}
-        isMoving={isMoving}
-      />
+      {foldersEnabled ? (
+        <MoveMessageModal
+          isOpen={isMoveModalOpen}
+          onClose={() => setMoveModalOpen(false)}
+          onConfirm={handleMove}
+          destinations={destinations}
+          isMoving={isMoving}
+        />
+      ) : null}
     </div>
   )
 }

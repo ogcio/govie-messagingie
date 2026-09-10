@@ -3,7 +3,7 @@
 The canonical testing guide for the consolidated citizen-portal lives
 at the repo root:
 
-> **[`docs/testing.md`](../../../docs/testing.md)**
+> **[`docs/internal/testing.md`](../../../docs/internal/testing.md)**
 
 That file covers:
 

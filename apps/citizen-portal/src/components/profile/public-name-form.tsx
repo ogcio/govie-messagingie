@@ -4,8 +4,8 @@ import { useEnv } from "@citizen-portal/shared"
 import {
   FormField,
   FormFieldError,
-  FormFieldLabel,
   Heading,
+  Paragraph,
   Stack,
   TextInput,
   toaster,
@@ -80,15 +80,24 @@ export function PublicNameForm({
     <FullWidthContainer>
       <form onSubmit={handleSubmit} data-testid='public-name-form'>
         <Stack direction='column' gap={6}>
-          <Heading as='h2' size='md' data-testid='public-name-heading'>
+          <Heading
+            as='h2'
+            size='md'
+            id='public-name-heading'
+            data-testid='public-name-heading'
+          >
             {t("form.title")}
           </Heading>
           <FormField>
-            <FormFieldLabel text={t("form.description")} htmlFor='publicName' />
+            <Paragraph id='public-name-helper' data-testid='public-name-helper'>
+              {t("form.description")}
+            </Paragraph>
             {validationError && <FormFieldError text={validationError} />}
             <TextInput
               id='publicName'
               name='publicName'
+              aria-labelledby='public-name-heading'
+              aria-describedby='public-name-helper'
               value={value}
               onChange={(e) => setValue(e.target.value)}
               data-testid='public-name-input'

@@ -76,7 +76,7 @@ export async function listTemplates(params: {
     data.push({ id: row.templateMetaId, contents: row.contents });
   }
 
-  const totalCount = result.rows.at(0)?.count || 0;
+  const totalCount = Number(result.rows.at(0)?.count ?? 0);
 
   return { data, totalCount };
 }

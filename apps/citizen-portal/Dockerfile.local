@@ -96,6 +96,8 @@ ENV NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION=${NEXT_PUBLIC_ENABLE_FORMS_INTEGRATION:
 # LEA (AB#40267) — default "true" for the local image so LEA surfaces are
 # visible during development (dev/uat behaviour); prod ships it off.
 ENV NEXT_PUBLIC_ENABLE_LEA=${NEXT_PUBLIC_ENABLE_LEA:-true}
+# Folders (AB#42582) — default off, same as deployed builds.
+ENV NEXT_PUBLIC_ENABLE_FOLDERS=${NEXT_PUBLIC_ENABLE_FOLDERS:-false}
 
 ENV NEXT_PUBLIC_MATOMO_URL=${NEXT_PUBLIC_MATOMO_URL}
 ENV NEXT_PUBLIC_MATOMO_PROTOCOL=${NEXT_PUBLIC_MATOMO_PROTOCOL}

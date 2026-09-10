@@ -62,10 +62,24 @@ const SEEDER_ENV = {
   SEEDER_MESSAGING_APP_ADMIN_LOGOUT_REDIRECT_URI:
     "http://messaging.local.test:8080/admin",
 
+  SEEDER_MESSAGING_ADMIN_APP_REDIRECT_URI:
+    "http://messaging-admin.local.test:8080/callback",
+  SEEDER_MESSAGING_ADMIN_APP_REDIRECT_URI_LEGACY:
+    "http://messaging-admin.local.test:8080/api/callback",
+  SEEDER_MESSAGING_ADMIN_APP_LOGOUT_REDIRECT_URI:
+    "http://messaging-admin.local.test:8080",
+
   SEEDER_PROFILE_APP_REDIRECT_URI: "http://profile.local.test:8080/callback",
   SEEDER_PROFILE_APP_REDIRECT_URI_LEGACY:
     "http://profile.local.test:8080/api/callback",
   SEEDER_PROFILE_APP_LOGOUT_REDIRECT_URI: "http://profile.local.test:8080",
+
+  SEEDER_PROFILE_ADMIN_APP_REDIRECT_URI:
+    "http://profile-admin.local.test:8080/callback",
+  SEEDER_PROFILE_ADMIN_APP_REDIRECT_URI_LEGACY:
+    "http://profile-admin.local.test:8080/api/callback",
+  SEEDER_PROFILE_ADMIN_APP_LOGOUT_REDIRECT_URI:
+    "http://profile-admin.local.test:8080",
 
   SEEDER_DASHBOARD_APP_REDIRECT_URI:
     "http://dashboard.local.test:8080/callback",

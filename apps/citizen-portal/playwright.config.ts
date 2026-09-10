@@ -20,13 +20,14 @@ const baseURL = process.env.BASE_URL || "http://messaging.local.test:4001"
 const isDockerHarness = /local\.test/.test(baseURL)
 
 export default defineConfig({
-  //globalTimeout: 3480000, // 58 minutes
+  globalTimeout: 3480000, // 58 minutes
   expect: {
     timeout: 25000,
   },
   timeout: 180 * 1000,
   testDir: path.join(__dirname, "e2e"),
   retries: 2,
+  workers: 1,
   outputDir: "test-results/",
   reporter: [
     ["junit", { outputFile: "e2e/test-results/results.xml" }],
@@ -54,6 +55,26 @@ export default defineConfig({
       name: "Desktop Chrome",
       use: {
         ...devices["Desktop Chrome"],
+      },
+    },
+    /**
+     * On-demand only — run it with `pnpm test:e2e:webkit:smoke`.
+     *
+     * The nightly scripts pin `--project='Desktop Chrome'` deliberately. The
+     * Openshift agent image ships Chromium's shared libraries but not
+     * WebKit's (libgstreamer, libgtk-4, libgraphene, libflite…), and the
+     * pipeline's `playwright install` step already warns about them at
+     * install time. WebKit therefore dies in `browserType.launch` before it
+     * can assert anything, so including it in CI bought a guaranteed failure
+     * and no signal. Putting it back in the nightly needs those libraries
+     * baked into the agent image — `playwright install --with-deps` cannot do
+     * it from the job, which runs unprivileged and cannot apt-get.
+     */
+    {
+      name: "Desktop WebKit",
+      testMatch: /user-message-mark-as-read\.spec\.ts/,
+      use: {
+        ...devices["Desktop Safari"],
       },
     },
   ],

@@ -71,6 +71,67 @@ describe("withRollback", () => {
     expect(mockClient.query).not.toHaveBeenCalledWith("ROLLBACK");
   });
 
+  it("should use a savepoint and release it on success when already in a transaction", async () => {
+    const mockClient = createMockClient();
+    mockClient.query.mockResolvedValue({});
+    mockClient.query.mockResolvedValueOnce({
+      rows: [{ in_transaction: true }],
+    });
+
+    const callback = vi.fn().mockResolvedValue("savepoint-success");
+
+    const result = await withRollback(
+      mockClient as unknown as PoolClient,
+      callback,
+    );
+
+    expect(result).toBe("savepoint-success");
+    const queries = mockClient.query.mock.calls.map((c) => c[0] as string);
+    expect(queries.some((q) => q.startsWith("SAVEPOINT savepoint_"))).toBe(
+      true,
+    );
+    expect(
+      queries.some((q) => q.startsWith("RELEASE SAVEPOINT savepoint_")),
+    ).toBe(true);
+    expect(queries).not.toContain("BEGIN");
+  });
+
+  it("should roll back to the savepoint on error when already in a transaction", async () => {
+    const mockClient = createMockClient();
+    mockClient.query.mockResolvedValue({});
+    mockClient.query.mockResolvedValueOnce({
+      rows: [{ in_transaction: true }],
+    });
+
+    const error = new Error("savepoint failure");
+    const callback = vi.fn().mockRejectedValue(error);
+
+    await expect(
+      withRollback(mockClient as unknown as PoolClient, callback),
+    ).rejects.toThrow(error);
+
+    const queries = mockClient.query.mock.calls.map((c) => c[0] as string);
+    expect(
+      queries.some((q) => q.startsWith("ROLLBACK TO SAVEPOINT savepoint_")),
+    ).toBe(true);
+    expect(
+      queries.some((q) => q.startsWith("RELEASE SAVEPOINT savepoint_")),
+    ).toBe(true);
+  });
+
+  it("should treat an empty transaction-status result as not in a transaction", async () => {
+    const mockClient = createMockClient();
+    mockClient.query.mockResolvedValue({});
+    mockClient.query.mockResolvedValueOnce({ rows: [] });
+
+    const callback = vi.fn().mockResolvedValue("ok");
+
+    await withRollback(mockClient as unknown as PoolClient, callback);
+
+    expect(mockClient.query).toHaveBeenCalledWith("BEGIN");
+    expect(mockClient.query).toHaveBeenCalledWith("COMMIT");
+  });
+
   it("should check transaction status correctly", async () => {
     const mockClient = createMockClient();
 

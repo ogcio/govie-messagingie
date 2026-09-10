@@ -17,6 +17,28 @@ const __dirname = dirname(__filename)
  * 5. Validates setup
  */
 
+// Every backend service with its own database. Each entry lists the pnpm
+// scripts to run (in order) after the database has been created and migrated.
+const API_SERVICES = [
+  {
+    name: "messaging-api",
+    postMigrate: ["sync-event-summary"],
+  },
+  {
+    name: "upload-api",
+    postMigrate: [],
+  },
+  {
+    name: "scheduler-api",
+    postMigrate: [],
+  },
+  {
+    name: "profile-api",
+    // Consent statements are required reference data, not test data
+    postMigrate: ["seed-consent-statements"],
+  },
+]
+
 class DevSetup {
   constructor() {
     this.rootDir = join(__dirname, "..", "..")
@@ -152,6 +174,28 @@ class DevSetup {
           "success",
         )
         this.log("Using existing PostgreSQL instance", "info")
+
+        // Postgres may be running outside of `pnpm db:up` (natively, or as a
+        // lone container), so the other compose services still need starting:
+        // upload-api will not boot without S3 (ministack) and needs ClamAV,
+        // messaging-api sends mail through MailDev.
+        this.log(
+          "Starting remaining Docker services (maildev, redis, clamav, ministack)...",
+          "info",
+        )
+        try {
+          execSync(
+            "docker compose --env-file .env -f docker-compose.yaml up --detach maildev redis clamav ministack",
+            {
+              cwd: this.rootDir,
+              stdio: "inherit",
+            },
+          )
+        } catch {
+          this.warnings.push(
+            "Could not start auxiliary Docker services (maildev, redis, clamav, ministack). upload-api needs S3 + ClamAV and messaging-api needs MailDev — start them with: pnpm db:up",
+          )
+        }
       } catch {
         // PostgreSQL is not running, check if Docker containers are running
         this.log(
@@ -206,22 +250,30 @@ class DevSetup {
       // Wait for database to be ready
       await this.waitForDatabase()
 
-      // Create and migrate database
-      this.log("Creating and migrating database...", "info")
-      execSync("pnpm --filter messaging-api db:create", {
-        cwd: this.rootDir,
-        stdio: "inherit",
-      })
+      // Create and migrate the database of every API service
+      for (const service of API_SERVICES) {
+        this.log(
+          `Creating and migrating database for ${service.name}...`,
+          "info",
+        )
 
-      execSync("pnpm --filter messaging-api db:migrate", {
-        cwd: this.rootDir,
-        stdio: "inherit",
-      })
+        execSync(`pnpm --filter ${service.name} db:create`, {
+          cwd: this.rootDir,
+          stdio: "inherit",
+        })
 
-      execSync("pnpm --filter messaging-api sync-event-summary", {
-        cwd: this.rootDir,
-        stdio: "inherit",
-      })
+        execSync(`pnpm --filter ${service.name} db:migrate`, {
+          cwd: this.rootDir,
+          stdio: "inherit",
+        })
+
+        for (const script of service.postMigrate) {
+          execSync(`pnpm --filter ${service.name} ${script}`, {
+            cwd: this.rootDir,
+            stdio: "inherit",
+          })
+        }
+      }
 
       this.log("Database setup completed", "success")
     } catch (error) {
@@ -235,7 +287,8 @@ class DevSetup {
     // Check if all required files exist
     const requiredFiles = [
       "apps/messaging-next/package.json",
-      "apps/messaging-api/package.json",
+      "apps/messaging-support/package.json",
+      ...API_SERVICES.map((service) => `apps/${service.name}/package.json`),
       "package.json",
       "pnpm-workspace.yaml",
     ]
@@ -247,7 +300,11 @@ class DevSetup {
     }
 
     // Check if environment files exist
-    const envFiles = ["apps/messaging-next/.env", "apps/messaging-api/.env"]
+    const envFiles = [
+      "apps/messaging-next/.env",
+      "apps/messaging-support/.env",
+      ...API_SERVICES.map((service) => `apps/${service.name}/.env`),
+    ]
 
     for (const file of envFiles) {
       if (!existsSync(join(this.rootDir, file))) {
@@ -312,11 +369,18 @@ class DevSetup {
     console.log("2. Run tests: pnpm test")
     console.log("3. Check health: pnpm scripts:health-check")
     const apiPort = process.env.API_PORT || "8002"
+    const profileApiPort = process.env.PROFILE_API_PORT || "8003"
+    const schedulerApiPort = process.env.SCHEDULER_API_PORT || "8005"
+    const uploadApiPort = process.env.UPLOAD_API_PORT || "8008"
     const frontendPort = process.env.FRONTEND_PORT || "3002"
     const maildevPort = process.env.MAILDEV_PORT || "1080"
-    console.log(`4. View API docs: http://localhost:${apiPort}/docs`)
-    console.log(`5. View frontend: http://localhost:${frontendPort}`)
-    console.log(`6. View MailDev: http://localhost:${maildevPort}`)
+    console.log(`4. View messaging-api docs: http://localhost:${apiPort}/docs`)
+    console.log(
+      `5. Other APIs: profile-api http://localhost:${profileApiPort}, scheduler-api http://localhost:${schedulerApiPort}, upload-api http://localhost:${uploadApiPort}`,
+    )
+    console.log(`6. View frontend: http://localhost:${frontendPort}`)
+    console.log("7. View messaging-support: http://localhost:1337")
+    console.log(`8. View MailDev: http://localhost:${maildevPort}`)
   }
 
   printErrors() {

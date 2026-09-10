@@ -160,10 +160,6 @@ export class EmailSpecificProvider {
 
     // If no primary provider is found, return the default provider
     if (!provider) {
-      this.logger?.warn(
-        { organisationId: this.organisationId },
-        "No primary email provider found, returning default",
-      );
       return this.getDefault();
     }
 

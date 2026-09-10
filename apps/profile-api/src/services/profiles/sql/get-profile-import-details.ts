@@ -19,13 +19,25 @@ export const getProfileImportDetails = async (
   client: PoolClient,
   id: string,
   batch?: number,
+  organisationId?: string,
 ): Promise<ProfileImportDetail[]> => {
   if (!id) {
     throw httpErrors.badRequest("Profile import ID is required");
   }
   const args: (string | number)[] = [id];
+  const filters: string[] = [
+    "pid.profile_import_id = $1",
+    "pid.data IS NOT NULL",
+  ];
+
   if (batch !== undefined) {
     args.push(batch);
+    filters.push(`pid.batch_number = $${args.length}`);
+  }
+
+  if (organisationId !== undefined) {
+    args.push(organisationId);
+    filters.push(`pi.organisation_id = $${args.length}`);
   }
 
   const result = await client.query<{
@@ -34,12 +46,11 @@ export const getProfileImportDetails = async (
     status: string;
     batch: number;
   }>(
-    `SELECT id, data, status, batch_number as batch
-    FROM profile_import_details
-    WHERE profile_import_id = $1 
-    AND data IS NOT NULL
-    ${batch !== undefined ? "AND batch_number = $2" : ""}
-    ORDER BY id;`,
+    `SELECT pid.id, pid.data, pid.status, pid.batch_number as batch
+    FROM profile_import_details pid
+    INNER JOIN profile_imports pi ON pi.id = pid.profile_import_id
+    WHERE ${filters.join(" AND ")}
+    ORDER BY pid.id;`,
     args,
   );
 

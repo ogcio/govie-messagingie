@@ -164,16 +164,13 @@ function StaleClaimsRefreshGate({ children }: { children: ReactNode }) {
     if (isOnboarded) {
       if (previousAttemptTs) {
         // Recovered after a refresh attempt earlier this session.
-        faro.api?.pushLog([
-          TRACE_MESSAGES.STALE_CLAIMS_REFRESH.RECOVERED,
-          {
-            context: {
-              previousAttemptTs,
-              roleCount: claims.roles?.length ?? 0,
-              orgCount: claims.organizations.length,
-            },
+        faro.api?.pushLog([TRACE_MESSAGES.STALE_CLAIMS_REFRESH.RECOVERED], {
+          context: {
+            previousAttemptTs,
+            roleCount: String(claims.roles?.length ?? 0),
+            orgCount: String(claims.organizations.length),
           },
-        ])
+        })
       }
       sessionStorage.removeItem(STALE_CLAIMS_REFRESH_KEY)
       return
@@ -184,32 +181,27 @@ function StaleClaimsRefreshGate({ children }: { children: ReactNode }) {
     // refresh loop — same behaviour as before this gate existed.
     if (previousAttemptTs) {
       faro.api?.pushLog(
-        [
-          TRACE_MESSAGES.STALE_CLAIMS_REFRESH.SKIPPED_ALREADY_ATTEMPTED,
-          {
-            context: {
-              previousAttemptTs,
-              roles: claims.roles ?? [],
-              orgRoleCount: claims.organization_roles.length,
-            },
+        [TRACE_MESSAGES.STALE_CLAIMS_REFRESH.SKIPPED_ALREADY_ATTEMPTED],
+        {
+          level: LogLevel.WARN,
+          context: {
+            previousAttemptTs,
+            roles: (claims.roles ?? []).join(","),
+            orgRoleCount: String(claims.organization_roles.length),
           },
-        ],
-        { level: LogLevel.WARN },
+        },
       )
       return
     }
 
-    faro.api?.pushLog([
-      TRACE_MESSAGES.STALE_CLAIMS_REFRESH.DETECTED,
-      {
-        context: {
-          // Role *names* are not PII; user identifiers are intentionally omitted.
-          roles: claims.roles ?? [],
-          orgRoleCount: claims.organization_roles.length,
-          signinMethod: claims.signinMethod,
-        },
+    faro.api?.pushLog([TRACE_MESSAGES.STALE_CLAIMS_REFRESH.DETECTED], {
+      context: {
+        // Role *names* are not PII; user identifiers are intentionally omitted.
+        roles: (claims.roles ?? []).join(","),
+        orgRoleCount: String(claims.organization_roles.length),
+        signinMethod: String(claims.signinMethod),
       },
-    ])
+    })
 
     triggered.current = true
     sessionStorage.setItem(STALE_CLAIMS_REFRESH_KEY, String(Date.now()))
@@ -217,15 +209,13 @@ function StaleClaimsRefreshGate({ children }: { children: ReactNode }) {
     invalidateSession()
       .catch((error: unknown) => {
         faro.api?.pushLog(
-          [
-            TRACE_MESSAGES.STALE_CLAIMS_REFRESH.INVALIDATE_FAILED,
-            {
-              context: {
-                error: error instanceof Error ? error.message : String(error),
-              },
+          [TRACE_MESSAGES.STALE_CLAIMS_REFRESH.INVALIDATE_FAILED],
+          {
+            level: LogLevel.ERROR,
+            context: {
+              error: error instanceof Error ? error.message : String(error),
             },
-          ],
-          { level: LogLevel.ERROR },
+          },
         )
       })
       .finally(() => {

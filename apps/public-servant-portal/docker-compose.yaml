@@ -1,0 +1,48 @@
+# Local Host-based testing for the consolidated public-servant-portal image.
+#
+# Build context is the repo root because Dockerfile.local copies pnpm
+# workspace files (package.json, pnpm-*.yaml, patches/) that live above
+# this directory.
+#
+# Prerequisites:
+#   1. The `base-deps` image must already exist locally. Build it once with:
+#        pnpm docker:build:base
+#   2. Add the test hostnames to /etc/hosts:
+#        127.0.0.1 messaging-admin.local.test profile-admin.local.test
+#
+# Run with:
+#   cd apps/public-servant-portal
+#   docker compose up --build public-servant-portal
+#
+# Then verify each zone responds:
+#   curl -H "Host: messaging-admin.local.test" http://localhost:8080/health
+#   curl -H "Host: profile-admin.local.test"   http://localhost:8080/health
+#
+# And in a browser:
+#   http://messaging-admin.local.test:8080/
+#   http://profile-admin.local.test:8080/
+
+services:
+  public-servant-portal:
+    container_name: public-servant-portal
+    build:
+      context: ../..
+      dockerfile: apps/public-servant-portal/Dockerfile.local
+    image: public-servant-portal:local
+    ports:
+      - "${PUBLIC_SERVANT_PORTAL_PORT:-8080}:8080"
+    environment:
+      PORT: 8080
+      MESSAGING_ADMIN_HOST: messaging-admin.local.test
+      PROFILE_ADMIN_HOST: profile-admin.local.test
+    restart: unless-stopped
+    healthcheck:
+      # Health check uses the messaging-admin zone Host header; nginx returns 200 on /health.
+      test:
+        - CMD-SHELL
+        - >-
+          wget -q -O - --header="Host: messaging-admin.local.test"
+          http://127.0.0.1:8080/health || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5

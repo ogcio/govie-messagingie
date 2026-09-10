@@ -9,19 +9,39 @@ const __dirname = dirname(__filename)
 /**
  * Database Reset Script
  *
- * This script provides a safe way to reset the database:
- * 1. Drops the existing database
- * 2. Creates a new database
- * 3. Runs all migrations
- * 4. Syncs event summaries
- * 5. Optionally seeds with test data
+ * This script provides a safe way to reset the database of every API service:
+ * 1. Drops the existing databases
+ * 2. Creates new databases
+ * 3. Runs all migrations, followed by each service's post-migrate scripts
+ *    (event summary sync, consent statement reference data)
  */
+
+// Every backend service with its own database. Each entry lists the pnpm
+// scripts to run (in order) after the database has been created and migrated.
+const API_SERVICES = [
+  {
+    name: "messaging-api",
+    postMigrate: ["sync-event-summary"],
+  },
+  {
+    name: "upload-api",
+    postMigrate: [],
+  },
+  {
+    name: "scheduler-api",
+    postMigrate: [],
+  },
+  {
+    name: "profile-api",
+    // Consent statements are required reference data, not test data
+    postMigrate: ["seed-consent-statements"],
+  },
+]
 
 class DatabaseReset {
   constructor() {
     this.rootDir = join(__dirname, "..", "..")
     this.force = process.argv.includes("--force")
-    this.seed = process.argv.includes("--seed")
   }
 
   log(message, type = "info") {
@@ -42,13 +62,9 @@ class DatabaseReset {
     try {
       await this.confirmReset()
       await this.checkDatabaseConnection()
-      await this.dropDatabase()
-      await this.createDatabase()
+      await this.dropDatabases()
+      await this.createDatabases()
       await this.runMigrations()
-
-      if (this.seed) {
-        await this.seedDatabase()
-      }
 
       this.log("🎉 Database reset completed successfully!", "success")
       this.printNextSteps()
@@ -105,74 +121,65 @@ class DatabaseReset {
     }
   }
 
-  async dropDatabase() {
-    this.log("Dropping existing database...", "info")
+  async dropDatabases() {
+    for (const service of API_SERVICES) {
+      this.log(`Dropping database of ${service.name}...`, "info")
 
-    try {
-      execSync("pnpm --filter messaging-api db:drop", {
-        cwd: this.rootDir,
-        stdio: "inherit",
-      })
-      this.log("Database dropped successfully", "success")
-    } catch (error) {
-      throw new Error(`Failed to drop database: ${error.message}`)
+      try {
+        execSync(`pnpm --filter ${service.name} db:drop`, {
+          cwd: this.rootDir,
+          stdio: "inherit",
+        })
+        this.log(`Database of ${service.name} dropped successfully`, "success")
+      } catch (error) {
+        throw new Error(
+          `Failed to drop database of ${service.name}: ${error.message}`,
+        )
+      }
     }
   }
 
-  async createDatabase() {
-    this.log("Creating new database...", "info")
+  async createDatabases() {
+    for (const service of API_SERVICES) {
+      this.log(`Creating database of ${service.name}...`, "info")
 
-    try {
-      execSync("pnpm --filter messaging-api db:create", {
-        cwd: this.rootDir,
-        stdio: "inherit",
-      })
-      this.log("Database created successfully", "success")
-    } catch (error) {
-      throw new Error(`Failed to create database: ${error.message}`)
+      try {
+        execSync(`pnpm --filter ${service.name} db:create`, {
+          cwd: this.rootDir,
+          stdio: "inherit",
+        })
+        this.log(`Database of ${service.name} created successfully`, "success")
+      } catch (error) {
+        throw new Error(
+          `Failed to create database of ${service.name}: ${error.message}`,
+        )
+      }
     }
   }
 
   async runMigrations() {
-    this.log("Running database migrations...", "info")
+    for (const service of API_SERVICES) {
+      this.log(`Running migrations of ${service.name}...`, "info")
 
-    try {
-      execSync("pnpm --filter messaging-api db:migrate", {
-        cwd: this.rootDir,
-        stdio: "inherit",
-      })
-      this.log("Migrations completed successfully", "success")
-    } catch (error) {
-      throw new Error(`Failed to run migrations: ${error.message}`)
-    }
-  }
+      try {
+        execSync(`pnpm --filter ${service.name} db:migrate`, {
+          cwd: this.rootDir,
+          stdio: "inherit",
+        })
 
-  async syncEventSummary() {
-    this.log("Syncing event summaries...", "info")
+        for (const script of service.postMigrate) {
+          execSync(`pnpm --filter ${service.name} ${script}`, {
+            cwd: this.rootDir,
+            stdio: "inherit",
+          })
+        }
 
-    try {
-      execSync("pnpm --filter messaging-api sync-event-summary", {
-        cwd: this.rootDir,
-        stdio: "inherit",
-      })
-      this.log("Event summaries synced successfully", "success")
-    } catch (error) {
-      throw new Error(`Failed to sync event summaries: ${error.message}`)
-    }
-  }
-
-  async seedDatabase() {
-    this.log("Seeding database with test data...", "info")
-
-    try {
-      // Run the seed script from the messaging-api directory
-      execSync(`cd apps/messaging-api && tsx --env-file=.env seed-db.mjs`, {
-        cwd: this.rootDir,
-        stdio: "inherit",
-      })
-      this.log("Database seeded successfully", "success")
-    } catch (error) {
-      throw new Error(`Failed to seed database: ${error.message}`)
+        this.log(`Migrations of ${service.name} completed`, "success")
+      } catch (error) {
+        throw new Error(
+          `Failed to run migrations of ${service.name}: ${error.message}`,
+        )
+      }
     }
   }
 
@@ -180,10 +187,6 @@ class DatabaseReset {
     console.log("\n📋 Next Steps:")
     console.log("1. Start development servers: pnpm dev")
     console.log("2. Check database health: pnpm scripts:health-check")
-
-    if (this.seed) {
-      console.log("3. Test data has been loaded for development")
-    }
   }
 }
 

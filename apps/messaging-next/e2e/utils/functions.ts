@@ -1,5 +1,4 @@
 import { expect, type Page } from "@playwright/test"
-import { WAIT_TIME } from "./consts"
 import { sendMessageAndVerify } from "./message-helpers"
 import { navigateAndVerifyHeading } from "./navigation-helpers"
 import { addNewRecipient } from "./recipient-helpers"
@@ -8,7 +7,7 @@ const ADMIN_URL = process.env.ADMIN_URL || "http://localhost:3001"
 
 export const generateTestData = () => ({
   uuid: crypto.randomUUID(),
-  timestamp: Date.now(),
+  timestamp: `${Date.now()}-${crypto.randomUUID()}`,
 })
 
 export async function sendE2ETemplateMessage(page: Page, nonSecure = false) {
@@ -32,7 +31,6 @@ export async function searchByText(
 ) {
   await page.getByRole("textbox", { name: "Search" }).fill(searchText)
   await page.getByRole("button", { name: searchButtonName }).click()
-  await page.waitForTimeout(WAIT_TIME)
 }
 
 export async function clickButton(page: Page, buttonName: string) {

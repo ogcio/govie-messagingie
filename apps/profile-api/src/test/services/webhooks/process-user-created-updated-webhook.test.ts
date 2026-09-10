@@ -351,4 +351,59 @@ describe("processUserCreatedOrUpdatedWebhook Unit Tests", () => {
       expect(result.id).toBeDefined();
     });
   });
+
+  describe("OTP application handling", () => {
+    const otpWebhookBody = (id: string, applicationId?: string) => ({
+      applicationId,
+      data: {
+        id,
+        username: `otp-${id}`,
+        primaryEmail: `${id}@example.com`,
+        identities: {},
+        customData: {},
+      },
+    });
+
+    it("pre-approves consent for signins from an OTP application", async () => {
+      const userId = `otp${Math.random().toString(36).substring(2, 8)}`;
+      const result = await processUserCreatedOrUpdatedWebhook({
+        body: otpWebhookBody(userId, "otp-app-1"),
+        pool,
+        logger,
+        config: { ...config, OTP_APPLICATION_IDS: "otp-app-1, otp-app-2" },
+        getLogtoClient: vi.fn().mockResolvedValue(mockLogtoClient),
+      });
+
+      expect(result.status).toBe("success");
+    });
+
+    it("reads the application id from body.application.id when present", async () => {
+      const userId = `otp${Math.random().toString(36).substring(2, 8)}`;
+      const result = await processUserCreatedOrUpdatedWebhook({
+        body: {
+          ...otpWebhookBody(userId),
+          application: { id: "otp-app-2" },
+        },
+        pool,
+        logger,
+        config: { ...config, OTP_APPLICATION_IDS: "otp-app-1,otp-app-2" },
+        getLogtoClient: vi.fn().mockResolvedValue(mockLogtoClient),
+      });
+
+      expect(result.status).toBe("success");
+    });
+
+    it("does not pre-approve when the application is not OTP-enabled", async () => {
+      const userId = `otp${Math.random().toString(36).substring(2, 8)}`;
+      const result = await processUserCreatedOrUpdatedWebhook({
+        body: otpWebhookBody(userId, "regular-app"),
+        pool,
+        logger,
+        config: { ...config, OTP_APPLICATION_IDS: "otp-app-1" },
+        getLogtoClient: vi.fn().mockResolvedValue(mockLogtoClient),
+      });
+
+      expect(result.status).toBe("success");
+    });
+  });
 });

@@ -16,7 +16,7 @@ import {
 import { LogoHarpWhite, LogoWhite } from "@ogcio/design-system-react/logos"
 import { usePathname } from "next/navigation"
 import { useTranslations } from "next-intl"
-import { useState } from "react"
+import { type ReactNode, useState } from "react"
 import { LANG_EN, LANG_GA } from "@/const"
 import { useActiveLocale } from "@/hooks/use-active-locale"
 import { useShowApplicationLinks } from "@/hooks/use-show-application-links"
@@ -57,7 +57,8 @@ export function PageHeader({
   logoHref,
   languageHref: languageHrefOverride,
 }: {
-  publicName: string
+  /** Usually `<PublicName>`; a plain string for pre-profile surfaces. */
+  publicName: ReactNode
   onSignOut: () => void
   title?: string
   logoHref?: string
@@ -161,14 +162,6 @@ export function PageHeader({
             {showApplicationLinks && isZoneEnabled("messages") ? (
               <li>
                 <ListItem href={messagingHref} label={t("drawer.messaging")} />
-              </li>
-            ) : null}
-            {zone === "messages" ? (
-              <li>
-                <ListItem
-                  href={`/${locale}/whats-new`}
-                  label={t("drawer.whatsNew")}
-                />
               </li>
             ) : null}
             <li>

@@ -1,16 +1,17 @@
 import { expect, type Page } from "@playwright/test"
-import { AUTH_SIGN_IN_URL, WAIT_TIME } from "./consts"
+import { templates, urls } from "../fixtures"
+import { signInStepVisible } from "../helpers/user-auth.helper"
 import { sendMessageAndVerify } from "./message-helpers"
 import { navigateAndVerifyHeading } from "./navigation-helpers"
 import { addNewRecipient } from "./recipient-helpers"
 
-const ADMIN_URL = process.env.ADMIN_URL || "http://localhost:3001"
-const AUTH_URL = process.env.AUTH_URL || "http://localhost:3002"
-const PROFILE_URL = process.env.PROFILE_URL || "http://localhost:3003"
+const ADMIN_URL = urls.admin
+const AUTH_URL = urls.auth
+const PROFILE_URL = urls.profile
 
 export const generateTestData = () => ({
   uuid: crypto.randomUUID(),
-  timestamp: Date.now(),
+  timestamp: `${Date.now()}-${crypto.randomUUID()}`,
 })
 
 export async function sendE2ETemplateMessage(page: Page, nonSecure = false) {
@@ -19,7 +20,7 @@ export async function sendE2ETemplateMessage(page: Page, nonSecure = false) {
     `${ADMIN_URL}/en/send-a-message`,
     "Send a message",
   )
-  await page.selectOption("select#template-select", "Test Template E2E")
+  await page.selectOption("select#template-select", templates.e2e)
   //if nonsecure message click button
   if (nonSecure) {
     await page.getByRole("radio", { name: "Non-secured" }).click()
@@ -34,7 +35,6 @@ export async function searchByText(
 ) {
   await page.getByRole("textbox", { name: "Search" }).fill(searchText)
   await page.getByRole("button", { name: searchButtonName }).click()
-  await page.waitForTimeout(WAIT_TIME)
 }
 
 export async function clickButton(page: Page, buttonName: string) {
@@ -44,23 +44,77 @@ export async function clickButton(page: Page, buttonName: string) {
 export async function logout(page: Page) {
   if (page.url().includes("-admin")) {
     await page.context().clearCookies()
-    await page.goto(`/`)
   } else {
     await clickButton(page, "Menu")
     await clickButton(page, "Logout")
-    await page.waitForLoadState("networkidle")
   }
   await confirmSignout(page)
 }
 
+/**
+ * How long to let the sign-out chain finish on its own. The profile
+ * global-signout orchestrator reserves `MIN_DELAY_MS` (3s) plus up to
+ * `IFRAME_TIMEOUT_MS` (20s) for its iframe fan-out, so 30s covers its own worst
+ * case. A warm dev run reaches the IdP in ~13s and we return as soon as it
+ * does, so this is a ceiling rather than a delay we pay every sign-out.
+ */
+const SIGNOUT_CHAIN_TIMEOUT = 30_000
+
+/**
+ * Where the probe below knocks. It has to be a route that is genuinely behind
+ * auth: `/` is a poor witness because it redirects for reasons of its own, so a
+ * bounce from it does not isolate the session. The inbox is unambiguous — it
+ * renders for a live session and bounces to the IdP without one.
+ */
+const PROTECTED_PROBE_PATH = "/en/messages"
+
+/**
+ * Confirms the sign-out both finished and actually ended the session.
+ *
+ * Traced end to end on dev, the chain runs profile `/global-signout` ->
+ * `/en/global-signout` -> Logto `/oidc/session/end` -> `/post-global-signout`
+ * -> the post-redirect URI -> a fresh mock IdP sign-in, reaching the IdP around
+ * 13s. So the happy path really does end on a sign-in step, and waiting for one
+ * is right.
+ *
+ * What broke was treating a waypoint as the end. The post-redirect URI —
+ * `/en/messages`, or `/en/my-profile` in the profile zone — is on that path for
+ * roughly two seconds before the app re-initiates sign-in, and it is exactly
+ * where CI reported the chain "settling". Widening the wait does not help when
+ * the chain stops there for good: `a2240bbb` tripled it to 45s and changed
+ * nothing.
+ *
+ * So when no sign-in step arrives, do not accept wherever we ended up — those
+ * URLs render whether or not the session died. Probe instead: navigating to a
+ * protected route forces a fresh request through SAG, and an unauthenticated
+ * one bounces to the IdP. Keep both halves; the probe is the assertion, and
+ * neither half may be replaced by a check on the settle URL.
+ *
+ * Both halves stop at the sign-in step and go no further. Advancing into it is
+ * not this function's job: callers that want a fillable form call
+ * `waitForMockLoginForm` themselves, and clicking through here would leave an
+ * authorization request in flight at the IdP — a sign-out helper that starts a
+ * sign-in.
+ */
 export async function confirmSignout(page: Page) {
-  if (page.url().includes(AUTH_SIGN_IN_URL)) {
-    // Click the MyGovID login button
-    await page.getByRole("button", { name: "Continue with MyGovId" }).click()
+  if (await signInStepVisible(page, SIGNOUT_CHAIN_TIMEOUT)) {
+    return
   }
-  await expect(page.getByText("Summary")).toBeVisible({
-    timeout: 15000,
-  })
+
+  const stoppedOn = page.url()
+  await page.goto(PROTECTED_PROBE_PATH)
+
+  // Judge the probe only once it has run out: `signInStepVisible` waits for
+  // the bounce to render a sign-in step, so this cannot read a URL that is
+  // still in flight. Landing anywhere else means the route served us its
+  // authenticated content, i.e. the session outlived the sign-out.
+  if (!(await signInStepVisible(page))) {
+    throw new Error(
+      `Sign-out did not clear the session. The chain stopped on ${stoppedOn}; ` +
+        `navigating to ${PROTECTED_PROBE_PATH} was then not redirected to ` +
+        `authentication and settled on ${page.url()} with no sign-in form.`,
+    )
+  }
 }
 
 /**
@@ -83,13 +137,25 @@ export async function confirmGlobalSignout(page: Page) {
   await confirmSignout(page)
 }
 
-export async function sendMessageToDevCitizen(page: Page, nonSecure = false) {
+/**
+ * Sends the E2E template to an opted-in recipient.
+ *
+ * Default `messagingie2@gmail.com` is deliverable on dest and is the Gmail
+ * inbox the deep-link tests poll. Optional `recipientEmail` overrides the
+ * search; callers that read the inbox back must sign in as the profile that
+ * owns that contact (for messagingie2 that is `users.peterParker`).
+ */
+export async function sendMessageToDevCitizen(
+  page: Page,
+  nonSecure = false,
+  recipientEmail = "messagingie2@gmail.com",
+) {
   await navigateAndVerifyHeading(
     page,
     `${ADMIN_URL}/en/send-a-message`,
     "Send a message",
   )
-  await page.selectOption("select#template-select", "Test Template E2E")
+  await page.selectOption("select#template-select", templates.e2e)
   //if nonsecure message click button
   if (nonSecure) {
     await page.getByRole("radio", { name: "Non-secured" }).click()
@@ -105,17 +171,26 @@ export async function sendMessageToDevCitizen(page: Page, nonSecure = false) {
   await page
     .getByRole("tabpanel", { name: "Search" })
     .locator('input[name="email"]')
-    .fill("messagingie2@")
+    .fill(recipientEmail)
   await page.getByRole("button", { name: "Search" }).click()
   await expect(
     page.getByLabel("Search").getByRole("cell", { name: "List is empty" }),
   ).toBeHidden()
 
-  await expect(page.getByRole("cell", { name: "messaging ie2" })).toBeVisible()
-  await page
-    .getByRole("row", { name: "messaging ie2 <messagingie2@gmail.com>" })
-    .getByTestId("govie-icon")
-    .click()
+  const recipientRow = page
+    .getByRole("row")
+    .filter({ hasText: recipientEmail })
+    .first()
+  await expect(recipientRow).toBeVisible()
+  const addRecipient = recipientRow.getByRole("button", {
+    name: "Add recipient",
+  })
+  // Both the desktop and mobile row variants carry this same aria-label, and an
+  // opted-out recipient renders them disabled. Without this check `.click()`
+  // spends the entire test timeout in actionability polling and reports only
+  // "target closed", which says nothing about why.
+  await expect(addRecipient).toBeEnabled({ timeout: 10_000 })
+  await addRecipient.click()
   await clickButton(page, "Continue to Attachments")
   await clickButton(page, "Skip")
   await sendMessageAndVerify(page)
@@ -130,7 +205,7 @@ export async function sendMessageToNewEmailAddress(
     `${ADMIN_URL}/en/send-a-message`,
     "Send a message",
   )
-  await page.selectOption("select#template-select", "Test Template E2E")
+  await page.selectOption("select#template-select", templates.e2e)
   //if nonsecure message click button
   if (nonSecure) {
     await page.getByRole("radio", { name: "Non-secured" }).click()

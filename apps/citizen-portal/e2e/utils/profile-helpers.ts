@@ -6,7 +6,7 @@ export async function updatePublicName(page: Page) {
   const newName = `E2E PublicServant User ${uuid}`
 
   await page.getByTestId("public-name-input").fill(newName)
-  await page.getByRole("button", { name: "Update" }).click()
+  await page.getByRole("button", { name: "Update Public Name" }).click()
 
   return newName
 }

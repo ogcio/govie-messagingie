@@ -16,7 +16,7 @@
     }
   },
   "dashboard": {
-    "welcome": "Fáilte air ais, {name}",
+    "welcome": "Fáilte air ais, <name></name>",
     "messages": {
       "title": "Do theachtaireachtaí is déanaí",
       "link": "Féach ar gach teachtaireacht",
@@ -259,7 +259,6 @@
         "dashboard": "Painéal Rialaithe",
         "submissions": "Aighneachtaí",
         "messaging": "MessagingIE",
-        "whatsNew": "Cad atá nua",
         "close": "Dún"
       },
       "menu": "Roghchlár",
@@ -344,7 +343,7 @@
     },
     "firstName": "Céad ainm",
     "lastName": "Sloinne",
-    "update": "Nuashonraigh",
+    "update": "Nuashonraigh an tAinm Poiblí",
     "name": "Ainm",
     "dateOfBirth": "Dáta breithe",
     "clickToReveal": "Cliceáil chun nochtadh",

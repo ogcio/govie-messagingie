@@ -100,6 +100,15 @@ describe("withRetry", () => {
     await promise;
   });
 
+  it("should throw a generic error when no attempt ever ran", async () => {
+    const operation = vi.fn();
+
+    await expect(withRetry(operation, { maxRetries: 0 })).rejects.toThrow(
+      "Operation failed after 0 retries",
+    );
+    expect(operation).not.toHaveBeenCalled();
+  });
+
   it("should pass abort signal to operation", async () => {
     const operation = vi.fn().mockImplementation((signal: AbortSignal) => {
       expect(signal).toBeInstanceOf(AbortSignal);

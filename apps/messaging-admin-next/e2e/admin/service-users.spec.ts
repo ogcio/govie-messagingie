@@ -70,13 +70,14 @@ test.describe("Admin Service Users Import Tests", () => {
     await expect(
       page.getByRole("heading", { name: "Service User Import Detail" }),
     ).toBeVisible()
-    await page.waitForTimeout(3000)
-    await page.reload()
-    await expect(
-      page.getByRole("cell", {
-        name: "Playwright Test Import Test <playwright.import.test@example.com>",
-      }),
-    ).toBeVisible()
+    await expect(async () => {
+      await page.reload()
+      await expect(
+        page.getByRole("cell", {
+          name: "Playwright Test Import Test <playwright.import.test@example.com>",
+        }),
+      ).toBeVisible()
+    }).toPass()
     await page.getByText("Back", { exact: true }).click()
 
     //search for the new user in service users tab
@@ -85,8 +86,6 @@ test.describe("Admin Service Users Import Tests", () => {
       .getByRole("textbox", { name: "Search Service Users" })
       .fill("Playwright")
     await page.getByRole("button", { name: "Search" }).click()
-    //wait for table to load
-    await page.waitForTimeout(1000)
 
     // Check that the new user appears in the table
     await expect(
@@ -150,8 +149,6 @@ test.describe("Admin Service Users Import Tests", () => {
       .getByRole("textbox", { name: "Search Service Users" })
       .fill("Playwright Partial")
     await page.getByRole("button", { name: "Search" }).click()
-    //wait for table to load
-    await page.waitForTimeout(1000)
 
     // Check that the new user appears in the table with partial data
     await expect(

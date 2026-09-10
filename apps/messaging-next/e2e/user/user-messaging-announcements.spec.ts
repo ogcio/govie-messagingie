@@ -19,9 +19,9 @@ test.describe("User Messages page", () => {
         "#login-form > div > div.gi-w-full > div:nth-child(2) > div.gi-accordion > div",
       )
       .click()
-    await page.locator("#firstName").fill("Catherine")
-    await page.locator("#lastName").fill("Sigurjónsdóttir")
-    await page.locator("#email").fill("catherine.sigurjonsdottir@mail.ie")
+    await page.locator("#firstName").fill("E2E Citizen")
+    await page.locator("#lastName").fill("User")
+    await page.locator("#email").fill("e2e_citizen_1@user.com")
     await page.getByRole("button", { name: "LOGIN" }).click()
     await page.waitForLoadState("networkidle")
   })
